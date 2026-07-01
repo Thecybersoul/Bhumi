@@ -205,6 +205,37 @@
     .search-card{grid-template-columns:1fr}
     .hero-stats{gap:18px}
   }
+  /* Responsive styles & fixes for horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+  @media(max-width:480px){
+    .enquiry-bar {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+      padding: 14px 20px !important;
+      margin: 0 -20px !important;
+    }
+    .enquiry-bar div {
+      text-align: center !important;
+      margin-bottom: 4px;
+    }
+    .enquiry-bar .btn {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+  }
+  @media(max-width:1040px){
+    .search-card .search-field {
+      border-right: 0 !important;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 0;
+    }
+    .search-card .search-field:last-of-type {
+      border-bottom: 0;
+    }
+  }
 </style>
 </head>
 <body>
@@ -221,7 +252,6 @@
       <a href="../founders-brief.html">About</a>
     </nav>
     <div style="display:flex;gap:9px">
-      <a class="btn btn-ghost" href="admin.html">Admin Login</a>
       <a class="btn btn-primary" href="#" onclick="toast('Our team will WhatsApp you shortly.');return false;">Talk to Expert</a>
     </div>
   </div>
@@ -363,7 +393,7 @@
 <footer>
   <div class="wrap row">
     <div>
-      <a href="#" class="brand"><span class="mark">ಭೂ</span><span style="color:#fff">Bhūmī<small>Bengaluru Land Exchange</small></span></a>
+      <a href="../index.html" class="brand"><span class="mark">ಭೂ</span><span style="color:#fff">Bhūmī<small>Bengaluru Land Exchange</small></span></a>
       <p style="margin-top:8px">Conceptual prototype. Information is illustrative and not a legal or financial offer. Always conduct independent due diligence.</p>
     </div>
     <div style="font-size:.78rem;color:#7f8a83">© 2026 Bhūmī · Bengaluru · India</div>
