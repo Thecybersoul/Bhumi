@@ -1,12 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "name": "bhumi-land-exchange",
-  "builds": [{ "src": "*.html", "use": "@vercel/static" }],
-  "routes": [
-    { "src": "/prototype/(.*)", "dest": "/prototype/$1" },
-    { "src": "/(.*)", "dest": "/$1" }
-  ],
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
