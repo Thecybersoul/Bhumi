@@ -171,6 +171,24 @@
     .flow{flex-direction:column}
     .flow .arrow{transform:rotate(90deg);padding:6px 0}
   }
+  @media(max-width:560px){
+    .brand small {
+      display: none;
+    }
+    .topbar .cta {
+      gap: 6px;
+    }
+    .topbar .btn {
+      padding: 7px 11px;
+      font-size: .78rem;
+      border-radius: 8px;
+    }
+  }
+  @media(max-width:400px){
+    .topbar .cta .btn-ghost {
+      display: none;
+    }
+  }
 </style>
 </head>
 <body>
