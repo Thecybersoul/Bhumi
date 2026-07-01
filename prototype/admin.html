@@ -189,7 +189,7 @@
 <!-- ===== LOGIN ===== -->
 <div id="login">
   <div class="login-card">
-    <div class="brand"><span class="mark">ಭೂ</span><span>Bhūmī <small style="display:block;font-family:var(--sans);font-weight:500;font-size:.58rem;letter-spacing:.16em;color:var(--gold)">ADMIN CONSOLE</small></span></div>
+    <a href="../index.html" class="brand"><span class="mark">ಭೂ</span><span>Bhūmī <small style="display:block;font-family:var(--sans);font-weight:500;font-size:.58rem;letter-spacing:.16em;color:var(--gold)">ADMIN CONSOLE</small></span></a>
     <h2>Welcome back</h2>
     <p class="sub">Sign in to manage inventory &amp; leads.</p>
     <form onsubmit="doLogin(event)">
@@ -219,7 +219,7 @@
 <div class="shell">
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sbrand"><span class="mark">ಭೂ</span>Bhūmī <small style="font-family:var(--sans);font-weight:500;font-size:.56rem;letter-spacing:.14em;color:var(--gold-soft);margin-left:2px">ADMIN</small></div>
+    <a href="../index.html" class="sbrand" style="display: flex; align-items: center; gap: 10px; padding: 22px 22px 18px; font-family: var(--serif); font-weight: 600; font-size: 1.18rem; color: #fff; border-bottom: 1px solid rgba(255,255,255,.08)"><span class="mark">ಭೂ</span>Bhūmī <small style="font-family:var(--sans);font-weight:500;font-size:.56rem;letter-spacing:.14em;color:var(--gold-soft);margin-left:2px">ADMIN</small></a>
     <div class="grp">Workspace</div>
     <div class="nav-it on" data-page="dash" onclick="goPage('dash')"><span class="ic">▦</span> Dashboard</div>
     <div class="nav-it" data-page="props" onclick="goPage('props')"><span class="ic">▤</span> Properties <span class="badge" id="navPropCount">7</span></div>
@@ -439,27 +439,112 @@
 
 <script>
 /* ---------- AUTH ---------- */
-function doLogin(e){e.preventDefault();document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';init();}
-function doLogout(){document.getElementById('app').style.display='none';document.getElementById('login').style.display='grid';}
+function doLogin(e){
+  e.preventDefault();
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  init();
+}
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='grid';
+}
 
-/* ---------- DATA ---------- */
-let PROPS=[
-  {id:'BLR-1042',title:'68 Acres NH-44 Frontage Land',zone:'North',loc:'Devanahalli',extent:68,price:9.5,status:'Live',use:'Township'},
-  {id:'BLR-1037',title:'22 Acres Scenic Lake-View Land',zone:'East',loc:'Sarjapur',extent:22,price:6.2,status:'Live',use:'Villa'},
-  {id:'BLR-1029',title:'45 Acres Industrial-Grade Land',zone:'East',loc:'Hoskote',extent:45,price:3.8,status:'Live',use:'Industrial'},
-  {id:'BLR-1051',title:'30 Acres Fertile Agricultural Land',zone:'South',loc:'Kanakapura Road',extent:30,price:1.6,status:'Live',use:'Agriculture'},
-  {id:'BLR-1064',title:'52 Acres Resort-Ready Hill-View Land',zone:'North',loc:'Nandi Hills',extent:52,price:4.4,status:'Live',use:'Resort'},
-  {id:'BLR-1018',title:'15 Acres Highway Commercial Land',zone:'West',loc:'Tumkur Road',extent:15,price:7.1,status:'Live',use:'Industrial'},
-  {id:'BLR-1073',title:'40 Acres Mixed-Use Township Land',zone:'North',loc:'Doddaballapur',extent:40,price:2.9,status:'Reserved',use:'Township'}
+/* ---------- SHARED DATA PERSISTENCE ---------- */
+const DEFAULT_DATA = [
+  {id:'BLR-1042',title:'68 Acres NH-44 Frontage Land',zone:'North',loc:'Devanahalli',img:'img/p1.jpg',
+    extent:68,guntas:0,pricePA:9.5,priceType:'Negotiable',status:'Live',featured:true,road:true,roadType:'NH-44, 850m',titleClear:true,
+    distAirport:15,distCity:38,landUse:'Residential / Mixed',conversion:'Not converted',ownership:'Agreement holder',khata:'B Khata',
+    topo:'Flat',soil:'Red loam',water:'Borewell + good table',fence:'Barbed',elec:'Nearby HT line',
+    risk:'Low',riskNotes:'No rajakaluve / lake buffer',use:['Township','Villa','Land-banking'],
+    growth:'Airport–Devanahalli growth corridor',conn:88,amen:'Intl Airport 15km · KIADB 8km · Metro Phase-2B planned',
+    desc:'Strategically located large parcel near Kempegowda International Airport — ideal for township, villa or land-banking with strong appreciation potential driven by aerospace SEZ & business parks.',
+    summary:'Prime 68-acre NH-44 frontage parcel near Bengaluru Airport.'},
+  {id:'BLR-1037',title:'22 Acres Scenic Lake-View Land',zone:'East',loc:'Sarjapur',img:'img/p2.jpg',
+    extent:22,guntas:20,pricePA:6.2,priceType:'Fixed',status:'Live',featured:true,road:true,roadType:'60ft road',titleClear:true,
+    distAirport:52,distCity:24,landUse:'Residential',conversion:'Converted (NA)',ownership:'Single owner',khata:'A Khata',
+    topo:'Gently sloping',soil:'Red loam',water:'Cauvery supply nearby',fence:'Compound wall',elec:'Transformer on site',
+    risk:'Low',riskNotes:'Lake buffer 30m setback respected',use:['Villa','Resort'],
+    growth:'Sarjapur–ORR IT corridor',conn:81,amen:'Whitefield 12km · IT parks 6km · International schools 4km',
+    desc:'A picturesque parcel adjoining a lake — perfect for a premium villa community or boutique resort with strong residential demand in the IT belt.',
+    summary:'Lake-front 22 acres in Sarjapur — villa & resort ready.'},
+  {id:'BLR-1029',title:'45 Acres Industrial-Grade Land',zone:'East',loc:'Hoskote',img:'img/p3.jpg',
+    extent:45,guntas:0,pricePA:3.8,priceType:'Negotiable',status:'Live',featured:false,road:true,roadType:'State highway frontage',titleClear:true,
+    distAirport:45,distCity:30,landUse:'Industrial',conversion:'Converted',ownership:'Single owner',khata:'A Khata',
+    topo:'Flat',soil:'Rocky base, load-bearing',water:'Borewell x3',fence:'Compound wall',elec:'33kVA line',
+    risk:'Low',riskNotes:'Clear of all buffers',use:['Industrial','Township'],
+    growth:'Hoskote industrial & logistics hub',conn:74,amen:'STRR 5km · KIADB industrial area 10km · rail siding 18km',
+    desc:'Wide, flat, well-serviced parcel suited for warehousing, logistics or industrial development with direct highway frontage.',
+    summary:'45-acre industrial parcel with highway frontage at Hoskote.'},
+  {id:'BLR-1051',title:'30 Acres Fertile Agricultural Land',zone:'South',loc:'Kanakapura Road',img:'img/p4.jpg',
+    extent:30,guntas:16,pricePA:1.6,priceType:'Negotiable',status:'Live',featured:false,road:true,roadType:'Village road 30ft',titleClear:true,
+    distAirport:62,distCity:34,landUse:'Agricultural',conversion:'Not converted',ownership:'Multiple owners (4)',khata:'A Khata',
+    topo:'Gently undulating',soil:'Fertile red loam',water:'Canal + 2 borewells',fence:'Natural hedgerow',elec:'Single phase nearby',
+    risk:'Moderate',riskNotes:'Seasonal stream — verify buffer',use:['Agriculture','Land-banking','Resort'],
+    growth:'Kanakapura corridor — metro & expressway planned',conn:62,amen:'NICE Road 22km · Metro Green Line ext. planned · Art-of-Living 14km',
+    desc:'Lush, fertile farmland with mature trees and canal access — a strong long-term hold as the southern corridor develops.',
+    summary:'Fertile 30-acre farmland on Kanakapura Road.'},
+  {id:'BLR-1064',title:'52 Acres Resort-Ready Hill-View Land',zone:'North',loc:'Nandi Hills',img:'img/p5.jpg',
+    extent:52,guntas:0,pricePA:4.4,priceType:'On Request',status:'Live',featured:true,road:true,roadType:'District road',titleClear:true,
+    distAirport:30,distCity:48,landUse:'Residential / Hospitality',conversion:'Partially converted',ownership:'Single owner',khata:'A Khata',
+    topo:'Rolling with elevation',soil:'Rocky-loam',water:'Borewell',fence:'Stone wall',elec:'Available',
+    risk:'Low',riskNotes:'Elevated — no flood risk',use:['Resort','Villa','Land-banking'],
+    growth:'Nandi Hills tourism & villa corridor',conn:70,amen:'Nandi Hills 6km · Airport 30km · NH-44 12km',
+    desc:'Elevated, scenic parcel with hill views — a rare resort/villa development opportunity in a fast-appreciating tourism corridor.',
+    summary:'52-acre hill-view parcel — resort development ready.'},
+  {id:'BLR-1018',title:'15 Acres Highway Commercial Land',zone:'West',loc:'Tumkur Road',img:'img/p1.jpg',
+    extent:15,guntas:10,pricePA:7.1,priceType:'Fixed',status:'Live',featured:false,road:true,roadType:'NH-4 frontage 400m',titleClear:true,
+    distAirport:55,distCity:22,landUse:'Commercial',conversion:'Converted (NA)',ownership:'Single owner',khata:'A Khata',
+    topo:'Flat',soil:'Hard strata',water:'Cauvery',fence:'Compound wall',elec:'HT line on boundary',
+    risk:'Low',riskNotes:'Clear',use:['Industrial','Township','Land-banking'],
+    growth:'Tumkur Road logistics & commercial belt',conn:79,amen:'NH-4 · Dabaspet industrial area 8km · rail 5km',
+    desc:'Premium highway-frontage commercial parcel — strong visibility and access for showrooms, logistics or mixed commercial use.',
+    summary:'15-acre NH-4 commercial frontage near Tumkur Road.'},
+  {id:'BLR-1073',title:'40 Acres Mixed-Use Township Land',zone:'North',loc:'Doddaballapur',img:'img/p3.jpg',
+    extent:40,guntas:0,pricePA:2.9,priceType:'Negotiable',status:'Reserved',featured:false,road:true,roadType:'STRR frontage',titleClear:false,
+    distAirport:42,distCity:46,landUse:'Residential / Industrial',conversion:'Not converted',ownership:'Agreement holder',khata:'B Khata',
+    topo:'Flat',soil:'Red loam',water:'Borewell',fence:'Barbed',elec:'Nearby',
+    risk:'Moderate',riskNotes:'Title under verification',use:['Township','Industrial','Land-banking'],
+    growth:'STRR / Doddaballapur industrial node',conn:66,amen:'STRR · KIADB 9km · Airport 42km',
+    desc:'Large STRR-frontage parcel with township & industrial potential — currently reserved pending title verification.',
+    summary:'40-acre STRR-frontage township land at Doddaballapur.'}
 ];
-const LEADS=[
+
+const DEFAULT_LEADS = [
   {nm:'Vikram Enterprises',pp:'Logistics Pvt Ltd',prop:'BLR-1029',stage:'New',src:'Website',date:'2 hrs ago'},
   {nm:'Meera Nair',pp:'NRI Investor',prop:'BLR-1042',stage:'Visit',src:'WhatsApp',date:'5 hrs ago'},
   {nm:'Prestige Group',pp:'Township developer',prop:'BLR-1073',stage:'Contacted',src:'Direct',date:'1 day ago'},
   {nm:'Green Acres',pp:'Farm collective',prop:'BLR-1051',stage:'New',src:'Website',date:'2 days ago'},
   {nm:'Skyline Resorts',pp:'Hospitality',prop:'BLR-1064',stage:'Visit',src:'Phone',date:'3 days ago'}
 ];
-let propFilter='',leadFilter='';
+
+function getPropsData() {
+  const local = localStorage.getItem('bhumi_properties');
+  if (local) {
+    try { return JSON.parse(local); } catch(e) { console.error(e); }
+  }
+  localStorage.setItem('bhumi_properties', JSON.stringify(DEFAULT_DATA));
+  return DEFAULT_DATA;
+}
+
+function savePropsData(data) {
+  localStorage.setItem('bhumi_properties', JSON.stringify(data));
+}
+
+function getLeadsData() {
+  const local = localStorage.getItem('bhumi_leads');
+  if (local) {
+    try { return JSON.parse(local); } catch(e) { console.error(e); }
+  }
+  localStorage.setItem('bhumi_leads', JSON.stringify(DEFAULT_LEADS));
+  return DEFAULT_LEADS;
+}
+
+function saveLeadsData(data) {
+  localStorage.setItem('bhumi_leads', JSON.stringify(data));
+}
+
+let propFilter='', leadFilter='';
 
 /* ---------- NAV ---------- */
 function goPage(p){
@@ -480,69 +565,119 @@ function buildChart(){
   document.getElementById('chart').innerHTML=data.map(d=>`<div class="bar" style="height:${d/max*100}%"><span class="v">${d}</span></div>`).join('');
   document.getElementById('chartX').innerHTML=lbl.map(l=>`<span>${l}</span>`).join('');
 }
+
 function renderRecentLeads(){
-  document.getElementById('recentLeads').innerHTML=LEADS.slice(0,4).map(l=>`
+  const leads = getLeadsData();
+  document.getElementById('recentLeads').innerHTML=leads.slice(0,4).map(l=>`
     <div class="lead" onclick="goPage('leads')">
       <div class="nm">${l.nm}</div><div class="p">${l.pp} · ${l.date}</div><div class="pp">${l.prop}</div>
     </div>`).join('');
 }
+
 function updStats(){
-  const live=PROPS.filter(p=>p.status==='Live');
-  const val=PROPS.reduce((s,p)=>s+p.extent*p.price,0);
+  const list = getPropsData();
+  const live = list.filter(p=>p.status==='Live');
+  const val = list.reduce((s,p)=>s+p.extent*(p.pricePA || p.price || 0),0);
   document.getElementById('sListings').textContent=live.length;
   document.getElementById('sValue').textContent='₹'+Math.round(val)+'Cr';
-  document.getElementById('navPropCount').textContent=PROPS.length;
+  document.getElementById('navPropCount').textContent=list.length;
+  document.getElementById('navLeadCount').textContent=getLeadsData().length;
 }
 
 /* ---------- PROPERTIES ---------- */
 function renderProps(){
-  const list=PROPS.filter(p=>!propFilter||p.status===propFilter);
+  const list = getPropsData().filter(p=>!propFilter||p.status===propFilter);
   document.getElementById('propBody').innerHTML=list.map(p=>`
     <tr>
       <td><span class="t-id">${p.id}</span></td>
-      <td><div class="t-title">${p.title}</div><div class="t-loc">${p.loc} · ${p.use}</div></td>
+      <td><div class="t-title">${p.title}</div><div class="t-loc">${p.loc} · ${(Array.isArray(p.use) ? p.use.join(', ') : p.use)}</div></td>
       <td>${p.zone}</td>
       <td><b>${p.extent}</b> Ac</td>
-      <td>₹${p.price} Cr</td>
+      <td>₹${p.pricePA || p.price} Cr</td>
       <td><span class="st ${p.status}">${p.status}</span></td>
       <td><div class="row-acts">
-        <button title="View" onclick="toast('Opening public view…')">👁</button>
+        <a href="marketplace.html" target="_blank" title="View" class="btn btn-ghost" style="padding: 6px 9px; font-size: .8rem; display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center;">👁</a>
         <button title="Edit" onclick="openModal('edit','${p.id}')">✎</button>
         <button title="Delete" onclick="delProp('${p.id}')">🗑</button>
       </div></td>
     </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No properties in this status.</td></tr>';
 }
-function filterProps(el,s){propFilter=s;document.querySelectorAll('#page-props .fpill').forEach(x=>x.classList.remove('on'));el.classList.add('on');renderProps();}
+
+function filterProps(el,s){
+  propFilter=s;
+  document.querySelectorAll('#page-props .fpill').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  renderProps();
+}
+
 function delProp(id){
-  if(confirm('Delete '+id+'? This removes it from the marketplace.')){PROPS=PROPS.filter(p=>p.id!==id);renderProps();updStats();toast('Property deleted ✓');}
+  if(confirm('Delete '+id+'? This removes it from the marketplace.')){
+    let list = getPropsData();
+    list=list.filter(p=>p.id!==id);
+    savePropsData(list);
+    renderProps();
+    updStats();
+    toast('Property deleted ✓');
+  }
 }
 
 /* ---------- LEADS ---------- */
 function renderLeads(){
-  const list=LEADS.filter(l=>!leadFilter||l.stage===leadFilter);
-  const stageCl={'New':'st Live','Contacted':'st Reserved','Visit':'st Sold'};
+  const list = getLeadsData().filter(l=>!leadFilter||l.stage===leadFilter);
   document.getElementById('leadBody').innerHTML=list.map((l,i)=>`
     <tr>
       <td><div class="t-title">${l.nm}</div><div class="t-loc">${l.pp}</div></td>
       <td><span class="t-id">${l.prop}</span></td>
       <td><span class="st ${l.stage==='New'?'Live':l.stage==='Contacted'?'Reserved':'Sold'}">${l.stage}</span></td>
       <td>${l.src}</td><td>${l.date}</td>
-      <td><div class="row-acts"><button title="WhatsApp" onclick="toast('Opening WhatsApp…')">💬</button><button title="Call">📞</button><button title="Advance" onclick="advLead(${i})">→</button></div></td>
+      <td><div class="row-acts">
+        <button title="WhatsApp" onclick="toast('Opening WhatsApp…')">💬</button>
+        <button title="Call" onclick="toast('Calling lead…')">📞</button>
+        <button title="Advance" onclick="advLead(${i})">→</button>
+      </div></td>
     </tr>`).join('');
 }
-function filterLead(el,s){leadFilter=s;document.querySelectorAll('#page-leads .fpill').forEach(x=>x.classList.remove('on'));el.classList.add('on');renderLeads();}
-function advLead(i){const flow=['New','Contacted','Visit'];const c=flow.indexOf(LEADS[i].stage);if(c<flow.length-1){LEADS[i].stage=flow[c+1];renderLeads();toast('Lead moved to '+LEADS[i].stage+' ✓');}}
+
+function filterLead(el,s){
+  leadFilter=s;
+  document.querySelectorAll('#page-leads .fpill').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  renderLeads();
+}
+
+function advLead(i){
+  const leads = getLeadsData();
+  const flow=['New','Contacted','Visit'];
+  const c=flow.indexOf(leads[i].stage);
+  if(c<flow.length-1){
+    leads[i].stage=flow[c+1];
+    saveLeadsData(leads);
+    renderLeads();
+    toast('Lead moved to '+leads[i].stage+' ✓');
+  }
+}
 
 /* ---------- ANALYTICS ---------- */
 function renderAnalytics(){
+  const list = getPropsData();
   const zones=[{z:'North',v:48},{z:'East',v:31},{z:'South',v:14},{z:'West',v:7}];
-  const max=Math.max(...zones.map(x=>x.v));
   document.getElementById('zoneBars').innerHTML=zones.map(x=>`
-    <div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px"><span style="font-weight:600">${x.z} Bengaluru</span><span style="color:var(--muted)">${x.v}% · ${Math.round(x.v*118)} views</span></div>
-    <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden"><div style="height:100%;width:${x.v}%;background:linear-gradient(90deg,var(--green),var(--gold))"></div></div></div>`).join('');
-  const top=[...PROPS].sort((a,b)=>b.extent-a.extent).slice(0,4);
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px">
+        <span style="font-weight:600">${x.z} Bengaluru</span><span style="color:var(--muted)">${x.v}% · ${Math.round(x.v*11.8)} views</span>
+      </div>
+      <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden">
+        <div style="height:100%;width:${x.v}%;background:linear-gradient(90deg,var(--green),var(--gold))"></div>
+      </div>
+    </div>`).join('');
+    
+  const top=[...list].sort((a,b)=>b.extent-a.extent).slice(0,4);
   document.getElementById('topList').innerHTML=top.map((p,i)=>`
-    <div class="lead"><div class="nm">${i+1}. ${p.title}</div><div class="p">${p.id} · ${p.loc}</div><div class="pp">${Math.round(40+p.extent*1.2)} views · ${Math.round(2+p.extent*0.3)} enquiries</div></div>`).join('');
+    <div class="lead">
+      <div class="nm">${i+1}. ${p.title}</div>
+      <div class="p">${p.id} · ${p.loc}</div>
+      <div class="pp">${Math.round(40+p.extent*1.2)} views · ${Math.round(2+p.extent*0.3)} enquiries</div>
+    </div>`).join('');
 }
 
 /* ---------- MODAL / FORM ---------- */
@@ -553,37 +688,108 @@ function openModal(mode,id){
   document.getElementById('editId').value='';
   document.getElementById('modalTitle').textContent=mode==='edit'?'Edit property':'Add new property';
   document.getElementById('saveBtnText').textContent=mode==='edit'?'Save changes':'Publish property';
-  if(mode==='edit'&&id){const p=PROPS.find(x=>x.id===id);if(p){
-    document.getElementById('editId').value=id;
-    document.getElementById('f_title').value=p.title;
-    document.getElementById('f_loc').value=p.loc;
-    document.getElementById('f_zone').value=p.zone;
-    document.getElementById('f_extent').value=p.extent;
-    document.getElementById('f_price').value=p.price;
-    document.getElementById('f_status').value=p.status;
-  }}
+  
+  if(mode==='edit'&&id){
+    const list = getPropsData();
+    const p=list.find(x=>x.id===id);
+    if(p){
+      document.getElementById('editId').value=id;
+      document.getElementById('f_title').value=p.title || '';
+      document.getElementById('f_loc').value=p.loc || '';
+      document.getElementById('f_zone').value=p.zone || 'North';
+      document.getElementById('f_extent').value=p.extent || '';
+      document.getElementById('f_price').value=p.pricePA || p.price || '';
+      document.getElementById('f_status').value=p.status || 'Live';
+      document.getElementById('f_ltype').value=p.ltype || 'Sale';
+      document.getElementById('f_road').value=p.roadType || '';
+      document.getElementById('f_airport').value=p.distAirport || '';
+      document.getElementById('f_topo').value=p.topo || 'Flat';
+      document.getElementById('f_soil').value=p.soil || '';
+      document.getElementById('f_water').value=p.water || '';
+      document.getElementById('f_landuse').value=p.landUse || 'Residential';
+      document.getElementById('f_conv').value=p.conversion || 'Converted';
+      document.getElementById('f_own').value=p.ownership || '';
+      document.getElementById('f_title2').value=p.titleClear ? 'Clear' : 'Pending';
+      document.getElementById('f_ptype').value=p.priceType || 'Negotiable';
+      document.getElementById('f_risk').value=p.riskNotes || '';
+      document.getElementById('f_desc').value=p.desc || '';
+      
+      const useList = Array.isArray(p.use) ? p.use : (p.use || '').split(',').map(s=>s.trim());
+      document.querySelectorAll('#useChipsForm .cm').forEach(x => {
+        x.classList.toggle('on', useList.includes(x.dataset.v));
+      });
+    }
+  }
   updPreview();
 }
-function closeModal(){document.getElementById('modal').classList.remove('open');}
-function saveProperty(e){
-  e.preventDefault();
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+}
+
+function saveProperty(event){
+  event.preventDefault();
   const id=document.getElementById('editId').value;
-  const title=document.getElementById('f_title').value;
-  const use=[...document.querySelectorAll('#useChipsForm .cm.on')].map(x=>x.dataset.v).join(', ')||'General';
-  const data={
-    title,zone:document.getElementById('f_zone').value,loc:document.getElementById('f_loc').value,
-    extent:parseFloat(document.getElementById('f_extent').value),price:parseFloat(document.getElementById('f_price').value),
-    status:document.getElementById('f_status').value,use
+  const use=[...document.querySelectorAll('#useChipsForm .cm.on')].map(x=>x.dataset.v);
+  
+  const title = document.getElementById('f_title').value;
+  const loc = document.getElementById('f_loc').value;
+  const zone = document.getElementById('f_zone').value;
+  const extent = parseFloat(document.getElementById('f_extent').value) || 0;
+  const pricePA = parseFloat(document.getElementById('f_price').value) || 0;
+  const status = document.getElementById('f_status').value;
+  const priceType = document.getElementById('f_ptype').value;
+  const roadType = document.getElementById('f_road').value;
+  const distAirport = parseInt(document.getElementById('f_airport').value) || 15;
+  const topo = document.getElementById('f_topo').value;
+  const soil = document.getElementById('f_soil').value;
+  const water = document.getElementById('f_water').value;
+  const landUse = document.getElementById('f_landuse').value;
+  const conversion = document.getElementById('f_conv').value;
+  const ownership = document.getElementById('f_own').value;
+  const titleClear = document.getElementById('f_title2').value === 'Clear';
+  const riskNotes = document.getElementById('f_risk').value;
+  const desc = document.getElementById('f_desc').value;
+  const ltype = document.getElementById('f_ltype').value;
+
+  const data = {
+    title, zone, loc, extent, pricePA, status, priceType,
+    road: !!roadType, roadType, titleClear, distAirport,
+    topo, soil, water, landUse, conversion, ownership,
+    riskNotes, desc, use, ltype,
+    img: 'img/p1.jpg',
+    guntas: 0,
+    distCity: 30,
+    khata: 'A Khata',
+    fence: 'Fenced',
+    elec: 'Available',
+    risk: riskNotes.toLowerCase().includes('high') ? 'High' : (riskNotes.toLowerCase().includes('mod') ? 'Moderate' : 'Low'),
+    growth: `${zone} growth corridor`,
+    conn: Math.floor(Math.random() * (95 - 60 + 1)) + 60,
+    amen: `${loc} amenities & road access`,
+    summary: `${extent} acres in ${loc} for development.`
   };
-  if(id){const p=PROPS.find(x=>x.id===id);Object.assign(p,data);toast('Property updated ✓');}
-  else{
-    const nid='BLR-'+(1080+PROPS.length);
-    PROPS.unshift({id:nid,...data});
+
+  let list = getPropsData();
+  if(id){
+    const index = list.findIndex(x=>x.id===id);
+    if(index !== -1) {
+      const existing = list[index];
+      list[index] = { ...existing, ...data };
+    }
+    toast('Property updated ✓');
+  } else {
+    const nid='BLR-'+(1080+list.length);
+    list.unshift({id:nid,...data});
     toast('Property published ✓');
   }
-  closeModal();renderProps();updStats();goPage('props');
+  
+  savePropsData(list);
+  closeModal();
+  init();
+  goPage('props');
 }
-/* live preview + use chips */
+
 function updPreview(){
   const t=document.getElementById('f_title').value||'Property title';
   const loc=document.getElementById('f_loc').value||'Locality';
@@ -596,13 +802,36 @@ function updPreview(){
     <div style="font-size:.8rem;color:var(--muted)">${ext} acres · ₹${pr} Cr/acre</div>
     <div class="serif" style="color:var(--green);font-weight:600;margin-top:6px">₹${tot.toFixed(1)} Cr</div>`;
 }
-['f_title','f_loc','f_extent','f_price','f_zone'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',updPreview);});
-document.querySelectorAll('#useChipsForm .cm').forEach(c=>c.onclick=()=>{c.classList.toggle('on');updPreview();});
 
 /* ---------- INIT ---------- */
-function init(){buildChart();renderRecentLeads();renderProps();renderLeads();updStats();}
+function init(){
+  buildChart();
+  renderRecentLeads();
+  renderProps();
+  renderLeads();
+  updStats();
+}
+
+['f_title','f_loc','f_extent','f_price','f_zone'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('input', updPreview);
+});
+
+document.querySelectorAll('#useChipsForm .cm').forEach(c => {
+  c.onclick = () => {
+    c.classList.toggle('on');
+    updPreview();
+  };
+});
+
 let toastTimer;
-function toast(msg){const t=document.getElementById('toast');t.textContent='✓ '+msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent='✓ '+msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
 </script>
 </body>
 </html>

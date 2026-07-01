@@ -31,7 +31,7 @@ bhumi-platform/
 |---|---|---|
 | **Marketplace** | Interactive buyer site with sample inventory | `prototype/marketplace.html` |
 | **Admin Dashboard** | Login-protected console (demo creds pre-filled) | `prototype/admin.html` |
-| **Founder's Brief** | The vision in plain English | `founders-brief.html` |
+| **Executive Brief** | The strategic vision and market opportunity brief | `founders-brief.html` |
 | **Blueprint** | Brand, design system, data model, tech, roadmap | `blueprint.html` |
 
 ---
@@ -120,12 +120,6 @@ To turn this into a real product, see the **Blueprint** (`blueprint.html`) → "
 ## 📝 License
 
 MIT — see [LICENSE](LICENSE). Free to use, modify, and deploy.
-
----
-
-## 🙏 Acknowledgements
-
-Concept inspired by the product patterns of [Big Properties World](https://bigpropertiesworld.com/) (large-parcel listings & enquiry flow) and [TalkingLands](https://www.talkinglands.com/) (spatial intelligence & immersive UX), reimagined for Bengaluru's land market.
 
 ---
 

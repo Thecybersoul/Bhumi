@@ -32,3 +32,5 @@ npm-debug.log*
 .cache/
 __pycache__/
 *.pyc
+
+.vercel

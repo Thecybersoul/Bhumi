@@ -70,7 +70,11 @@
   .btn-gold:hover{background:var(--gold-soft)}
   .btn-ghost{border-color:var(--line);color:var(--ink);background:#fff}
   .btn-ghost:hover{border-color:var(--green)}
-  .menu-btn{display:none}
+  .menu-btn{display:none;background:transparent;border:1px solid var(--line);border-radius:9px;width:38px;height:38px;place-items:center;cursor:pointer;font-size:1.1rem;color:var(--green)}
+  .mobile-nav{display:none;position:absolute;top:66px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--line);padding:16px 28px;flex-direction:column;gap:12px;box-shadow:var(--shadow-lg);z-index:55}
+  .mobile-nav.open{display:flex}
+  .mobile-nav a{font-size:.95rem;font-weight:500;color:var(--ink-2);padding:6px 0}
+  .mobile-nav a.active{color:var(--green);font-weight:600}
 
   /* ---------- COVER ---------- */
   .cover{
@@ -236,7 +240,8 @@
   /* responsive */
   @media(max-width:980px){
     .nav-links{display:none}
-    .menu-btn{display:inline-grid}
+    .nav-cta{display:none}
+    .menu-btn{display:grid}
     .split,.split.reverse,.g2,.g3,.g4,footer .grid{grid-template-columns:1fr}
     .swatches{grid-template-columns:repeat(3,1fr)}
     .badge-float{display:none}
@@ -272,6 +277,20 @@
       <a class="btn btn-ghost" href="prototype/marketplace.html" target="_blank">Live Prototype →</a>
       <a class="btn btn-primary" href="prototype/admin.html" target="_blank">Admin Demo</a>
     </div>
+    <button class="menu-btn" onclick="toggleMobileMenu()" aria-label="Toggle navigation">☰</button>
+  </div>
+  <div class="mobile-nav" id="mobileNav">
+    <a href="#summary" onclick="toggleMobileMenu()">Summary</a>
+    <a href="#brand" onclick="toggleMobileMenu()">Brand</a>
+    <a href="#design" onclick="toggleMobileMenu()">Design System</a>
+    <a href="#market" onclick="toggleMobileMenu()">Marketplace</a>
+    <a href="#admin" onclick="toggleMobileMenu()">Admin</a>
+    <a href="#data" onclick="toggleMobileMenu()">Data Model</a>
+    <a href="#stack" onclick="toggleMobileMenu()">Tech</a>
+    <a href="#roadmap" onclick="toggleMobileMenu()">Roadmap</a>
+    <hr style="border:0;border-top:1px solid var(--line);margin:8px 0" />
+    <a href="prototype/marketplace.html" target="_blank">Live Prototype →</a>
+    <a href="prototype/admin.html" target="_blank">Admin Demo</a>
   </div>
 </header>
 
@@ -293,8 +312,8 @@
     </div>
   </div>
   <div class="badge-float">
-    <div class="t">Inspired by</div>
-    <div class="s">Big Properties World · TalkingLands — reimagined for Bengaluru's land market.</div>
+    <div class="t">Bhūmī Architecture</div>
+    <div class="s">Designed for scale, transaction safety, and spatial intelligence.</div>
   </div>
 </div>
 
@@ -894,7 +913,7 @@
       </div>
       <div><h5>Blueprint</h5><a href="#summary">Summary</a><a href="#brand">Brand</a><a href="#design">Design System</a><a href="#data">Data Model</a><a href="#stack">Tech Stack</a></div>
       <div><h5>Prototypes</h5><a href="prototype/marketplace.html" target="_blank">Marketplace</a><a href="prototype/admin.html" target="_blank">Admin Dashboard</a></div>
-      <div><h5>Inspired by</h5><a href="https://bigpropertiesworld.com/" target="_blank">Big Properties World</a><a href="https://www.talkinglands.com/" target="_blank">TalkingLands</a></div>
+      <div><h5>Reference</h5><a href="founders-brief.html">Executive Brief</a><a href="prototype/marketplace.html" target="_blank">Inventory Map</a><a href="#roadmap">Platform Roadmap</a></div>
     </div>
     <div class="fbot">
       <span>Conceptual blueprint for demonstration. Not legal or financial advice.</span>
@@ -902,6 +921,41 @@
     </div>
   </div>
 </footer>
+
+<script>
+function toggleMobileMenu() {
+  const nav = document.getElementById('mobileNav');
+  nav.classList.toggle('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a, .mobile-nav a');
+
+  function updateActiveLink() {
+    let currentId = '';
+    const scrollPos = window.scrollY + 100;
+
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionHeight = section.offsetHeight;
+      if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+        currentId = section.getAttribute('id');
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === `#${currentId}`) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveLink);
+  updateActiveLink();
+});
+</script>
 
 </body>
 </html>
