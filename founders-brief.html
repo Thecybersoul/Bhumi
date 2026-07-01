@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bhūmī — A Plain-English Blueprint for the Founding Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#0E3B2E;--green-700:#13513C;--moss:#27684E;--gold:#C2974A;--gold-soft:#D9B978;
+    --ink:#10231B;--ink-2:#3A4A43;--muted:#6B7A72;--line:#E4DFD3;--cream:#F6F3EC;--paper:#FBF9F4;
+    --white:#FFF;--teal:#1F7A6D;--rose:#B7462F;
+    --shadow:0 1px 2px rgba(16,35,27,.06),0 12px 32px -12px rgba(16,35,27,.18);
+    --shadow-lg:0 30px 80px -30px rgba(16,35,27,.35);
+    --serif:'Fraunces','Playfair Display',Georgia,serif;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --mono:'JetBrains Mono','SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .wrap{max-width:920px;margin:0 auto;padding:0 28px}
+  .serif{font-family:var(--serif);font-weight:500;letter-spacing:-.012em}
+  .mono{font-family:var(--mono)}
+
+  /* topbar */
+  .topbar{position:sticky;top:0;z-index:60;background:rgba(246,243,236,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .topbar .row{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-weight:600;font-size:1.2rem;color:var(--green)}
+  .brand .mark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(150deg,var(--green-700),var(--green));color:var(--gold-soft);font-size:1.05rem;line-height:1}
+  .brand small{display:block;font-family:var(--sans);font-weight:500;font-size:.58rem;letter-spacing:.16em;color:var(--gold);text-transform:uppercase}
+  .topbar .cta{display:flex;gap:9px;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:600;padding:9px 15px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:.2s;white-space:nowrap}
+  .btn-primary{background:var(--green);color:#fff}
+  .btn-primary:hover{background:var(--green-700)}
+  .btn-ghost{border-color:var(--line);color:var(--ink);background:#fff}
+  .btn-ghost:hover{border-color:var(--green)}
+
+  /* cover */
+  .cover{position:relative;overflow:hidden;color:#fff;padding:96px 0 70px;
+    background:radial-gradient(120% 90% at 80% -10%,rgba(194,151,74,.30),transparent 55%),linear-gradient(180deg,rgba(14,59,46,.82),rgba(8,28,22,.93)),url('prototype/img/hero.jpg') center/cover no-repeat}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(8,28,22,.5))}
+  .cover .wrap{position:relative;z-index:2}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft);border:1px solid rgba(217,185,120,.35);padding:6px 13px;border-radius:100px;background:rgba(255,255,255,.04)}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--gold-soft)}
+  .cover h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.2rem,6vw,4rem);line-height:1.06;letter-spacing:-.02em;margin:22px 0 18px;max-width:15ch}
+  .cover h1 em{font-style:italic;color:var(--gold-soft)}
+  .cover p.lead{font-size:1.12rem;color:#dbe2dc;max-width:58ch}
+
+  /* section */
+  section{padding:78px 0}
+  .sec-tag{font-family:var(--mono);font-size:.72rem;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:12px}
+  h2.big{font-family:var(--serif);font-weight:500;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.1;letter-spacing:-.015em;max-width:20ch;margin-bottom:18px}
+  h2.big em{font-style:italic;color:var(--green-700)}
+  p.body{font-size:1.08rem;color:var(--ink-2);max-width:62ch}
+  p.body strong{color:var(--ink)}
+  .hr-soft{height:1px;background:var(--line);border:0}
+
+  /* big idea statement */
+  .lede{font-family:var(--serif);font-size:clamp(1.5rem,3.4vw,2.2rem);line-height:1.32;color:var(--green);font-weight:500;max-width:24ch;border-left:4px solid var(--gold);padding-left:24px}
+
+  /* stat row */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:34px}
+  .stat{text-align:left}
+  .stat .k{font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.6rem);font-weight:600;color:var(--green);line-height:1}
+  .stat .l{font-size:.86rem;color:var(--muted);margin-top:6px}
+
+  /* card grid */
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:26px;transition:.2s}
+  .card:hover{box-shadow:var(--shadow);transform:translateY(-3px);border-color:#d8d2c2}
+  .card .emoji{font-size:1.8rem;margin-bottom:12px}
+  .card h3{font-family:var(--serif);font-weight:600;font-size:1.18rem;margin-bottom:8px}
+  .card p{color:var(--ink-2);font-size:.92rem}
+  .card .who{display:inline-block;font-family:var(--mono);font-size:.66rem;color:var(--gold);background:#f6efdd;padding:3px 8px;border-radius:6px;margin-top:14px;letter-spacing:.05em}
+
+  /* split */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;margin-top:10px}
+  .product{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:28px;position:relative;overflow:hidden}
+  .product.buyer{border-top:5px solid var(--green)}
+  .product.team{border-top:5px solid var(--gold)}
+  .product .ph{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:8px}
+  .product.buyer .ph{color:var(--green)}
+  .product.team .ph{color:var(--gold)}
+  .product h3{font-family:var(--serif);font-size:1.5rem;font-weight:600;margin-bottom:8px}
+  .product p{color:var(--ink-2);font-size:.96rem;margin-bottom:16px}
+  .product ul{list-style:none;display:grid;gap:10px}
+  .product li{display:flex;gap:10px;font-size:.9rem;color:var(--ink-2)}
+  .product li .c{flex:0 0 auto;width:20px;height:20px;border-radius:6px;color:#fff;display:grid;place-items:center;font-size:.7rem;margin-top:1px}
+  .buyer .c{background:var(--green)}.team .c{background:var(--gold)}
+
+  /* flow diagram */
+  .flow{display:flex;align-items:stretch;gap:0;margin:30px 0;flex-wrap:wrap}
+  .flow .step{flex:1;min-width:140px;background:var(--white);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;text-align:center}
+  .flow .arrow{display:grid;place-items:center;color:var(--gold);font-size:1.5rem;padding:0 4px;font-weight:700}
+  .flow .step .n{font-family:var(--mono);font-size:.66rem;color:var(--gold);letter-spacing:.08em}
+  .flow .step h4{font-family:var(--serif);font-size:1.02rem;margin:6px 0 4px}
+  .flow .step p{font-size:.8rem;color:var(--muted)}
+
+  /* comparison */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px}
+  .vs .col{border-radius:16px;padding:24px}
+  .vs .bad{background:#fbf2ee;border:1px solid #eccfc4}
+  .vs .good{background:#eef5ef;border:1px solid #cfe3d4}
+  .vs h4{font-family:var(--serif);font-size:1.12rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .vs ul{list-style:none;display:grid;gap:9px}
+  .vs li{font-size:.9rem;color:var(--ink-2);display:flex;gap:9px;align-items:flex-start}
+  .vs .bad .ic{color:var(--rose)}.vs .good .ic{color:#1d7a4d}
+
+  /* money list */
+  .money{display:grid;gap:14px;margin-top:6px}
+  .money .row{display:flex;gap:16px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .money .num{font-family:var(--serif);font-size:1.7rem;color:var(--gold);font-weight:600;line-height:1;flex:0 0 auto;width:44px}
+  .money h4{font-family:var(--serif);font-size:1.1rem;margin-bottom:4px}
+  .money p{font-size:.9rem;color:var(--ink-2)}
+  .money .pill{display:inline-block;font-size:.66rem;font-weight:600;padding:2px 8px;border-radius:100px;margin-top:8px}
+  .money .pill.core{background:#e6f4ec;color:#1d7a4d}
+  .money .pill.later{background:#eef3ef;color:var(--moss)}
+
+  /* phases */
+  .phases{position:relative;margin-top:10px;padding-left:8px}
+  .ph{display:grid;grid-template-columns:120px 1fr;gap:24px;padding:18px 0;border-top:1px solid var(--line)}
+  .ph:last-child{border-bottom:1px solid var(--line)}
+  .ph .when{font-family:var(--mono);font-size:.74rem;color:var(--gold);letter-spacing:.06em;font-weight:600}
+  .ph .when b{display:block;font-family:var(--serif);font-size:1rem;color:var(--ink);margin-top:4px}
+  .ph h4{font-family:var(--serif);font-size:1.2rem;margin-bottom:6px}
+  .ph p{font-size:.92rem;color:var(--ink-2);max-width:54ch}
+
+  /* decisions */
+  .q{background:var(--white);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 20px;margin-bottom:12px}
+  .q .qt{font-family:var(--mono);font-size:.66rem;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+  .q h4{font-family:var(--serif);font-size:1.12rem;margin:5px 0 6px}
+  .q p{font-size:.88rem;color:var(--ink-2)}
+  .q .opts{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .q .opts span{font-size:.76rem;color:var(--moss);background:#eef3ef;padding:4px 10px;border-radius:100px}
+
+  /* values */
+  .vals{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .val{text-align:center;padding:22px;background:var(--white);border:1px solid var(--line);border-radius:14px}
+  .val .em{font-size:1.6rem;margin-bottom:8px}
+  .val h4{font-family:var(--serif);font-size:1.08rem;margin-bottom:4px}
+  .val p{font-size:.84rem;color:var(--muted)}
+
+  /* callout */
+  .callout{background:linear-gradient(150deg,var(--green),var(--green-700));color:#fff;border-radius:24px;padding:50px;position:relative;overflow:hidden;text-align:center}
+  .callout::before{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(194,151,74,.4),transparent 70%)}
+  .callout h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.7rem,4vw,2.5rem);position:relative;max-width:22ch;margin:0 auto 14px}
+  .callout p{color:#cfe0d7;max-width:50ch;margin:0 auto;position:relative}
+
+  /* pull quote */
+  .quote{font-family:var(--serif);font-size:clamp(1.4rem,3vw,1.9rem);line-height:1.35;color:var(--green);text-align:center;max-width:24ch;margin:0 auto;font-weight:500;font-style:italic}
+  .quote::before{content:"“";font-size:3rem;color:var(--gold-soft);display:block;line-height:.6;margin-bottom:10px}
+
+  /* footer */
+  footer{background:var(--ink);color:#9aa6a0;padding:44px 0 26px;margin-top:0}
+  footer .row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+  footer .brand{color:#fff}
+  footer p{font-size:.82rem;max-width:42ch}
+  footer .fbot{border-top:1px solid #243029;margin-top:26px;padding-top:18px;font-size:.76rem;color:#6f7a73;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+  @media(max-width:760px){
+    .stats{grid-template-columns:1fr 1fr}
+    .g2,.g3,.split,.vs,.vals{grid-template-columns:1fr}
+    .ph{grid-template-columns:1fr;gap:6px}
+    .flow{flex-direction:column}
+    .flow .arrow{transform:rotate(90deg);padding:6px 0}
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="wrap row">
+    <a href="#top" class="brand"><span class="mark">ಭೂ</span><span>Bhūmī<small>For the Founding Team</small></span></a>
+    <div class="cta">
+      <a class="btn btn-ghost" href="blueprint.html">Full Blueprint →</a>
+      <a class="btn btn-primary" href="prototype/marketplace.html" target="_blank">See Prototype</a>
+    </div>
+  </div>
+</header>
+
+<!-- COVER -->
+<div class="cover" id="top">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot"></span> Founding Team Brief · Plain English</span>
+    <h1>The simplest way to understand <em>what we're building</em>.</h1>
+    <p class="lead">This document explains the heart of Bhūmī — the why, the who, the what, and the how — in everyday language. No tech jargon. Just the idea, the opportunity, and the plan.</p>
+  </div>
+</div>
+
+<!-- THE ONE BIG IDEA -->
+<section>
+  <div class="wrap">
+    <span class="sec-tag">01 · The one idea</span>
+    <h2 class="big">We are building the <em>most trusted place</em> to buy &amp; sell large land in Bengaluru.</h2>
+    <p class="body">Today, finding a large plot of land in Bengaluru — for a villa project, a factory, a resort, a farm, or just as an investment — is messy. Buyers waste weeks jumping between brokers, WhatsApp messages, and vague listings that hide more than they reveal.</p>
+    <div style="margin:34px 0">
+      <p class="lede">We bring every great parcel of land into one trusted, transparent marketplace — with all the important facts in one place, so a buyer can confidently choose from their screen.</p>
+    </div>
+    <p class="body"><strong>That's it.</strong> Be the first place serious land buyers think of, and the easiest place for landowners to be seen. Everything else flows from that.</p>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- THE OPPORTUNITY -->
+<section style="background:var(--paper)">
+  <div class="wrap">
+    <span class="sec-tag">02 · Why now, why Bengaluru</span>
+    <h2 class="big">Bengaluru is growing outward — and land is the prize.</h2>
+    <p class="body">The city is expanding fast along every direction — the airport, the ring roads, new metros, industrial corridors. The people who own or buy the right land early stand to gain enormously. But the market to find and trust that land is broken.</p>
+    <div class="stats">
+      <div class="stat"><div class="k">#3</div><div class="l">Largest metro in India — and still growing fast</div></div>
+      <div class="stat"><div class="k">9</div><div class="l">Active growth corridors around the city</div></div>
+      <div class="stat"><div class="k">Crores</div><div class="l">In land changing hands every month — mostly offline</div></div>
+      <div class="stat"><div class="k">0</div><div class="l">Trusted, large-parcel-first brands serving this need</div></div>
+    </div>
+    <p class="body" style="margin-top:28px">There is no clear, trusted leader for <strong>large parcels of land</strong>. Most property platforms focus on apartments and houses. We focus on the land underneath everything — the raw material of all development. That's a wide-open lane.</p>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- WHO WE SERVE -->
+<section>
+  <div class="wrap">
+    <span class="sec-tag">03 · Who we serve</span>
+    <h2 class="big">Six kinds of people come to us.</h2>
+    <p class="body">Each arrives with a different goal — but they all need the same thing: trustworthy land, clearly explained. We tag every parcel for who it suits best.</p>
+    <div class="grid g3" style="margin-top:30px">
+      <div class="card"><div class="emoji">🏘</div><h3>The Developer</h3><p>Building villa or apartment townships. Needs large, well-located, titled parcels they can plan a whole project on.</p><span class="who">Township · Villa</span></div>
+      <div class="card"><div class="emoji">🏭</div><h3>The Industrialist</h3><p>Needs land for factories, warehouses, logistics. Cares about roads, power, soil and clearances.</p><span class="who">Industrial</span></div>
+      <div class="card"><div class="emoji">📈</div><h3>The Investor</h3><p>Buying land to hold and let it appreciate. Wants growth corridors and future infrastructure.</p><span class="who">Land-banking</span></div>
+      <div class="card"><div class="emoji">🏝</div><h3>The Resort Builder</h3><p>Looking for scenic, peaceful land for resorts, retreats or farmstays.</p><span class="who">Resort · Farmstay</span></div>
+      <div class="card"><div class="emoji">🌾</div><h3>The Farmer / Agri Buyer</h3><p>Wants fertile, water-rich farmland — sometimes to cultivate, often to hold.</p><span class="who">Agriculture</span></div>
+      <div class="card"><div class="emoji">🏢</div><h3>The Institution</h3><p>Schools, hospitals, IT parks, SEZs — need sizable, well-connected, zoned land.</p><span class="who">Institutional</span></div>
+    </div>
+    <p class="body" style="margin-top:24px"><strong>One inventory, many doors in.</strong> A buyer can arrive looking for "factory land near Hoskote" or "farmland on Kanakapura Road" — and land in exactly the right place.</p>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- WHAT WE'RE BUILDING -->
+<section style="background:var(--paper)">
+  <div class="wrap">
+    <span class="sec-tag">04 · What we're building</span>
+    <h2 class="big">Two things — and only two.</h2>
+    <p class="body">Everything we make falls into one of two buckets. Keep it this simple.</p>
+    <div class="split">
+      <div class="product buyer">
+        <div class="ph">Thing 1 · For the world to see</div>
+        <h3>The Marketplace</h3>
+        <p>Our shop window. The website buyers visit to find land.</p>
+        <ul>
+          <li><span class="c">✓</span>Search by area, size, price &amp; purpose</li>
+          <li><span class="c">✓</span>Beautiful property pages with every key fact</li>
+          <li><span class="c">✓</span>Photos, drone views &amp; maps</li>
+          <li><span class="c">✓</span>Enquire or book a visit in one tap</li>
+        </ul>
+      </div>
+      <div class="product team">
+        <div class="ph">Thing 2 · For us to run it</div>
+        <h3>The Admin Dashboard</h3>
+        <p>Our back office. Where the team adds &amp; manages everything.</p>
+        <ul>
+          <li><span class="c">✓</span>Log in securely to add new land parcels</li>
+          <li><span class="c">✓</span>Fill in all the property details &amp; photos</li>
+          <li><span class="c">✓</span>See who enquired &amp; follow up</li>
+          <li><span class="c">✓</span>Track views, leads &amp; performance</li>
+        </ul>
+      </div>
+    </div>
+    <p class="body" style="margin-top:24px">When we add or edit a parcel in the admin, it instantly appears on the marketplace. <strong>One source of truth.</strong> No duplication, no confusion.</p>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- THE TRANSPARENCY PROMISE -->
+<section>
+  <div class="wrap">
+    <span class="sec-tag">05 · Our promise to every buyer</span>
+    <h2 class="big">Every parcel tells the <em>whole story</em>.</h2>
+    <p class="body">This is what makes us different from every broker and listing site. For each piece of land, we don't just post a photo and a price — we answer the questions a buyer would otherwise spend weeks chasing.</p>
+    <div class="flow">
+      <div class="step"><div class="n">WHERE</div><h4>Location</h4><p>Exactly where, what's nearby, how connected</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">HOW BIG</div><h4>Extent &amp; Shape</h4><p>How many acres, the terrain, the soil</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">IS IT SAFE</div><h4>Legal &amp; Title</h4><p>Ownership, clear title, approvals, risk flags</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">HOW MUCH</div><h4>Price</h4><p>Clear pricing, per acre, negotiable or not</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">GOOD FOR?</div><h4>Best Use</h4><p>What this land is actually suited for</p></div>
+    </div>
+    <p class="body" style="margin-top:24px">When a buyer can see all five on their phone, they can confidently <strong>shortlist 3–5 parcels before ever visiting a site.</strong> That speed and confidence is our product.</p>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- WHY WE WIN -->
+<section style="background:var(--paper)">
+  <div class="wrap">
+    <span class="sec-tag">06 · Why buyers will choose us</span>
+    <h2 class="big">Today is chaos. Tomorrow is clarity.</h2>
+    <div class="vs">
+      <div class="col bad">
+        <h4><span class="ic">✕</span> Buying land today</h4>
+        <ul>
+          <li><span class="ic">✕</span>Days of calling random brokers</li>
+          <li><span class="ic">✕</span>Vague listings with one photo &amp; no details</li>
+          <li><span class="ic">✕</span>No idea if the title is clear or risky</li>
+          <li><span class="ic">✕</span>Visiting plots that turn out to be wrong</li>
+          <li><span class="ic">✕</span>Hidden prices, hidden problems</li>
+        </ul>
+      </div>
+      <div class="col good">
+        <h4><span class="ic">✓</span> Buying land with Bhūmī</h4>
+        <ul>
+          <li><span class="ic">✓</span>One trusted place, all verified parcels</li>
+          <li><span class="ic">✓</span>Full details, photos, maps &amp; drone views</li>
+          <li><span class="ic">✓</span>Title &amp; risk clearly shown upfront</li>
+          <li><span class="ic">✓</span>Shortlist from screen — visit only the best</li>
+          <li><span class="ic">✓</span>Transparent pricing &amp; honest guidance</li>
+        </ul>
+      </div>
+    </div>
+    <p class="body" style="margin-top:26px"><strong>Trust is our real product.</strong> Land deals are huge decisions. If people believe we tell the truth — clearly and completely — they'll keep coming back, and they'll tell others.</p>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- HOW WE MAKE MONEY -->
+<section>
+  <div class="wrap">
+    <span class="sec-tag">07 · How we make money</span>
+    <h2 class="big">Several ways — one core engine.</h2>
+    <p class="body">The business earns from multiple streams, but most of our money comes from successfully connecting buyers and sellers of land.</p>
+    <div class="money">
+      <div class="row"><div class="num">01</div><div><h4>Success commission on deals</h4><p>When a deal closes because of us — a sale, a joint venture, a lease — we earn a percentage. This is the heart of the business.</p><span class="pill core">CORE · from day one</span></div></div>
+      <div class="row"><div class="num">02</div><div><h4>Paid featured listings</h4><p>Landowners or developers who want their parcel shown first and highlighted pay for premium placement.</p><span class="pill core">CORE · from day one</span></div></div>
+      <div class="row"><div class="num">03</div><div><h4>Expert consultation &amp; reports</h4><p>Buyers pay for deep due-diligence — location analysis, risk checks, valuation reports.</p><span class="pill later">LATER · once trust is built</span></div></div>
+      <div class="row"><div class="num">04</div><div><h4>Drone, photo &amp; media services</h4><p>We shoot and create beautiful media (drone tours, brochures) for landowners who want to list well.</p><span class="pill later">LATER · as we grow</span></div></div>
+      <div class="row"><div class="num">05</div><div><h4>Loan &amp; financing referrals</h4><p>Banks pay us when we connect a buyer to a land or project loan.</p><span class="pill later">LATER · partnerships</span></div></div>
+    </div>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- THE PATH -->
+<section style="background:var(--paper)">
+  <div class="wrap">
+    <span class="sec-tag">08 · The path forward</span>
+    <h2 class="big">Four steps, one direction.</h2>
+    <div class="phases">
+      <div class="ph">
+        <div class="when">STEP 1<b>First 3 months</b></div>
+        <div><h4>Build the basics &amp; fill the shelves</h4><p>Launch the marketplace and the admin. Get our first 30 real, verified parcels listed. Make it look world-class so people trust us on sight.</p></div>
+      </div>
+      <div class="ph">
+        <div class="when">STEP 2<b>Months 3–6</b></div>
+        <div><h4>Add maps &amp; rich media</h4><p>Interactive maps so people can see land by location. Drone footage &amp; 360° views so it feels real. Grow to 100+ parcels.</p></div>
+      </div>
+      <div class="ph">
+        <div class="when">STEP 3<b>Months 6–10</b></div>
+        <div><h4>Become the intelligence leader</h4><p>Layer in growth analysis, risk flags &amp; price trends — so we don't just show land, we help people <em>understand</em> it. Start charging for deep reports.</p></div>
+      </div>
+      <div class="ph">
+        <div class="when">STEP 4<b>Months 10+</b></div>
+        <div><h4>Scale &amp; expand</h4><p>A mobile app, tools for brokers &amp; developers, and eventually take this model to the next cities.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- OUR VALUES -->
+<section>
+  <div class="wrap">
+    <span class="sec-tag">09 · What we stand for</span>
+    <h2 class="big">Three words to guide every decision.</h2>
+    <div class="vals" style="margin-top:30px">
+      <div class="val"><div class="em">🔍</div><h4>Transparency</h4><p>We tell the whole truth about every parcel — even the risks. Especially the risks.</p></div>
+      <div class="val"><div class="em">🤝</div><h4>Trust</h4><p>We'd rather lose a quick deal than mislead a buyer. Trust compounds; shortcuts don't.</p></div>
+      <div class="val"><div class="em">✨</div><h4>Excellence</h4><p>Every detail — the photos, the data, the design — should feel premium and effortless.</p></div>
+    </div>
+    <div style="margin:46px 0 10px">
+      <p class="quote">If a buyer can't trust what they see on our screen, nothing else we build matters.</p>
+    </div>
+  </div>
+</section>
+<hr class="hr-soft" />
+
+<!-- DECISIONS FOR FOUNDERS -->
+<section style="background:var(--paper)">
+  <div class="wrap">
+    <span class="sec-tag">10 · For us to decide</span>
+    <h2 class="big">The questions only <em>we</em> can answer.</h2>
+    <p class="body">Before we build, the founding team should align on these. There's no wrong answer — but we must choose deliberately.</p>
+    <div style="margin-top:26px">
+      <div class="q"><div class="qt">Decision 1</div><h4>What's our final name &amp; identity?</h4><p>We're using "Bhūmī" (ಭೂ — Kannada for 'earth/land'). Does the team feel it? Or do we go another direction?</p>
+        <div class="opts"><span>Bhūmī ✓</span><span>TerraBengaluru</span><span>Acreage</span><span>Something else</span></div></div>
+      <div class="q"><div class="qt">Decision 2</div><h4>Which corridors do we launch with?</h4><p>We can't cover all of Bengaluru on day one. Which 3–4 zones (e.g. Devanahalli, Sarjapur, Hoskote) do we own first?</p>
+        <div class="opts"><span>North / Airport</span><span>East / Sarjapur</span><span>South / Kanakapura</span><span>West / Tumkur</span></div></div>
+      <div class="q"><div class="qt">Decision 3</div><h4>Where do our first listings come from?</h4><p>Do we list our own/known inventory, partner with landowners, or recruit broker networks? A mix?</p>
+        <div class="opts"><span>Own inventory</span><span>Landowner partnerships</span><span>Broker network</span><span>Mix of all</span></div></div>
+      <div class="q"><div class="qt">Decision 4</div><h4>How aggressive is our commission model?</h4><p>Lower fees to win share early, or premium fees with premium service? What's our pricing philosophy?</p>
+        <div class="opts"><span>Win share first</span><span>Premium from start</span><span>Tiered</span></div></div>
+      <div class="q"><div class="qt">Decision 5</div><h4>Who builds &amp; runs it?</h4><p>In-house team, an agency, or technical co-founder? This shapes speed, cost and control.</p>
+        <div class="opts"><span>In-house</span><span>Agency</span><span>Tech co-founder</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="callout">
+      <h2>The opportunity is real. The lane is open. The plan is clear.</h2>
+      <p>Bengaluru's land market is waiting for a brand that leads with trust and clarity. Let's make Bhūmī that brand.</p>
+      <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn btn-gold" href="prototype/marketplace.html" target="_blank">See the Marketplace</a>
+        <a class="btn" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)" href="blueprint.html">Read the Full Blueprint</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <a href="#top" class="brand"><span class="mark">ಭೂ</span><span style="color:#fff">Bhūmī<small>Bengaluru Land Exchange</small></span></a>
+        <p style="margin-top:8px">A founding-team brief — the vision in plain English. For the full technical blueprint, use the link above.</p>
+      </div>
+      <div style="font-size:.78rem;color:#7f8a73">Bengaluru · India · 2026</div>
+    </div>
+    <div class="fbot">
+      <span>Conceptual document for the founding team. Not legal or financial advice.</span>
+      <span>Bhūmī · v1.0</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

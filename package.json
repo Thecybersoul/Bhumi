@@ -1,0 +1,21 @@
+{
+  "name": "bhumi-bengaluru-land-exchange",
+  "version": "1.0.0",
+  "description": "Bhūmī — a world-class marketplace & admin platform for large land parcels in and around Bengaluru.",
+  "private": true,
+  "scripts": {
+    "start": "npx serve . -l 8080",
+    "serve": "python3 -m http.server 8080",
+    "dev": "python3 -m http.server 8080"
+  },
+  "keywords": [
+    "real-estate",
+    "land",
+    "bengaluru",
+    "marketplace",
+    "property",
+    "proptech"
+  ],
+  "author": "Bhūmī",
+  "license": "MIT"
+}
