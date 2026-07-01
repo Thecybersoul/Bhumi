@@ -1,184 +1,609 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Bhūmī — Bengaluru Land Exchange</title>
-<meta name="description" content="Bhūmī — a world-class marketplace for large land parcels in and around Bengaluru. Villa & apartment townships, industries, resorts, agriculture & land-banking." />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230E3B2E'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='%23D9B978' font-family='serif'>ಭೂ</text></svg>" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --green:#0E3B2E;--green-700:#13513C;--gold:#C2974A;--gold-soft:#D9B978;
-    --ink:#10231B;--ink-2:#3A4A43;--muted:#6B7A72;--line:#E4DFD3;--cream:#F6F3EC;--paper:#FBF9F4;
-    --shadow-lg:0 30px 80px -30px rgba(16,35,27,.4);
-    --serif:'Fraunces','Playfair Display',Georgia,serif;
-    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.6;-webkit-font-smoothing:antialiased}
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bhūmī — Bengaluru Land Exchange</title>
+  <meta name="description"
+    content="Bhūmī — a world-class marketplace for large land parcels in and around Bengaluru. Villa & apartment townships, industries, resorts, agriculture & land-banking." />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230E3B2E'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='%23D9B978' font-family='serif'>ಭೂ</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --green: #0E3B2E;
+      --green-700: #13513C;
+      --gold: #C2974A;
+      --gold-soft: #D9B978;
+      --ink: #10231B;
+      --ink-2: #3A4A43;
+      --muted: #6B7A72;
+      --line: #E4DFD3;
+      --cream: #F6F3EC;
+      --paper: #FBF9F4;
+      --shadow-lg: 0 30px 80px -30px rgba(16, 35, 27, .4);
+      --serif: 'Fraunces', 'Playfair Display', Georgia, serif;
+      --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
 
-  /* hero */
-  .hero{position:relative;overflow:hidden;color:#fff;padding:120px 0 96px;
-    background:radial-gradient(120% 90% at 80% -10%,rgba(194,151,74,.30),transparent 55%),linear-gradient(180deg,rgba(14,59,46,.82),rgba(8,28,22,.93)),url('prototype/img/hero.jpg') center/cover no-repeat}
-  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(8,28,22,.5))}
-  .hero .wrap{position:relative;z-index:2}
-  .brand{display:inline-flex;align-items:center;gap:11px;font-family:var(--serif);font-weight:600;font-size:1.3rem;color:#fff}
-  .brand .mark{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.12);color:var(--gold-soft);font-size:1.1rem}
-  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft);border:1px solid rgba(217,185,120,.35);padding:7px 14px;border-radius:100px;background:rgba(255,255,255,.04);margin-top:34px}
-  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--gold-soft)}
-  .hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.3rem,6vw,4.2rem);line-height:1.04;letter-spacing:-.02em;margin:22px 0 18px;max-width:15ch}
-  .hero h1 em{font-style:italic;color:var(--gold-soft)}
-  .hero p{color:#dbe2dc;max-width:58ch;font-size:1.08rem}
-  .hero .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
-  .btn{display:inline-flex;align-items:center;gap:8px;font-size:.86rem;font-weight:600;padding:12px 18px;border-radius:11px;cursor:pointer;border:1px solid transparent;transition:.2s;white-space:nowrap}
-  .btn-gold{background:var(--gold);color:#241a08}
-  .btn-gold:hover{background:var(--gold-soft);transform:translateY(-1px)}
-  .btn-outline{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.3)}
-  .btn-outline:hover{background:rgba(255,255,255,.18)}
-  .hero-stats{display:flex;gap:30px;flex-wrap:wrap;margin-top:42px}
-  .hero-stats div{border-left:1px solid rgba(255,255,255,.2);padding-left:15px}
-  .hero-stats .k{font-family:var(--serif);font-size:1.5rem;font-weight:600}
-  .hero-stats .v{font-size:.74rem;color:#b9c4bd}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-  /* nav strip */
-  .navstrip{position:sticky;top:0;z-index:50;background:rgba(246,243,236,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-  .navstrip .row{display:flex;align-items:center;justify-content:space-between;height:60px}
-  .navstrip .brand{color:var(--green)}
-  .navstrip .brand .mark{background:linear-gradient(150deg,var(--green-700),var(--green));color:var(--gold-soft)}
-  .quick-links{display:flex;gap:6px}
-  .quick-links a{font-size:.82rem;font-weight:500;color:var(--ink-2);padding:8px 12px;border-radius:9px;transition:.15s}
-  .quick-links a:hover{background:#efe9da;color:var(--green)}
+    html {
+      scroll-behavior: smooth
+    }
 
-  /* sections */
-  section{padding:80px 0}
-  .sec-tag{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:12px}
-  h2.big{font-family:var(--serif);font-weight:500;font-size:clamp(1.9rem,4.5vw,2.9rem);line-height:1.1;letter-spacing:-.015em;max-width:22ch;margin-bottom:16px}
-  h2.big em{font-style:italic;color:var(--green-700)}
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--cream);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased
+    }
 
-  /* deliverable cards */
-  .grid{display:grid;gap:22px}
-  .g2{grid-template-columns:repeat(2,1fr)}
-  .deliv{display:block;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:.22s;position:relative}
-  .deliv:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:#d8d2c2}
-  .deliv .thumb{height:170px;position:relative;display:grid;place-items:center;color:#fff;font-family:var(--serif);font-size:1.6rem;font-weight:500}
-  .deliv .thumb .tag{position:absolute;top:14px;left:14px;font-family:'JetBrains Mono',monospace;font-size:.64rem;background:rgba(255,255,255,.92);color:var(--green);padding:4px 9px;border-radius:7px;letter-spacing:.05em}
-  .deliv .body{padding:24px}
-  .deliv .body .ph{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
-  .deliv .body h3{font-family:var(--serif);font-weight:600;font-size:1.4rem;margin:6px 0 8px}
-  .deliv .body p{color:var(--ink-2);font-size:.92rem}
-  .deliv .body .go{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-weight:600;font-size:.88rem;color:var(--green)}
-  .deliv:hover .go{color:var(--gold)}
+    a {
+      color: inherit;
+      text-decoration: none
+    }
 
-  .t-market{background:linear-gradient(150deg,#0E3B2E,#1B6B4F),url('prototype/img/p1.jpg') center/cover;background-blend-mode:multiply}
-  .t-admin{background:linear-gradient(150deg,#13513C,#27684E),url('prototype/img/p3.jpg') center/cover;background-blend-mode:multiply}
-  .t-founders{background:linear-gradient(150deg,#1F7A6D,#0E3B2E),url('prototype/img/p4.jpg') center/cover;background-blend-mode:multiply}
-  .t-blueprint{background:linear-gradient(150deg,#C2974A,#9a6a12),url('prototype/img/p5.jpg') center/cover;background-blend-mode:multiply}
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 28px
+    }
 
-  /* callout */
-  .callout{background:linear-gradient(150deg,var(--green),var(--green-700));color:#fff;border-radius:24px;padding:54px;position:relative;overflow:hidden;text-align:center}
-  .callout::before{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(194,151,74,.4),transparent 70%)}
-  .callout h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.7rem,4vw,2.5rem);position:relative;max-width:22ch;margin:0 auto 14px}
-  .callout p{color:#cfe0d7;max-width:52ch;margin:0 auto;position:relative}
+    /* hero */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      padding: 120px 0 96px;
+      background: radial-gradient(120% 90% at 80% -10%, rgba(194, 151, 74, .30), transparent 55%), linear-gradient(180deg, rgba(14, 59, 46, .82), rgba(8, 28, 22, .93)), url('prototype/img/hero.jpg') center/cover no-repeat
+    }
 
-  footer{background:var(--ink);color:#9aa6a0;padding:44px 0 26px}
-  footer .row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
-  footer .brand{color:#fff}
-  footer p{font-size:.82rem;max-width:42ch}
-  footer .fbot{border-top:1px solid #243029;margin-top:26px;padding-top:18px;font-size:.76rem;color:#6f7a73;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent, rgba(8, 28, 22, .5))
+    }
 
-  @media(max-width:760px){
-    .quick-links{display:none}
-    .g2{grid-template-columns:1fr}
-    .hero{padding:80px 0 60px}
-  }
-</style>
+    .hero .wrap {
+      position: relative;
+      z-index: 2
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: #fff
+    }
+
+    .brand .mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, .12);
+      color: var(--gold-soft);
+      font-size: 1.1rem
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      border: 1px solid rgba(217, 185, 120, .35);
+      padding: 7px 14px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, .04);
+      margin-top: 34px
+    }
+
+    .eyebrow .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold-soft)
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: clamp(2.3rem, 6vw, 4.2rem);
+      line-height: 1.04;
+      letter-spacing: -.02em;
+      margin: 22px 0 18px;
+      max-width: 15ch
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--gold-soft)
+    }
+
+    .hero p {
+      color: #dbe2dc;
+      max-width: 58ch;
+      font-size: 1.08rem
+    }
+
+    .hero .cta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 30px
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .86rem;
+      font-weight: 600;
+      padding: 12px 18px;
+      border-radius: 11px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: .2s;
+      white-space: nowrap
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #241a08
+    }
+
+    .btn-gold:hover {
+      background: var(--gold-soft);
+      transform: translateY(-1px)
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, .1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .3)
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, .18)
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      margin-top: 42px
+    }
+
+    .hero-stats div {
+      border-left: 1px solid rgba(255, 255, 255, .2);
+      padding-left: 15px
+    }
+
+    .hero-stats .k {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 600
+    }
+
+    .hero-stats .v {
+      font-size: .74rem;
+      color: #b9c4bd
+    }
+
+    /* nav strip */
+    .navstrip {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(246, 243, 236, .9);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line)
+    }
+
+    .navstrip .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px
+    }
+
+    .navstrip .brand {
+      color: var(--green)
+    }
+
+    .navstrip .brand .mark {
+      background: linear-gradient(150deg, var(--green-700), var(--green));
+      color: var(--gold-soft)
+    }
+
+    .quick-links {
+      display: flex;
+      gap: 6px
+    }
+
+    .quick-links a {
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--ink-2);
+      padding: 8px 12px;
+      border-radius: 9px;
+      transition: .15s
+    }
+
+    .quick-links a:hover {
+      background: #efe9da;
+      color: var(--green)
+    }
+
+    /* sections */
+    section {
+      padding: 80px 0
+    }
+
+    .sec-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem;
+      color: var(--gold);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 12px
+    }
+
+    h2.big {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: clamp(1.9rem, 4.5vw, 2.9rem);
+      line-height: 1.1;
+      letter-spacing: -.015em;
+      max-width: 22ch;
+      margin-bottom: 16px
+    }
+
+    h2.big em {
+      font-style: italic;
+      color: var(--green-700)
+    }
+
+    /* deliverable cards */
+    .grid {
+      display: grid;
+      gap: 22px
+    }
+
+    .g2 {
+      grid-template-columns: repeat(2, 1fr)
+    }
+
+    .deliv {
+      display: block;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: .22s;
+      position: relative
+    }
+
+    .deliv:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: #d8d2c2
+    }
+
+    .deliv .thumb {
+      height: 170px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      font-weight: 500
+    }
+
+    .deliv .thumb .tag {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .64rem;
+      background: rgba(255, 255, 255, .92);
+      color: var(--green);
+      padding: 4px 9px;
+      border-radius: 7px;
+      letter-spacing: .05em
+    }
+
+    .deliv .body {
+      padding: 24px
+    }
+
+    .deliv .body .ph {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .66rem;
+      color: var(--gold);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 600
+    }
+
+    .deliv .body h3 {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 1.4rem;
+      margin: 6px 0 8px
+    }
+
+    .deliv .body p {
+      color: var(--ink-2);
+      font-size: .92rem
+    }
+
+    .deliv .body .go {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 16px;
+      font-weight: 600;
+      font-size: .88rem;
+      color: var(--green)
+    }
+
+    .deliv:hover .go {
+      color: var(--gold)
+    }
+
+    .t-market {
+      background: linear-gradient(150deg, #0E3B2E, #1B6B4F), url('prototype/img/p1.jpg') center/cover;
+      background-blend-mode: multiply
+    }
+
+    .t-admin {
+      background: linear-gradient(150deg, #13513C, #27684E), url('prototype/img/p3.jpg') center/cover;
+      background-blend-mode: multiply
+    }
+
+    .t-founders {
+      background: linear-gradient(150deg, #1F7A6D, #0E3B2E), url('prototype/img/p4.jpg') center/cover;
+      background-blend-mode: multiply
+    }
+
+    .t-blueprint {
+      background: linear-gradient(150deg, #C2974A, #9a6a12), url('prototype/img/p5.jpg') center/cover;
+      background-blend-mode: multiply
+    }
+
+    /* callout */
+    .callout {
+      background: linear-gradient(150deg, var(--green), var(--green-700));
+      color: #fff;
+      border-radius: 24px;
+      padding: 54px;
+      position: relative;
+      overflow: hidden;
+      text-align: center
+    }
+
+    .callout::before {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(194, 151, 74, .4), transparent 70%)
+    }
+
+    .callout h2 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
+      position: relative;
+      max-width: 22ch;
+      margin: 0 auto 14px
+    }
+
+    .callout p {
+      color: #cfe0d7;
+      max-width: 52ch;
+      margin: 0 auto;
+      position: relative
+    }
+
+    footer {
+      background: var(--ink);
+      color: #9aa6a0;
+      padding: 44px 0 26px
+    }
+
+    footer .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px
+    }
+
+    footer .brand {
+      color: #fff
+    }
+
+    footer p {
+      font-size: .82rem;
+      max-width: 42ch
+    }
+
+    footer .fbot {
+      border-top: 1px solid #243029;
+      margin-top: 26px;
+      padding-top: 18px;
+      font-size: .76rem;
+      color: #6f7a73;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px
+    }
+
+    @media(max-width:760px) {
+      .quick-links {
+        display: none
+      }
+
+      .g2 {
+        grid-template-columns: 1fr
+      }
+
+      .hero {
+        padding: 80px 0 60px
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="navstrip">
-  <div class="wrap row">
-    <a href="index.html" class="brand"><span class="mark">ಭೂ</span><span>Bhūmī<small style="display:block;font-family:var(--sans);font-weight:500;font-size:.56rem;letter-spacing:.16em;color:var(--gold)">BENGALURU LAND EXCHANGE</small></span></a>
-    <nav class="quick-links">
-      <a href="#deliverables">Deliverables</a>
-      <a href="founders-brief.html">Vision</a>
-      <a href="blueprint.html">Blueprint</a>
-      <a href="prototype/marketplace.html">Marketplace</a>
-    </nav>
-  </div>
-</div>
-
-<div class="hero" id="top">
-  <div class="wrap">
-    <a href="index.html" class="brand"><span class="mark">ಭೂ</span><span>Bhūmī</span></a>
-    <span class="eyebrow"><span class="dot"></span> World-Class Land Marketplace · Bengaluru</span>
-    <h1>Stop searching land. <em>Start selecting</em> it.</h1>
-    <p>Bengaluru's premium marketplace for large land parcels — for villa &amp; apartment townships, industries, resorts, agriculture &amp; land-banking. Every parcel verified, documented, and intelligence-rich.</p>
-    <div class="cta">
-      <a class="btn btn-gold" href="prototype/marketplace.html">Explore the Marketplace →</a>
-      <a class="btn btn-outline" href="#deliverables">Browse all deliverables</a>
-    </div>
-    <div class="hero-stats">
-      <div><div class="k">120+</div><div class="v">Verified parcels</div></div>
-      <div><div class="k">9</div><div class="v">Use-case segments</div></div>
-      <div><div class="k">70+</div><div class="v">Facts per parcel</div></div>
-      <div><div class="k">2</div><div class="v">Core products</div></div>
+  <div class="navstrip">
+    <div class="wrap row">
+      <a href="index.html" class="brand"><span class="mark">ಭೂ</span><span>Bhūmī<small
+            style="display:block;font-family:var(--sans);font-weight:500;font-size:.56rem;letter-spacing:.16em;color:var(--gold)">BENGALURU
+            LAND EXCHANGE</small></span></a>
+      <nav class="quick-links">
+        <a href="#deliverables">Deliverables</a>
+        <a href="founders-brief.html">Vision</a>
+        <a href="blueprint.html">Blueprint</a>
+        <a href="prototype/marketplace.html">Marketplace</a>
+      </nav>
     </div>
   </div>
-</div>
 
-<section id="deliverables">
-  <div class="wrap">
-    <span class="sec-tag">The package</span>
-    <h2 class="big">Everything that ships with this <em>project</em>.</h2>
-    <p style="color:var(--ink-2);font-size:1.04rem;max-width:60ch">Four integrated components — a public marketplace, an administrative console, a comprehensive vision brief, and a detailed platform blueprint.</p>
-    <div class="grid g2" style="margin-top:40px">
-      <a class="deliv" href="prototype/marketplace.html">
-        <div class="thumb t-market"><span class="tag">LIVE PROTOTYPE</span>Marketplace</div>
-        <div class="body"><div class="ph">Product 1 · Public</div><h3>The Marketplace</h3><p>Search, filter, map &amp; detail pages — where buyers discover and shortlist large parcels. Fully interactive with sample inventory.</p><span class="go">Open marketplace →</span></div>
-      </a>
-      <a class="deliv" href="prototype/admin.html">
-        <div class="thumb t-admin"><span class="tag">DASHBOARD</span>Admin</div>
-        <div class="body"><div class="ph">Product 2 · Private</div><h3>Admin Dashboard</h3><p>Login-protected console to add &amp; edit properties, manage leads, and track analytics. Demo credentials pre-filled.</p><span class="go">Open admin demo →</span></div>
-      </a>
-      <a class="deliv" href="founders-brief.html">
-        <div class="thumb t-founders"><span class="tag">EXECUTIVE</span>Vision Brief</div>
-        <div class="body"><div class="ph">For the founding team</div><h3>Executive Brief</h3><p>Strategic overview of the market opportunity, value proposition, operational model, and key execution metrics.</p><span class="go">Read the brief →</span></div>
-      </a>
-      <a class="deliv" href="blueprint.html">
-        <div class="thumb t-blueprint"><span class="tag">FULL PLAN</span>Blueprint</div>
-        <div class="body"><div class="ph">Strategic &amp; technical</div><h3>Full Blueprint</h3><p>Brand, design system, product architecture, 70+ field data model, tech stack, business model &amp; roadmap.</p><span class="go">Read the blueprint →</span></div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="callout">
-      <h2>Ready to deploy &amp; share.</h2>
-      <p>This is a static site — no build step, no server. Push to Git, connect to Vercel or Netlify, and it's live in minutes. See the README for details.</p>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    <div class="row">
-      <div>
-        <a href="index.html" class="brand"><span class="mark">ಭೂ</span><span style="color:#fff">Bhūmī<small style="display:block;font-family:var(--sans);font-weight:500;font-size:.56rem;letter-spacing:.16em;color:var(--gold-soft)">BENGALURU LAND EXCHANGE</small></span></a>
-        <p style="margin-top:8px">Conceptual platform &amp; prototype. Information is illustrative and not a legal or financial offer.</p>
+  <div class="hero" id="top">
+    <div class="wrap">
+      <a href="index.html" class="brand"><span class="mark">ಭೂ</span><span>Bhūmī</span></a>
+      <span class="eyebrow"><span class="dot"></span> World-Class Land Marketplace · Bengaluru</span>
+      <h1>Stop searching land. <em>Start selecting</em> it.</h1>
+      <p>Bengaluru's premium marketplace for large land parcels — for villa &amp; apartment townships, industries,
+        resorts, agriculture &amp; land-banking. Every parcel verified, documented, and intelligence-rich.</p>
+      <div class="cta">
+        <a class="btn btn-gold" href="prototype/marketplace.html">Explore the Marketplace →</a>
+        <a class="btn btn-outline" href="#deliverables">Browse all deliverables</a>
       </div>
-      <div style="font-size:.78rem;color:#7f8a73">Bengaluru · India · 2026</div>
+      <div class="hero-stats">
+        <div>
+          <div class="k">120+</div>
+          <div class="v">Verified parcels</div>
+        </div>
+        <div>
+          <div class="k">9</div>
+          <div class="v">Use-case segments</div>
+        </div>
+        <div>
+          <div class="k">70+</div>
+          <div class="v">Facts per parcel</div>
+        </div>
+        <div>
+          <div class="k">2</div>
+          <div class="v">Core products</div>
+        </div>
+      </div>
     </div>
-    <div class="fbot"><span>© 2026 Bhūmī</span><span>v1.0</span></div>
   </div>
-</footer>
+
+  <section id="deliverables">
+    <div class="wrap">
+      <span class="sec-tag">The package</span>
+      <h2 class="big">Everything that ships with this <em>project</em>.</h2>
+      <p style="color:var(--ink-2);font-size:1.04rem;max-width:60ch">Four integrated components — a public marketplace,
+        an administrative console, a comprehensive vision brief, and a detailed platform blueprint.</p>
+      <div class="grid g2" style="margin-top:40px">
+        <a class="deliv" href="founders-brief.html">
+          <div class="thumb t-founders"><span class="tag">EXECUTIVE</span>Vision Brief</div>
+          <div class="body">
+            <div class="ph">For the founding team</div>
+            <h3>Executive Brief</h3>
+            <p>Strategic overview of the market opportunity, value proposition, operational model, and key execution
+              metrics.</p><span class="go">Read the brief →</span>
+          </div>
+        </a>
+        <a class="deliv" href="blueprint.html">
+          <div class="thumb t-blueprint"><span class="tag">FULL PLAN</span>Blueprint</div>
+          <div class="body">
+            <div class="ph">Strategic &amp; technical</div>
+            <h3>Full Blueprint</h3>
+            <p>Brand, design system, product architecture, 70+ field data model, tech stack, business model &amp;
+              roadmap.</p><span class="go">Read the blueprint →</span>
+          </div>
+        </a>
+        <a class="deliv" href="prototype/marketplace.html">
+          <div class="thumb t-market"><span class="tag">LIVE PROTOTYPE</span>Marketplace</div>
+          <div class="body">
+            <div class="ph">Product 1 · Public</div>
+            <h3>The Marketplace</h3>
+            <p>Search, filter, map &amp; detail pages — where buyers discover and shortlist large parcels. Fully
+              interactive with sample inventory.</p><span class="go">Open marketplace →</span>
+          </div>
+        </a>
+        <a class="deliv" href="prototype/admin.html">
+          <div class="thumb t-admin"><span class="tag">DASHBOARD</span>Admin</div>
+          <div class="body">
+            <div class="ph">Product 2 · Private</div>
+            <h3>Admin Dashboard</h3>
+            <p>Login-protected console to add &amp; edit properties, manage leads, and track analytics. Demo credentials
+              pre-filled.</p><span class="go">Open admin demo →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="callout">
+        <h2>Ready to deploy &amp; share.</h2>
+        <p>This is a static site — no build step, no server. Push to Git, connect to Vercel or Netlify, and it's live in
+          minutes. See the README for details.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="row">
+        <div>
+          <a href="index.html" class="brand"><span class="mark">ಭೂ</span><span style="color:#fff">Bhūmī<small
+                style="display:block;font-family:var(--sans);font-weight:500;font-size:.56rem;letter-spacing:.16em;color:var(--gold-soft)">BENGALURU
+                LAND EXCHANGE</small></span></a>
+          <p style="margin-top:8px">Conceptual platform &amp; prototype. Information is illustrative and not a legal or
+            financial offer.</p>
+        </div>
+        <div style="font-size:.78rem;color:#7f8a73">Bengaluru · India · 2026</div>
+      </div>
+      <div class="fbot"><span>© 2026 Bhūmī</span><span>v1.0</span></div>
+    </div>
+  </footer>
 
 </body>
+
 </html>
