@@ -179,7 +179,7 @@ export default function MarketplacePage() {
         <main className={styles.main}>
           <div className={styles.insightsBanner}>
             <div className={styles.insightsTitle}>Market Intelligence</div>
-            <p><strong>78%</strong> of verified land in North Bengaluru is currently zoned for logistics and industrial parks. Prices in the Devanahalli corridor have appreciated 14% YoY.</p>
+            <p><strong>78%</strong> of new large-scale developments in North Bengaluru are currently zoned for logistics and industrial parks. Prices in the Devanahalli corridor have appreciated 14% YoY.</p>
           </div>
           
           {loading ? (

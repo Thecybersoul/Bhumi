@@ -108,10 +108,10 @@ export default async function Home() {
           <span className={styles.secTag} style={{ color: 'var(--gold-soft)' }}>Market Intelligence</span>
           <h2 className={styles.bigHeading} style={{ color: '#fff' }}>By the <em>numbers.</em></h2>
           <div className={styles.heroStats} style={{ marginTop: '30px' }}>
-            <div><div className={styles.heroStatK}>2,400+</div><div className={styles.heroStatV}>Acres Verified</div></div>
-            <div><div className={styles.heroStatK}>$1.2B</div><div className={styles.heroStatV}>Transaction Value</div></div>
-            <div><div className={styles.heroStatK}>100%</div><div className={styles.heroStatV}>Clear Title Guarantee</div></div>
-            <div><div className={styles.heroStatK}>48hr</div><div className={styles.heroStatV}>Diligence Turnaround</div></div>
+            <div><div className={styles.heroStatK}>$50B+</div><div className={styles.heroStatV}>Projected Market Growth</div></div>
+            <div><div className={styles.heroStatK}>14%</div><div className={styles.heroStatV}>Avg YoY Appreciation</div></div>
+            <div><div className={styles.heroStatK}>#1</div><div className={styles.heroStatV}>Fastest Growing Tech Hub</div></div>
+            <div><div className={styles.heroStatK}>60%</div><div className={styles.heroStatV}>Surge in Logistics Demand</div></div>
           </div>
         </div>
       </section>
