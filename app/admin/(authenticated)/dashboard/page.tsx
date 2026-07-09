@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Property, Enquiry } from '@/lib/types'
 import PropertyModal from '@/components/PropertyModal'
-import VerificationEditor from '@/components/VerificationEditor'
 import styles from './dashboard.module.css'
 
 type Tab = 'properties' | 'enquiries' | 'analytics'
@@ -16,7 +15,6 @@ export default function AdminDashboard() {
   const [enquiries, setEnquiries] = useState<Enquiry[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [showVerificationModal, setShowVerificationModal] = useState(false)
   const [editProp, setEditProp] = useState<Property | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [leadFilter, setLeadFilter] = useState<Stage | ''>('')
@@ -175,7 +173,7 @@ export default function AdminDashboard() {
                       <td>
                         <div className="actions" style={{justifyContent: 'flex-start'}}>
                           <button className="btn btn-sm btn-ghost btn-icon" title="Edit" onClick={() => { setEditProp(p); setShowModal(true) }}>✏️</button>
-                          <button className="btn btn-sm btn-ghost btn-icon" title="Verify" onClick={() => { setEditProp(p); setShowVerificationModal(true) }}>🛡</button>
+                          <button className="btn btn-sm btn-ghost btn-icon" title="Verify" onClick={() => router.push(`/admin/properties/${p.id}/verify`)}>🛡</button>
                           <a href="/marketplace" target="_blank" className="btn btn-sm btn-ghost btn-icon" title="View">↗</a>
                           {delConfirm === p.id ? (
                             <>
@@ -383,14 +381,6 @@ export default function AdminDashboard() {
           property={editProp}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditProp(null) }}
-        />
-      )}
-
-      {/* Verification Modal */}
-      {showVerificationModal && editProp && (
-        <VerificationEditor
-          property={editProp}
-          onClose={() => { setShowVerificationModal(false); setEditProp(null) }}
         />
       )}
 

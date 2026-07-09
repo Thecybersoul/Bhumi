@@ -115,6 +115,43 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Features */}
+      <section className={styles.section} style={{ background: 'var(--cream)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="wrap">
+          <span className={styles.secTag}>The Bhūmī Standard</span>
+          <h2 className={styles.bigHeading}>Built for <em>institutional</em> trust.</h2>
+          <p style={{ color: 'var(--ink-2)', fontSize: '1.04rem', maxWidth: '60ch', marginBottom: '48px' }}>
+            We've removed the friction, opacity, and risk from large land transactions through technology and rigorous human diligence.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
+            <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🛡</div>
+              <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>100% Verified Inventory</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>Every parcel on our exchange ships with a 9-point human-verified legal and physical diligence checklist.</p>
+            </div>
+            
+            <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🤝</div>
+              <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>Direct to Seller</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>We eliminate the chain of brokers. We connect institutional buyers directly with genuine landowners.</p>
+            </div>
+            
+            <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🗺</div>
+              <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>Spatial Intelligence</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>Our analysts overlay flood zones, upcoming infrastructure, and environmental buffers so you understand the land's true potential.</p>
+            </div>
+            
+            <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '16px' }}>💎</div>
+              <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>Curated Quality</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>We reject 80% of submitted properties. Only clear-titled, premium parcels that pass our stringent criteria make it to the exchange.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Featured */}
       {featured && featured.length > 0 && (
         <section id="featured" className={styles.section} style={{ background: '#fdfbf7' }}>
