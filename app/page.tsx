@@ -36,16 +36,18 @@ export default async function Home() {
 
       <div className={styles.hero} id="top">
         <div className="wrap" style={{ position: 'relative', zIndex: 2 }}>
-          <Link href="/" className="brand">
-            <span className="mark">ಭೂ</span><span style={{ color: '#fff' }}>Bhūmī</span>
-          </Link>
-          <div className={styles.eyebrow}>
-            <span className={styles.dot}></span> World-Class Land Marketplace · Bengaluru
+          <div style={{ display: 'block' }}>
+            <Link href="/" className="brand">
+              <span className="mark">ಭೂ</span><span style={{ color: '#fff' }}>Bhūmī</span>
+            </Link>
+          </div>
+          <div className={styles.eyebrow} style={{ marginTop: '24px' }}>
+            <span className={styles.dot}></span> Premium Land Marketplace · Bengaluru
           </div>
           <h1 className={styles.heroTitle}>Stop searching land. <em>Start selecting</em> it.</h1>
           <p className={styles.heroDesc}>
-            Bengaluru's premium marketplace for large land parcels — for villa & apartment townships, industries,
-            resorts, agriculture & land-banking. Every parcel verified, documented, and intelligence-rich.
+            Bengaluru's top marketplace for large land parcels. Perfect for villa townships, industries,
+            resorts, and land-banking. Every property is fully verified and documented.
           </p>
           <div className={styles.cta}>
             <Link className="btn btn-gold" href="/marketplace">Explore the Marketplace →</Link>
@@ -76,26 +78,26 @@ export default async function Home() {
       <section className={styles.section} style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
         <div className="wrap">
           <span className={styles.secTag}>Why Bhūmī</span>
-          <h2 className={styles.bigHeading}>One platform. Every large parcel. <em>Total transparency.</em></h2>
+          <h2 className={styles.bigHeading}>One platform. Clear properties. <em>Total transparency.</em></h2>
           <p style={{ color: 'var(--ink-2)', fontSize: '1.04rem', maxWidth: '60ch', marginBottom: '40px' }}>
-            Bhūmī consolidates Bengaluru's fragmented large-parcel land market into a single, trustworthy, intelligence-rich marketplace.
+            Bhūmī brings Bengaluru's scattered land market into one trusted place.
           </p>
 
           <div className={styles.bpGrid}>
             <div className={styles.bpCard}>
               <div className={styles.bpIcon}>◆</div>
               <h3>The Problem</h3>
-              <p>Large-parcel buyers (developers, investors, industries) waste weeks hunting across brokers, WhatsApp groups, and vague listings with missing legal, zoning, and spatial data. Trust is low; diligence is slow.</p>
+              <p>Buyers waste weeks dealing with brokers, WhatsApp groups, and incomplete listings missing legal or zoning data. Finding good land is slow and risky.</p>
             </div>
             <div className={styles.bpCard}>
               <div className={styles.bpIcon}>✦</div>
               <h3>The Solution</h3>
-              <p>A curated, verified inventory where every parcel ships with the 70+ facts that actually decide a deal — extent, title, conversion, zoning, frontage, risk flags, pricing, and suitability for each use-case.</p>
+              <p>A trusted marketplace where every property comes with the facts you need to make a decision — title, conversion, zoning, pricing, and risk flags.</p>
             </div>
             <div className={styles.bpCard}>
               <div className={styles.bpIcon}>▲</div>
               <h3>The Edge</h3>
-              <p>A spatial-intelligence layer (growth corridors, upcoming infra, flood & drain buffers) layered on top of listings — so buyers don't just see land, they understand it.</p>
+              <p>We provide deep insights on every property, showing you growth corridors and upcoming infrastructure so you make the best investment.</p>
             </div>
           </div>
         </div>
@@ -105,12 +107,12 @@ export default async function Home() {
       <section className={styles.section} style={{ background: '#0e1511', color: '#fff' }}>
         <div className="wrap">
           <span className={styles.secTag} style={{ color: 'var(--gold-soft)' }}>Market Intelligence</span>
-          <h2 className={styles.bigHeading} style={{ color: '#fff' }}>By the <em>numbers.</em></h2>
+          <h2 className={styles.bigHeading} style={{ color: '#fff' }}>Bengaluru by the <em>numbers.</em></h2>
           <div className={styles.heroStats} style={{ marginTop: '30px' }}>
-            <div><div className={styles.heroStatK}>₹4 Lakh Cr+</div><div className={styles.heroStatV}>Projected Market Growth</div></div>
-            <div><div className={styles.heroStatK}>14%</div><div className={styles.heroStatV}>Avg YoY Appreciation</div></div>
-            <div><div className={styles.heroStatK}>#1</div><div className={styles.heroStatV}>Fastest Growing Tech Hub</div></div>
-            <div><div className={styles.heroStatK}>60%</div><div className={styles.heroStatV}>Surge in Logistics Demand</div></div>
+            <div><div className={styles.heroStatK}>₹60K Cr+</div><div className={styles.heroStatV}>Investments in North Bengaluru</div></div>
+            <div><div className={styles.heroStatK}>12-15%</div><div className={styles.heroStatV}>Avg YoY Land Appreciation</div></div>
+            <div><div className={styles.heroStatK}>400+</div><div className={styles.heroStatV}>Global GCCs driving demand</div></div>
+            <div><div className={styles.heroStatK}>280 km</div><div className={styles.heroStatV}>STRR connecting growth corridors</div></div>
           </div>
         </div>
       </section>
@@ -119,34 +121,28 @@ export default async function Home() {
       <section className={styles.section} style={{ background: 'var(--cream)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
         <div className="wrap">
           <span className={styles.secTag}>The Bhūmī Standard</span>
-          <h2 className={styles.bigHeading}>Built for <em>institutional</em> trust.</h2>
+          <h2 className={styles.bigHeading}>Built for <em>trust.</em></h2>
           <p style={{ color: 'var(--ink-2)', fontSize: '1.04rem', maxWidth: '60ch', marginBottom: '48px' }}>
-            We've removed the friction, opacity, and risk from large land transactions through technology and rigorous human diligence.
+            We've removed the friction and risk from large land transactions through rigorous human diligence.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
             <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
               <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🛡</div>
               <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>100% Verified Inventory</h3>
-              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>Every parcel on our exchange ships with a 9-point human-verified legal and physical diligence checklist.</p>
+              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>Every property comes with a 9-point physical and legal checklist checked by our experts.</p>
             </div>
             
             <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
               <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🤝</div>
               <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>Direct to Seller</h3>
-              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>We eliminate the chain of brokers. We connect institutional buyers directly with genuine landowners.</p>
-            </div>
-            
-            <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🗺</div>
-              <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>Spatial Intelligence</h3>
-              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>Our analysts overlay flood zones, upcoming infrastructure, and environmental buffers so you understand the land's true potential.</p>
+              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>No middle brokers. We connect buyers directly with genuine landowners.</p>
             </div>
             
             <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}>
               <div style={{ fontSize: '2rem', marginBottom: '16px' }}>💎</div>
               <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--ink)' }}>Curated Quality</h3>
-              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>We reject 80% of submitted properties. Only clear-titled, premium parcels that pass our stringent criteria make it to the exchange.</p>
+              <p style={{ color: 'var(--muted)', fontSize: '.95rem', lineHeight: 1.6 }}>We reject 80% of submitted properties. Only premium, clear-titled lands make it to our platform.</p>
             </div>
           </div>
         </div>
