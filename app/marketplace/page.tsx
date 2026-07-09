@@ -3,9 +3,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { Property } from '@/lib/types'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDrawer from '@/components/PropertyDrawer'
+import SellFormModal from '@/components/SellFormModal'
 import Footer from '@/components/Footer'
 import styles from './marketplace.module.css'
 
+const SEGMENTS = ['Residential', 'Commercial', 'Industrial', 'Agricultural']
 const USE_CASES = ['Township', 'Villa', 'Resort', 'Industrial', 'Agriculture', 'Land-banking']
 const ZONES = ['North', 'East', 'South', 'West']
 
@@ -15,10 +17,12 @@ export default function MarketplacePage() {
   const [selected, setSelected] = useState<Property | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+  const [sellModalOpen, setSellModalOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   // Filters
   const [search, setSearch] = useState('')
+  const [segment, setSegment] = useState('')
   const [zone, setZone] = useState('')
   const [useCase, setUseCase] = useState('')
   const [minAcres, setMinAcres] = useState('')
@@ -49,6 +53,7 @@ export default function MarketplacePage() {
   const filtered = properties.filter(p => {
     if (search && !p.title.toLowerCase().includes(search.toLowerCase()) &&
         !p.location.toLowerCase().includes(search.toLowerCase())) return false
+    if (segment && p.land_use !== segment) return false
     if (zone && p.zone !== zone) return false
     if (useCase && !p.use_cases.includes(useCase)) return false
     if (minAcres && p.extent_acres < parseFloat(minAcres)) return false
@@ -57,10 +62,15 @@ export default function MarketplacePage() {
   })
 
   const clearFilters = () => {
-    setSearch(''); setZone(''); setUseCase(''); setMinAcres(''); setMaxPrice('')
+    setSearch(''); setSegment(''); setZone(''); setUseCase(''); setMinAcres(''); setMaxPrice('')
   }
 
-  const activeFilters = [zone, useCase, minAcres, maxPrice].filter(Boolean).length
+  let activeFilters = 0
+  if (segment) activeFilters++
+  if (zone) activeFilters++
+  if (useCase) activeFilters++
+  if (minAcres) activeFilters++
+  if (maxPrice) activeFilters++
 
   return (
     <div className={styles.page}>
@@ -72,7 +82,9 @@ export default function MarketplacePage() {
             <span>Bhūmī<small>Bengaluru Land Exchange</small></span>
           </a>
           <nav className="topbar-nav">
-            {/* Empty space or future links */}
+            <button className="btn btn-ghost" onClick={() => setSellModalOpen(true)}>
+              List Your Land
+            </button>
           </nav>
           <button className="btn btn-gold" onClick={() => showToast('Our team will contact you shortly.')}>
             Talk to Expert
@@ -120,6 +132,19 @@ export default function MarketplacePage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
+          </div>
+
+          <div className={styles.filterSection}>
+            <label className={styles.filterLabel}>Segment</label>
+            <div className={styles.filterChips}>
+              {SEGMENTS.map(s => (
+                <button
+                  key={s}
+                  className={`${styles.filterChip} ${segment === s ? styles.filterChipActive : ''}`}
+                  onClick={() => setSegment(segment === s ? '' : s)}
+                >{s}</button>
+              ))}
+            </div>
           </div>
 
           <div className={styles.filterSection}>
@@ -216,6 +241,17 @@ export default function MarketplacePage() {
             }}
           />
         </>
+      )}
+
+      {/* Sell Modal */}
+      {sellModalOpen && (
+        <SellFormModal 
+          onClose={() => setSellModalOpen(false)}
+          onSubmit={() => {
+            setSellModalOpen(false)
+            showToast('Listing request submitted. Our team will contact you for verification.')
+          }}
+        />
       )}
 
       {/* Toast */}

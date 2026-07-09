@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Property } from '@/lib/types'
+import VerificationPanel from '@/components/VerificationPanel'
 import styles from './PropertyDrawer.module.css'
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 export default function PropertyDrawer({ property: p, open, onClose, onEnquire }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [intent, setIntent] = useState<'Enquire' | 'Visit'>('Enquire')
-  const [form, setForm] = useState({ name: '', company: '', phone: '', email: '' })
+  const [form, setForm] = useState({ name: '', company: '', phone: '', email: '', notes: '' })
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,6 +127,9 @@ export default function PropertyDrawer({ property: p, open, onClose, onEnquire }
               <span>{p.risk_notes}</span>
             </div>
           )}
+
+          {/* Verification Panel */}
+          <VerificationPanel propertyId={p.id} />
         </div>
       </div>
 
@@ -162,6 +166,17 @@ export default function PropertyDrawer({ property: p, open, onClose, onEnquire }
                 <input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="you@example.com" />
               </div>
             </div>
+            {intent === 'Enquire' ? (
+              <div className="form-group">
+                <label>Message</label>
+                <textarea rows={2} value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} placeholder="What would you like to know?" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>Preferred Date & Time</label>
+                <input type="datetime-local" value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+              </div>
+            )}
             <div className={styles.formActions}>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancel</button>
               <button type="submit" className="btn btn-primary" disabled={submitting}>
