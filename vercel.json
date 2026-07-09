@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "buildCommand": "cd bhumi-app && npm run build",
-  "outputDirectory": "bhumi-app/.next",
-  "framework": "nextjs",
-  "installCommand": "cd bhumi-app && npm install"
-}
