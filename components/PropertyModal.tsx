@@ -23,6 +23,7 @@ const DEFAULTS: Partial<Property> = {
 export default function PropertyModal({ property, onSave, onClose }: Props) {
   const [form, setForm] = useState<Partial<Property>>({ ...DEFAULTS, ...(property || {}) })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -45,6 +46,31 @@ export default function PropertyModal({ property, onSave, onClose }: Props) {
     setSaving(true)
     await onSave(form)
     setSaving(false)
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setError('')
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      set('img_url', data.url)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -206,8 +232,12 @@ export default function PropertyModal({ property, onSave, onClose }: Props) {
 
             <div className="form-grid cols3" style={{marginTop: 8}}>
               <div className="form-group">
-                <label>Image URL</label>
-                <input placeholder="/img/p1.jpg" value={form.img_url || ''} onChange={e => set('img_url', e.target.value)} />
+                <label>Property Image</label>
+                <div style={{display:'flex',gap:8,flexDirection:'column'}}>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} style={{fontSize: '.8rem'}} />
+                  {uploading && <div style={{fontSize: '.75rem', color: 'var(--primary)'}}>Uploading…</div>}
+                  <input placeholder="/img/p1.jpg or uploaded URL" value={form.img_url || ''} onChange={e => set('img_url', e.target.value)} />
+                </div>
               </div>
               <div className="form-group">
                 <label>Connectivity Score (/100)</label>
@@ -227,7 +257,7 @@ export default function PropertyModal({ property, onSave, onClose }: Props) {
 
           <div className="modal-foot">
             <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={saving || uploading}>
               {saving ? 'Saving…' : property ? 'Save Changes' : 'Add Property'}
             </button>
           </div>
