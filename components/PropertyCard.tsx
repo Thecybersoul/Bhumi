@@ -15,7 +15,7 @@ const USE_COLORS: Record<string, string> = {
 
 export default function PropertyCard({ property: p, onClick }: Props) {
   const totalCr = (p.extent_acres * p.price_per_acre_cr).toFixed(1)
-  const primaryUse = p.use_cases[0] || 'Land'
+  const primaryUse = (p.use_cases && p.use_cases.length > 0) ? p.use_cases[0] : 'Land'
   const bgColor = USE_COLORS[primaryUse] || '#0E3B2E'
 
   return (
@@ -37,7 +37,7 @@ export default function PropertyCard({ property: p, onClick }: Props) {
         <h3 className={styles.title}>{p.title}</h3>
 
         <div className={styles.chips}>
-          {p.use_cases.slice(0, 3).map(u => (
+          {(p.use_cases || []).slice(0, 3).map(u => (
             <span key={u} className={styles.useChip}>{u}</span>
           ))}
         </div>
