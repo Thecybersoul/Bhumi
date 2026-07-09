@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import styles from '@/app/admin/(authenticated)/dashboard/dashboard.module.css'
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ onClose }: { onClose?: () => void }) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -13,8 +13,12 @@ export default function AdminSidebar() {
     router.push('/admin/login')
   }
 
+  const handleNavClick = () => {
+    if (onClose) onClose()
+  }
+
   return (
-    <aside className={styles.sidebar}>
+    <>
       <Link href="/" className={styles.sbrand}>
         <span className="mark" style={{width: 32, height: 32}}>ಭೂ</span>
         <span>Bhūmī <small>ADMIN</small></span>
@@ -23,6 +27,7 @@ export default function AdminSidebar() {
       <nav className={styles.sidenav}>
         <Link
           href="/admin/dashboard"
+          onClick={handleNavClick}
           className={`${styles.navItem} ${pathname === '/admin/dashboard' ? styles.navItemActive : ''}`}
         >
           <span>🏠</span>
@@ -30,6 +35,7 @@ export default function AdminSidebar() {
         </Link>
         <Link
           href="/admin/vision"
+          onClick={handleNavClick}
           className={`${styles.navItem} ${pathname === '/admin/vision' ? styles.navItemActive : ''}`}
         >
           <span>👁</span>
@@ -37,6 +43,7 @@ export default function AdminSidebar() {
         </Link>
         <Link
           href="/admin/blueprint"
+          onClick={handleNavClick}
           className={`${styles.navItem} ${pathname === '/admin/blueprint' ? styles.navItemActive : ''}`}
         >
           <span>🗺</span>
@@ -50,6 +57,6 @@ export default function AdminSidebar() {
           Sign out
         </button>
       </div>
-    </aside>
+    </>
   )
 }

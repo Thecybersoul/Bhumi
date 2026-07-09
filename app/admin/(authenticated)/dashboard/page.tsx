@@ -113,6 +113,24 @@ export default function AdminDashboard() {
           ))}
         </div>
 
+        {/* Tab Navigation */}
+        <div className={styles.tabNav}>
+          {([
+            { id: 'properties', label: 'Properties' },
+            { id: 'enquiries', label: 'Enquiries', badge: newLeads },
+            { id: 'analytics', label: 'Analytics' },
+          ] as { id: Tab; label: string; badge?: number }[]).map(item => (
+            <button
+              key={item.id}
+              className={`${styles.tabBtn} ${tab === item.id ? styles.tabBtnActive : ''}`}
+              onClick={() => setTab(item.id)}
+            >
+              {item.label}
+              {item.badge ? <span className={styles.tabBadge}>{item.badge}</span> : null}
+            </button>
+          ))}
+        </div>
+
         {/* Properties Tab */}
         {tab === 'properties' && (
           <div className={styles.section}>
