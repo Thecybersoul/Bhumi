@@ -13,6 +13,7 @@ export default function MarketplacePage() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Property | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   // Filters
@@ -79,15 +80,34 @@ export default function MarketplacePage() {
       </header>
 
       <div className={styles.shell}>
+        {/* Mobile Filter Toggle */}
+        <div className={styles.mobileFilterToggle} onClick={() => setMobileFilterOpen(true)}>
+          <span>Filter Properties {activeFilters > 0 && `(${activeFilters})`}</span>
+          <span>☰</span>
+        </div>
+
+        {/* Mobile Filter Overlay */}
+        {mobileFilterOpen && (
+          <div className="overlay" style={{ zIndex: 90 }} onClick={() => setMobileFilterOpen(false)} />
+        )}
+
         {/* Sidebar Filters */}
-        <aside className={styles.sidebar}>
+        <aside className={`${styles.sidebar} ${mobileFilterOpen ? styles.sidebarOpen : ''}`}>
           <div className={styles.filterHead}>
             <span className={styles.filterTitle}>Filters</span>
-            {activeFilters > 0 && (
-              <button className="btn btn-sm btn-ghost" onClick={clearFilters}>
-                Clear {activeFilters}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {activeFilters > 0 && (
+                <button className="btn btn-sm btn-ghost" onClick={clearFilters}>
+                  Clear {activeFilters}
+                </button>
+              )}
+              <button 
+                className={`btn btn-sm btn-ghost ${styles.mobileOnly}`} 
+                onClick={() => setMobileFilterOpen(false)}
+              >
+                ✕
               </button>
-            )}
+            </div>
           </div>
 
           <div className={styles.filterSection}>

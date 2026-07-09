@@ -95,42 +95,9 @@ export default function AdminDashboard() {
   )
 
   return (
-    <div className={styles.layout}>
-      {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <a href="/" className={styles.sbrand}>
-          <span className="mark" style={{width: 32, height: 32}}>ಭೂ</span>
-          <span>Bhūmī <small>ADMIN</small></span>
-        </a>
-
-        <nav className={styles.sidenav}>
-          {([
-            { id: 'properties', label: 'Properties', icon: '🏞' },
-            { id: 'enquiries', label: 'Enquiries', icon: '📋', badge: newLeads || undefined },
-            { id: 'analytics', label: 'Analytics', icon: '📊' },
-          ] as { id: Tab; label: string; icon: string; badge?: number }[]).map(item => (
-            <button
-              key={item.id}
-              className={`${styles.navItem} ${tab === item.id ? styles.navItemActive : ''}`}
-              onClick={() => setTab(item.id)}
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-              {item.badge ? <span className={styles.navBadge}>{item.badge}</span> : null}
-            </button>
-          ))}
-        </nav>
-
-        <div className={styles.sidebarFooter}>
-          <a href="/marketplace" target="_blank" className={styles.viewSite}>↗ View marketplace</a>
-          <button className="btn btn-sm btn-ghost" style={{width: '100%', justifyContent: 'center'}} onClick={handleLogout}>
-            Sign out
-          </button>
-        </div>
-      </aside>
-
+    <>
       {/* Main */}
-      <main className={styles.main}>
+      <div className={styles.main}>
         {/* Stats bar */}
         <div className={styles.statsBar}>
           {[
@@ -385,7 +352,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Property Modal */}
       {showModal && (
@@ -402,6 +369,6 @@ export default function AdminDashboard() {
           <div className="toast">✓ {toast}</div>
         </div>
       )}
-    </div>
+    </>
   )
 }

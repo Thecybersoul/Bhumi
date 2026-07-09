@@ -142,8 +142,59 @@
 .emptyIcon { font-size: 3rem; margin-bottom: 16px; }
 .empty h3 { font-family: var(--serif); font-size: 1.3rem; color: var(--ink); margin-bottom: 8px; }
 
+.mobileOnly {
+  display: none;
+}
+
+.mobileFilterToggle {
+  display: none;
+}
+
 @media (max-width: 900px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
-  .main { padding: 20px 18px; }
+  .mobileOnly {
+    display: inline-flex;
+  }
+  
+  .shell {
+    grid-template-columns: 1fr;
+    display: block;
+  }
+  
+  .mobileFilterToggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: .88rem;
+    position: sticky;
+    top: 62px;
+    z-index: 40;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 62px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    height: calc(100vh - 62px);
+    z-index: 100;
+    background: #faf9f5;
+    border-right: 1px solid var(--line);
+    transform: translateX(-100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow: 20px 0 60px rgba(16,35,27,.15);
+  }
+  
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .main { 
+    padding: 20px 18px; 
+  }
 }
