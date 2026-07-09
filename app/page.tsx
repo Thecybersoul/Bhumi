@@ -2,6 +2,7 @@ import styles from './page.module.css'
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
+import Footer from '@/components/Footer'
 
 // Force dynamic so we get live featured properties
 export const dynamic = 'force-dynamic'
@@ -101,6 +102,20 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Quick Facts */}
+      <section className={styles.section} style={{ background: '#0e1511', color: '#fff' }}>
+        <div className="wrap">
+          <span className={styles.secTag} style={{ color: 'var(--gold-soft)' }}>Market Intelligence</span>
+          <h2 className={styles.bigHeading} style={{ color: '#fff' }}>By the <em>numbers.</em></h2>
+          <div className={styles.heroStats} style={{ marginTop: '30px' }}>
+            <div><div className={styles.heroStatK}>2,400+</div><div className={styles.heroStatV}>Acres Verified</div></div>
+            <div><div className={styles.heroStatK}>$1.2B</div><div className={styles.heroStatV}>Transaction Value</div></div>
+            <div><div className={styles.heroStatK}>100%</div><div className={styles.heroStatV}>Clear Title Guarantee</div></div>
+            <div><div className={styles.heroStatK}>48hr</div><div className={styles.heroStatV}>Diligence Turnaround</div></div>
+          </div>
+        </div>
+      </section>
+
       {/* Featured */}
       {featured && featured.length > 0 && (
         <section id="featured" className={styles.section} style={{ background: '#fdfbf7' }}>
@@ -126,23 +141,7 @@ export default async function Home() {
         </section>
       )}
 
-      <footer className={styles.footer}>
-        <div className="wrap">
-          <div className={styles.footerRow}>
-            <div>
-              <Link href="/" className="brand">
-                <span className="mark">ಭೂ</span>
-                <span style={{ color: '#fff' }}>Bhūmī<small style={{ color: 'var(--gold-soft)' }}>BENGALURU LAND EXCHANGE</small></span>
-              </Link>
-              <p style={{ marginTop: 8 }}>Conceptual platform & prototype. Information is illustrative and not a legal or financial offer.</p>
-            </div>
-            <div style={{ fontSize: '.78rem', color: '#7f8a73' }}>Bengaluru · India · 2026</div>
-          </div>
-          <div className={styles.fbot}>
-            <span>© 2026 Bhūmī</span><span>v1.0</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </>
   )
 }

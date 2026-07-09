@@ -106,6 +106,32 @@
   background: #fdfbf7;
 }
 
+.insightsBanner {
+  background: #fff;
+  border: 1px solid rgba(194, 151, 74, .3);
+  border-left: 4px solid var(--gold);
+  padding: 18px 24px;
+  border-radius: 8px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(194, 151, 74, .05);
+}
+
+.insightsTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.insightsBanner p {
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));

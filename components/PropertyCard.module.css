@@ -30,27 +30,34 @@
   font-weight: 600;
 }
 
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.metaLeft, .metaRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .featuredBadge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  font-size: .64rem;
+  background: rgba(194, 151, 74, .15);
+  color: #a87b32;
+  font-size: .62rem;
   font-weight: 700;
-  background: var(--gold);
-  color: #241a08;
-  padding: 3px 9px;
-  border-radius: 100px;
-  letter-spacing: .04em;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 .body { padding: 20px; }
-
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
 
 .zone {
   font-size: .68rem;

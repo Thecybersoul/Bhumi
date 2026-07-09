@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Property } from '@/lib/types'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDrawer from '@/components/PropertyDrawer'
+import Footer from '@/components/Footer'
 import styles from './marketplace.module.css'
 
 const USE_CASES = ['Township', 'Villa', 'Resort', 'Industrial', 'Agriculture', 'Land-banking']
@@ -71,7 +72,7 @@ export default function MarketplacePage() {
             <span>Bhūmī<small>Bengaluru Land Exchange</small></span>
           </a>
           <nav className="topbar-nav">
-            <a href="/marketplace" className="active">Properties</a>
+            {/* Empty space or future links */}
           </nav>
           <button className="btn btn-gold" onClick={() => showToast('Our team will contact you shortly.')}>
             Talk to Expert
@@ -176,6 +177,11 @@ export default function MarketplacePage() {
 
         {/* Main content */}
         <main className={styles.main}>
+          <div className={styles.insightsBanner}>
+            <div className={styles.insightsTitle}>Market Intelligence</div>
+            <p><strong>78%</strong> of verified land in North Bengaluru is currently zoned for logistics and industrial parks. Prices in the Devanahalli corridor have appreciated 14% YoY.</p>
+          </div>
+          
           {loading ? (
             <div className={styles.loading}>
               {[1,2,3,4,5,6].map(i => <div key={i} className={styles.skeleton} />)}
@@ -218,6 +224,8 @@ export default function MarketplacePage() {
           <div className="toast">✓ {toast}</div>
         </div>
       )}
+
+      <Footer />
     </div>
   )
 }

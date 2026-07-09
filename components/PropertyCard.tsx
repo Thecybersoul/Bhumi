@@ -22,16 +22,20 @@ export default function PropertyCard({ property: p, onClick }: Props) {
     <article className={styles.card} onClick={onClick}>
       {/* Thumb */}
       <div className={styles.thumb} style={{ background: `url(${p.img_url}) center/cover` }}>
-        <span className={`badge badge-${p.status.toLowerCase()}`}>{p.status}</span>
         <div className={styles.code}>{p.code}</div>
-        {p.featured && <div className={styles.featuredBadge}>Featured</div>}
       </div>
 
       {/* Body */}
       <div className={styles.body}>
         <div className={styles.meta}>
-          <span className={styles.zone}>{p.zone} Bengaluru</span>
-          <span className={styles.loc}>📍 {p.location}</span>
+          <div className={styles.metaLeft}>
+            <span className={styles.zone}>{p.zone} Bengaluru</span>
+            <span className={styles.loc}>📍 {p.location}</span>
+          </div>
+          <div className={styles.metaRight}>
+            <span className={`badge badge-${p.status.toLowerCase()}`}>{p.status}</span>
+            {p.featured && <span className={styles.featuredBadge}>★ Featured</span>}
+          </div>
         </div>
 
         <h3 className={styles.title}>{p.title}</h3>
