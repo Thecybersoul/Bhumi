@@ -44,7 +44,7 @@
   z-index: 99;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .layout {
     flex-direction: column;
   }
@@ -54,6 +54,7 @@
   }
   .sidebarOpen {
     transform: translateX(0);
+    box-shadow: 2px 0 20px rgba(0,0,0,0.15);
   }
   .mobileToggle {
     display: flex;
@@ -154,6 +155,8 @@
   padding: 0 40px;
   background: #fff;
   border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .tabBtn {
@@ -269,7 +272,8 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
-  overflow: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .code {
@@ -367,8 +371,10 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 900px) {
-  .sidebar { display: none; }
   .statsBar { grid-template-columns: 1fr 1fr; }
   .analyticsGrid { grid-template-columns: 1fr; }
   .section { padding: 18px; }
+  .tabNav { padding: 0 18px; }
+  .statCard { padding: 16px; }
+  .statVal { font-size: 1.4rem; }
 }

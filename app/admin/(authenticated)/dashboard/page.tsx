@@ -157,13 +157,13 @@ export default function AdminDashboard() {
                 <thead>
                   <tr>
                     <th>Code</th>
+                    <th>Actions</th>
                     <th>Property</th>
                     <th>Location</th>
                     <th>Zone</th>
                     <th>Acres</th>
                     <th>₹ Cr/ac</th>
                     <th>Status</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,16 +171,7 @@ export default function AdminDashboard() {
                     <tr key={p.id}>
                       <td><span className={styles.code}>{p.code}</span></td>
                       <td>
-                        <div className={styles.propName}>{p.title}</div>
-                        <div className={styles.propSub}>{p.use_cases.join(' · ')}</div>
-                      </td>
-                      <td>{p.location}</td>
-                      <td>{p.zone}</td>
-                      <td>{p.extent_acres}</td>
-                      <td>₹{p.price_per_acre_cr}</td>
-                      <td><span className={`badge badge-${p.status.toLowerCase()}`}>{p.status}</span></td>
-                      <td>
-                        <div className="actions">
+                        <div className="actions" style={{justifyContent: 'flex-start'}}>
                           <button className="btn btn-sm btn-ghost btn-icon" title="Edit" onClick={() => { setEditProp(p); setShowModal(true) }}>✏️</button>
                           <a href="/marketplace" target="_blank" className="btn btn-sm btn-ghost btn-icon" title="View">↗</a>
                           {delConfirm === p.id ? (
@@ -193,6 +184,15 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </td>
+                      <td>
+                        <div className={styles.propName}>{p.title}</div>
+                        <div className={styles.propSub}>{p.use_cases.join(' · ')}</div>
+                      </td>
+                      <td>{p.location}</td>
+                      <td>{p.zone}</td>
+                      <td>{p.extent_acres}</td>
+                      <td>₹{p.price_per_acre_cr}</td>
+                      <td><span className={`badge badge-${p.status.toLowerCase()}`}>{p.status}</span></td>
                     </tr>
                   ))}
                   {filteredProps.length === 0 && (
@@ -230,12 +230,12 @@ export default function AdminDashboard() {
                 <thead>
                   <tr>
                     <th>Date</th>
+                    <th>Action</th>
                     <th>Name</th>
                     <th>Contact</th>
                     <th>Property</th>
                     <th>Intent</th>
                     <th>Stage</th>
-                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -246,32 +246,32 @@ export default function AdminDashboard() {
                       <tr key={e.id}>
                         <td style={{color:'var(--muted)',fontSize:'.78rem'}}>{new Date(e.created_at).toLocaleDateString('en-IN', {day:'2-digit',month:'short'})}</td>
                         <td>
+                          <div className="actions" style={{justifyContent: 'flex-start'}}>
+                            <button 
+                              className={`btn btn-sm ${canAdvance ? 'btn-ghost' : 'btn-ghost'}`}
+                              disabled={!canAdvance}
+                              onClick={() => handleAdvanceStage(e)}
+                              title={canAdvance ? `Advance to ${e.stage === 'New' ? 'Contacted' : 'Visit'}` : 'Final stage'}
+                            >
+                              {canAdvance ? '➡️' : '✅'}
+                            </button>
+                          </div>
+                        </td>
+                        <td>
                           <div className={styles.propName}>{e.name}</div>
                           <div className={styles.propSub}>{e.company}</div>
                         </td>
                         <td>
-                          <div style={{fontSize:'.82rem'}}>{e.phone}</div>
-                          <div style={{fontSize:'.76rem',color:'var(--muted)'}}>{e.email}</div>
+                          <div style={{fontSize:'.84rem'}}>{e.email}</div>
+                          <div style={{fontSize:'.78rem',color:'var(--muted)'}}>{e.phone}</div>
                         </td>
                         <td>
                           {prop ? (
-                            <>
-                              <div style={{fontSize:'.82rem',fontWeight:500}}>{prop.title}</div>
-                              <div style={{fontSize:'.72rem',color:'var(--muted)'}}>{prop.code}</div>
-                            </>
-                          ) : <span style={{color:'var(--muted)'}}>—</span>}
+                            <><div style={{fontSize:'.84rem',fontWeight:500}}>{prop.title}</div><div style={{fontSize:'.75rem',color:'var(--muted)'}}>{prop.code}</div></>
+                          ) : <span style={{color:'var(--muted)'}}>General</span>}
                         </td>
-                        <td><span style={{fontSize:'.8rem'}}>{e.intent}</span></td>
+                        <td>{e.intent}</td>
                         <td><span className={`badge badge-${e.stage.toLowerCase()}`}>{e.stage}</span></td>
-                        <td>
-                          <button
-                            className={`btn btn-sm ${canAdvance ? 'btn-ghost' : 'btn-ghost'}`}
-                            disabled={!canAdvance}
-                            onClick={() => handleAdvanceStage(e)}
-                          >
-                            {e.stage === 'New' ? 'Mark Contacted' : e.stage === 'Contacted' ? 'Mark Visit' : '✓ Done'}
-                          </button>
-                        </td>
                       </tr>
                     )
                   })}
