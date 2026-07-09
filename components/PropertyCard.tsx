@@ -1,3 +1,5 @@
+"use client"
+
 import { Property } from '@/lib/types'
 import styles from './PropertyCard.module.css'
 
