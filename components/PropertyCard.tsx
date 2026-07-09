@@ -5,7 +5,7 @@ import styles from './PropertyCard.module.css'
 
 interface Props {
   property: Property
-  onClick: () => void
+  onClick?: () => void
 }
 
 const USE_COLORS: Record<string, string> = {

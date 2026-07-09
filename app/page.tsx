@@ -84,7 +84,7 @@ export default async function Home() {
             <div className={styles.featuredGrid}>
               {featured.map(p => (
                 <div key={p.id} style={{ pointerEvents: 'none' }}>
-                  <PropertyCard property={p} onClick={() => {}} />
+                  <PropertyCard property={p} />
                 </div>
               ))}
             </div>
