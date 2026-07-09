@@ -5,8 +5,8 @@ import styles from './login.module.css'
 
 export default function AdminLogin() {
   const router = useRouter()
-  const [email, setEmail] = useState('admin@bhumi.in')
-  const [password, setPassword] = useState('bhumi2026')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -63,12 +63,10 @@ export default function AdminLogin() {
 
           {error && <div className={styles.error}>{error}</div>}
 
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{width: '100%', justifyContent: 'center', padding: '12px'}}>
-            {loading ? 'Signing in…' : 'Sign In'}
+          <button type="submit" className="btn btn-primary" disabled={loading} style={{width: '100%', justifyContent: 'center', padding: 12}}>
+            {loading ? 'Authenticating…' : 'Sign In'}
           </button>
         </form>
-
-        <p className={styles.hint}>Demo credentials pre-filled above</p>
       </div>
     </div>
   )

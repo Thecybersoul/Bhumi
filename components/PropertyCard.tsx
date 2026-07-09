@@ -21,7 +21,7 @@ export default function PropertyCard({ property: p, onClick }: Props) {
   return (
     <article className={styles.card} onClick={onClick}>
       {/* Thumb */}
-      <div className={styles.thumb} style={{ background: `linear-gradient(150deg, ${bgColor}e0, ${bgColor}99), url(${p.img_url}) center/cover` }}>
+      <div className={styles.thumb} style={{ background: `url(${p.img_url}) center/cover` }}>
         <span className={`badge badge-${p.status.toLowerCase()}`}>{p.status}</span>
         <div className={styles.code}>{p.code}</div>
         {p.featured && <div className={styles.featuredBadge}>Featured</div>}

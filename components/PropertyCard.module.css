@@ -23,9 +23,11 @@
 
 .code {
   font-family: var(--mono);
-  font-size: .62rem;
-  color: rgba(255,255,255,.7);
+  font-size: .66rem;
+  color: #fff;
   letter-spacing: .08em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5);
+  font-weight: 600;
 }
 
 .featuredBadge {
