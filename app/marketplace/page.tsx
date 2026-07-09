@@ -71,7 +71,6 @@ export default function MarketplacePage() {
           </a>
           <nav className="topbar-nav">
             <a href="/marketplace" className="active">Properties</a>
-            <a href="/admin/login">Admin</a>
           </nav>
           <button className="btn btn-gold" onClick={() => showToast('Our team will contact you shortly.')}>
             Talk to Expert
