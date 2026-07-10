@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 
 interface Props {
@@ -13,7 +14,6 @@ export default function SellFormModal({ onClose, onSubmit }: Props) {
     e.preventDefault()
     setSubmitting(true)
     
-    // Format the data into the notes field so the admin can see it easily
     const notes = `Location: ${form.location}\nExtent: ${form.extent} acres\nProposed Use Case: ${form.useCase}`
 
     await fetch('/api/enquiries', {
@@ -24,8 +24,8 @@ export default function SellFormModal({ onClose, onSubmit }: Props) {
         phone: form.phone, 
         email: form.email,
         company: '',
-        intent: 'Enquire', // Must be 'Enquire' to pass DB check constraint
-        source: 'Sell',    // We use source = 'Sell' to identify it in the admin UI
+        intent: 'Enquire',
+        source: 'Sell',
         notes 
       })
     })
@@ -35,48 +35,48 @@ export default function SellFormModal({ onClose, onSubmit }: Props) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: 500, width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="modal-content" style={{ maxWidth: 520 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
-            <h2 style={{ fontFamily: 'var(--serif)', fontSize: '1.5rem' }}>List Your Land</h2>
-            <p style={{ fontSize: '.88rem', color: 'var(--muted)', marginTop: 4 }}>
-              Submit your parcel for our team to review. We do not automatically publish listings.
+            <h2 style={{ fontFamily: 'var(--serif)', fontSize: '1.5rem', marginBottom: 4 }}>List Your Land</h2>
+            <p style={{ fontSize: '.88rem', color: 'var(--muted)' }}>
+              Submit your parcel for our team to review. We will not publish automatically.
             </p>
           </div>
-          <button className="btn btn-ghost" onClick={onClose} style={{ padding: '4px 12px' }}>✕</button>
+          <button className="btn btn-ghost btn-icon" onClick={onClose} style={{ flexShrink: 0, marginLeft: 16 }}>✕</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <div className="form-group" style={{ flex: 1 }}>
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid" style={{ marginBottom: 16 }}>
+            <div className="form-group">
               <label>Full Name *</label>
-              <input required value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} placeholder="Your name" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+              <input required value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} placeholder="Your name" />
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group">
               <label>Phone *</label>
-              <input required value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="+91 " style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+              <input required value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="+91 " />
             </div>
           </div>
           
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 16 }}>
             <label>Email Address</label>
-            <input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="you@example.com" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+            <input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="you@example.com" />
           </div>
 
-          <div style={{ display: 'flex', gap: 16 }}>
-            <div className="form-group" style={{ flex: 2 }}>
+          <div className="form-grid cols3" style={{ marginBottom: 16 }}>
+            <div className="form-group span2">
               <label>Location / Micro-market *</label>
-              <input required value={form.location} onChange={e => setForm(f => ({...f, location: e.target.value}))} placeholder="e.g. Devanahalli" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+              <input required value={form.location} onChange={e => setForm(f => ({...f, location: e.target.value}))} placeholder="e.g. Devanahalli" />
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group">
               <label>Extent (Acres) *</label>
-              <input required type="number" step="0.1" value={form.extent} onChange={e => setForm(f => ({...f, extent: e.target.value}))} placeholder="e.g. 5.5" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+              <input required type="number" step="0.1" value={form.extent} onChange={e => setForm(f => ({...f, extent: e.target.value}))} placeholder="e.g. 5.5" />
             </div>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 24 }}>
             <label>Proposed Best Use Case</label>
-            <select value={form.useCase} onChange={e => setForm(f => ({...f, useCase: e.target.value}))} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }}>
+            <select value={form.useCase} onChange={e => setForm(f => ({...f, useCase: e.target.value}))}>
               <option value="">Select a primary use case</option>
               <option value="Township">Township / Plotted Development</option>
               <option value="Villa">Premium Villa</option>
@@ -87,7 +87,7 @@ export default function SellFormModal({ onClose, onSubmit }: Props) {
             </select>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {submitting ? 'Submitting…' : 'Submit for Review'}

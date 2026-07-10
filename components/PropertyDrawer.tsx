@@ -169,12 +169,12 @@ export default function PropertyDrawer({ property: p, open, onClose, onEnquire }
             {intent === 'Enquire' ? (
               <div className="form-group">
                 <label>Message</label>
-                <textarea rows={2} value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} placeholder="What would you like to know?" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+                <textarea rows={2} value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} placeholder="What would you like to know?" />
               </div>
             ) : (
               <div className="form-group">
                 <label>Preferred Date & Time</label>
-                <input type="datetime-local" value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)' }} />
+                <input type="datetime-local" value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} />
               </div>
             )}
             <div className={styles.formActions}>
