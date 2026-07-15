@@ -17,9 +17,11 @@ export default function Logo({ variant = 'horizontal', className = '', style, th
   const goldColor = '#C2974A'
   const mossColor = isDark ? '#FFFFFF' : '#0E3B2E' 
 
+  const logoSrc = isDark ? "/img/logos/logo_extracted_2.png" : "/img/logos/logo_extracted_1.png"
+
   const IconMark = (
     <img 
-      src="/img/logos/logo_extracted_0.jpeg" 
+      src={logoSrc} 
       alt="Bhumi Estates Logo" 
       style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
     />
