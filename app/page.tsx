@@ -25,7 +25,7 @@ export default async function Home() {
       <div className={styles.navstrip}>
         <div className={`wrap ${styles.navstripRow}`}>
           <Link href="/" className="brand">
-            <Logo variant="horizontal" theme="light" style={{ transform: 'scale(0.8)' }} />
+            <Logo theme="light" style={{ height: '40px' }} />
           </Link>
           <nav className={styles.quickLinks}>
             <Link href="#featured">Featured</Link>
@@ -36,10 +36,9 @@ export default async function Home() {
 
       <div className={styles.hero} id="top">
         <div className="wrap" style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.1)', padding: '6px 16px 6px 6px', borderRadius: '100px', backdropFilter: 'blur(10px)', marginBottom: '30px', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <Logo variant="icon" theme="dark" style={{ width: '28px', height: '28px' }} />
-            <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.05em' }}>BHUMI ESTATES</span>
-          </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: '100px', backdropFilter: 'blur(10px)', marginBottom: '30px', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <Logo theme="dark" style={{ height: '28px' }} />
+            </div>
           <div className={styles.eyebrow} style={{ marginTop: '24px' }}>
             <span className={styles.dot}></span> Premium Land Marketplace · Bengaluru
           </div>

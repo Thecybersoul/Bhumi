@@ -35,8 +35,7 @@ export default function AdminLogin() {
     <div className={styles.page}>
       <div className={styles.card}>
         <a href="/" className="brand" style={{marginBottom: 32, display: 'flex'}}>
-          <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
-          <span>Bhumi Estates<small>Admin Console</small></span>
+          <Logo theme="light" style={{ height: '56px' }} />
         </a>
 
         <h1 className={styles.heading}>Sign in</h1>

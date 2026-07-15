@@ -21,8 +21,7 @@ export default function AdminSidebar({ onClose }: { onClose?: () => void }) {
   return (
     <>
       <Link href="/" className={styles.sbrand}>
-        <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
-        <span>Bhumi Estates <small>ADMIN</small></span>
+        <Logo theme="light" style={{ height: '40px' }} />
       </Link>
 
       <nav className={styles.sidenav}>

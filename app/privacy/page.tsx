@@ -6,10 +6,9 @@ export default function PrivacyPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#fdfbf7' }}>
       <header className="topbar">
-        <div className="wrap topbar-inner">
-          <Link href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}>
-            <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
-            <span>Bhumi Estates<small>BENGALURU LAND EXCHANGE</small></span>
+        <div className="wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#fff', borderBottom: '1px solid var(--line)' }}>
+          <Link href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+            <Logo theme="light" style={{ height: '40px' }} />
           </Link>
         </div>
       </header>

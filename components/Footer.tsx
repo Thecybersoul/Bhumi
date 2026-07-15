@@ -8,8 +8,8 @@ export default function Footer() {
       <div className="wrap">
         <div className={styles.footerRow} style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'space-between' }}>
           <div style={{ maxWidth: '300px' }}>
-            <Link href="/" className="brand" style={{ display: 'inline-block' }}>
-              <Logo variant="horizontal" theme="dark" />
+            <Link href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+              <Logo theme="dark" style={{ height: '40px' }} />
             </Link>
             <p style={{ marginTop: 16, color: '#9aa6a0', fontSize: '0.9rem' }}>
               India's most trusted spatial-intelligence-first land platform. Premium, verified, and transparent.

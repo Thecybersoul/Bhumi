@@ -79,9 +79,8 @@ export default function MarketplacePage() {
       {/* Topbar */}
       <header className="topbar">
         <div className={`wrap topbar-inner`}>
-          <Link href="/" className="brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-            <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
-            <span>Bhumi Estates<small>BENGALURU LAND EXCHANGE</small></span>
+          <Link href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+            <Logo theme="light" style={{ height: '40px' }} />
           </Link>
           <nav className="topbar-nav">
             <button className="btn btn-ghost" onClick={() => setSellModalOpen(true)}>

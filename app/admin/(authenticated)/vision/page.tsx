@@ -12,7 +12,9 @@ export default function VisionPage() {
 
 <header className="topbar">
   <div className="wrap row">
-    <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}><Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} /><span>Bhumi Estates<small>For the Founding Team</small></span></a>
+    <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+      <Logo theme="light" style={{ height: '40px' }} />
+    </a>
     <div className="cta">
       <a className="btn btn-ghost" href="blueprint.html">Full Blueprint →</a>
       <a className="btn btn-primary" href="/marketplace" target="_blank">See Prototype</a>
@@ -269,7 +271,9 @@ export default function VisionPage() {
   <div className="wrap">
     <div className="row">
       <div>
-        <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}><Logo variant="icon" theme="dark" style={{ transform: 'scale(0.8)' }} /><span style={{ color: '#fff' }}>Bhumi Estates<small>Bengaluru Land Exchange</small></span></a>
+        <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+          <Logo theme="dark" style={{ height: '40px' }} />
+        </a>
         <p style={{ marginTop: '8px' }}>The definitive platform for Bengaluru's next decade of growth.</p>
       </div>
       <div style={{ fontSize: '.78rem', color: '#7f8a73' }}>Bengaluru · India · 2026</div>

@@ -10,7 +10,9 @@ export default function FeasibilityPage() {
 
 <header className="topbar">
   <div className="wrap row">
-    <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}><Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} /><span>Bhumi Estates<small>Feasibility Plan</small></span></a>
+    <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+      <Logo theme="light" style={{ height: '40px' }} />
+    </a>
     <div className="cta">
       <Link className="btn btn-ghost" href="/admin/blueprint">Blueprint →</Link>
       <a className="btn btn-primary" href="/marketplace" target="_blank">See Prototype</a>
@@ -669,7 +671,9 @@ export default function FeasibilityPage() {
   <div className="wrap">
     <div className="row">
       <div>
-        <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}><Logo variant="icon" theme="dark" style={{ transform: 'scale(0.8)' }} /><span style={{ color: '#fff' }}>Bhumi Estates<small>India&apos;s Spatial Land Intelligence Platform</small></span></a>
+        <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+          <Logo theme="dark" style={{ height: '40px' }} />
+        </a>
         <p style={{ marginTop: '8px' }}>A comprehensive feasibility plan for India's most trusted spatial-intelligence-first land marketplace. Incorporating best practices from 1acre.in and TalkingLands.</p>
       </div>
       <div style={{ fontSize: '.78rem', color: '#7f8a73' }}>bhumiestates.in · India · 2026</div>

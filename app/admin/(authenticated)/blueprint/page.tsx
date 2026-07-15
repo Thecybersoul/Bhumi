@@ -12,9 +12,8 @@ export default function BlueprintPage() {
 
 <header className="topbar">
   <div className="wrap row">
-    <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}>
-      <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
-      <span>Bhumi Estates<small>India's Spatial Land Intelligence Platform</small></span>
+    <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+      <Logo theme="light" style={{ height: '40px' }} />
     </a>
     <nav className="nav-links">
       <a href="#summary">Summary</a>
@@ -644,7 +643,9 @@ export default function BlueprintPage() {
   <div className="wrap">
     <div className="grid">
       <div>
-        <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}><Logo variant="icon" theme="dark" style={{ transform: 'scale(0.8)' }} /><span style={{ color: '#fff' }}>Bhumi Estates<small>India's Spatial Land Intelligence Platform</small></span></a>
+        <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center'}}>
+          <Logo theme="dark" style={{ height: '40px' }} />
+        </a>
         <p style={{ maxWidth: '34ch', fontSize: '.88rem', marginTop: '6px' }}>A world-class blueprint for India's most trusted spatial-intelligence-first land platform — combining marketplace reach, AI intelligence, and enterprise tools.</p>
         <p className="mono" style={{ color: 'var(--gold-soft)', marginTop: '14px' }}>Blueprint v2.0 · 2026</p>
       </div>
