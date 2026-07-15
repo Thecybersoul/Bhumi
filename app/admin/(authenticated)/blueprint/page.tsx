@@ -1,6 +1,6 @@
-
 import React from 'react';
 import './blueprint.css';
+import Logo from '@/components/Logo';
 import Link from 'next/link';
 import AdminLayout from '../layout';
 
@@ -12,9 +12,9 @@ export default function BlueprintPage() {
 
 <header className="topbar">
   <div className="wrap row">
-    <a href="/" className="brand">
-      <span className="mark">ಭೂ</span>
-      <span>Bhūmī<small>Bengaluru Land Exchange</small></span>
+    <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}>
+      <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
+      <span>Bhumi Estates<small>India's Spatial Land Intelligence Platform</small></span>
     </a>
     <nav className="nav-links">
       <a href="#summary">Summary</a>
@@ -48,23 +48,23 @@ export default function BlueprintPage() {
 
 <div className="cover" id="top">
   <div className="wrap">
-    <span className="eyebrow"><span className="dot"></span> World-Class Platform Blueprint · v1.0</span>
-    <h1>The definitive land exchange for <em>Bengaluru's</em> next decade of growth.</h1>
-    <p className="lead">A blueprint for a premium real-estate platform focused on large land parcels in and around Bengaluru — purpose-built for villa & apartment townships, industries, resorts, agriculture, and strategic land-banking. Featuring a world-class public marketplace and a powerful admin dashboard.</p>
+    <span className="eyebrow"><span className="dot"></span> World-Class Platform Blueprint · v2.0</span>
+    <h1>India's most trusted <em>spatial-intelligence-first</em> land platform.</h1>
+    <p className="lead">A blueprint for Bhumi Estates — a unified platform combining a verified land marketplace (inspired by 1acre.in) with deep spatial intelligence (inspired by TalkingLands). Four products, seven revenue streams, and a pan-India vision starting from Bengaluru.</p>
     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
       <a className="btn btn-gold" href="/marketplace" target="_blank">Explore Marketplace Prototype</a>
       <a className="btn btn-ghost" style={{ background: 'rgba(255,255,255,.1)', color: '#fff', borderColor: 'rgba(255,255,255,.3)' }} href="#summary">Read the Blueprint</a>
     </div>
     <div className="meta">
-      <div><div className="k">2</div><div className="v">Core Products</div></div>
-      <div><div className="k">9</div><div className="v">Use-Case Segments</div></div>
-      <div><div className="k">70+</div><div className="v">Data Fields / Parcel</div></div>
+      <div><div className="k">4</div><div className="v">Product Suite</div></div>
+      <div><div className="k">7</div><div className="v">Revenue Streams</div></div>
       <div><div className="k">150+</div><div className="v">Spatial Intelligence Layers</div></div>
+      <div><div className="k">3-Tier</div><div className="v">Verification System</div></div>
     </div>
   </div>
   <div className="badge-float">
-    <div className="t">Bhūmī Architecture</div>
-    <div className="s">Designed for scale, transaction safety, and spatial intelligence.</div>
+    <div className="t">Bhumi Estates Architecture</div>
+    <div className="s">Marketplace reach + spatial intelligence depth + enterprise tools.</div>
   </div>
 </div>
 
@@ -74,26 +74,26 @@ export default function BlueprintPage() {
     <div className="sec-head">
       <div>
         <div className="sec-num">01 — EXECUTIVE SUMMARY</div>
-        <h2 className="sec-title serif">One platform. Every large parcel. Total transparency.</h2>
+        <h2 className="sec-title serif">Marketplace reach meets spatial intelligence depth.</h2>
       </div>
-      <p className="sec-sub">Bhūmī consolidates Bengaluru's fragmented large-parcel land market into a single, trustworthy, intelligence-rich marketplace — paired with an admin console that lets the team publish, verify, and manage inventory in minutes.</p>
+      <p className="sec-sub">Bhumi Estates unifies India's fragmented land market into a single platform — combining a verified land marketplace (like 1acre.in) with deep spatial intelligence (like TalkingLands). Four products, seven revenue streams, and a 3-tier verification system that sets the industry standard.</p>
     </div>
 
     <div className="grid g3">
       <div className="card">
         <div className="ico">◆</div>
         <h3>The Problem</h3>
-        <p>Large-parcel buyers (developers, investors, industries) waste weeks hunting across brokers, WhatsApp groups, and vague listings with missing legal, zoning, and spatial data. Trust is low; diligence is slow.</p>
+        <p>India's $300B annual land market is 90%+ offline. Buyers waste weeks across brokers and WhatsApp. Existing platforms offer either marketplace reach (1acre.in) OR spatial depth (TalkingLands) — never both together.</p>
       </div>
       <div className="card">
         <div className="ico">✦</div>
         <h3>The Solution</h3>
-        <p>A curated, verified inventory where every parcel ships with the 70+ facts that actually decide a deal — extent, title, conversion, zoning, frontage, risk flags, pricing, and suitability for each use-case.</p>
+        <p>A unified platform with 4 products: Bhumi Discover (marketplace), Bhumi Insights (AI reports), Bhumi Realm (enterprise pipeline), and Bhumi Reos (developer OS) — all powered by 150+ spatial layers and 3-tier verification.</p>
       </div>
       <div className="card">
         <div className="ico">▲</div>
         <h3>The Edge</h3>
-        <p>A spatial-intelligence layer (growth corridors, upcoming infra, flood &amp; drain buffers) layered on top of listings — so buyers don't just <em>see</em> land, they <em>understand</em> it. Plus a frictionless admin that keeps it all current.</p>
+        <p>No competitor combines marketplace liquidity with spatial intelligence depth. Our 3-tier verification (Preliminary → Verified → Bhumi Certified™) creates unmatched trust. 7 revenue streams ensure resilient, diversified growth.</p>
       </div>
     </div>
 
@@ -116,42 +116,21 @@ export default function BlueprintPage() {
         <div className="sec-num">02 — BRAND &amp; POSITIONING</div>
         <h2 className="sec-title serif">A name rooted in the land it serves.</h2>
       </div>
-      <p className="sec-sub">Working brand “Bhūmī” (Sanskrit/Kannada for <em>earth/land</em>) signals rootedness, trust, and scale — appropriate for a serious land platform. Alternatives provided below.</p>
+      <p className="sec-sub"><strong>Bhumi Estates</strong> (bhumiestates.in) — rooted in Sanskrit/Kannada "Bhūmī" (earth/land), with "Estates" conveying premium positioning and scale. The brand signals trust, intelligence, and authority in India's land market.</p>
     </div>
 
     <div className="split">
       <div>
         <span className="pill">Brand essence</span>
-        <h3 className="serif" style={{ fontSize: '1.7rem', margin: '16px 0 8px' }}>“Find it. Understand it. Own it — with full clarity.”</h3>
-        <p className="lead-p">Bhūmī is positioned as Bengaluru's most trustworthy large-parcel land marketplace — the place serious buyers go first. Premium but not flashy; data-rich but human; local expertise delivered through world-class product design.</p>
+        <h3 className="serif" style={{ fontSize: '1.7rem', margin: '16px 0 8px' }}>"Discover. Analyze. Own — with full spatial intelligence."</h3>
+        <p className="lead-p">Bhumi Estates is positioned as India's most trusted spatial-intelligence-first land platform — where serious buyers discover verified land with unmatched data depth. Launching in Bengaluru, scaling pan-India.</p>
         <ul className="check">
           <li><span className="c">✓</span><div><b>Voice:</b> Confident, precise, advisory. No hype, no spam, no inflated promises.</div></li>
           <li><span className="c">✓</span><div><b>Audience:</b> Developers, REITs/land bankers, industries, institutional investors, HNI/NRI buyers, hospitality &amp; agri groups.</div></li>
           <li><span className="c">✓</span><div><b>Promise:</b> Every listing is real, verified, and richly documented — diligence-ready.</div></li>
         </ul>
       </div>
-      <div>
-        <div className="card" style={{ background: 'var(--paper)' }}>
-          <div className="mono" style={{ color: 'var(--gold)' }}>NAMING OPTIONS</div>
-          <div style={{ marginTop: '14px', display: 'grid', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '10px' }}>
-              <span className="serif" style={{ fontSize: '1.15rem' }}>Bhūmī</span><span className="tag">RECOMMENDED</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '10px' }}>
-              <span className="serif" style={{ fontSize: '1.15rem' }}>TerraBengaluru</span><span className="note">descriptive</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '10px' }}>
-              <span className="serif" style={{ fontSize: '1.15rem' }}>Acreage</span><span className="note">modern</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '10px' }}>
-              <span className="serif" style={{ fontSize: '1.15rem' }}>Bengaluru Land Co.</span><span className="note">institutional</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '10px' }}>
-              <span className="serif" style={{ fontSize: '1.15rem' }}>Prithvi Lands</span><span className="note">heritage</span>
-            </div>
-          </div>
-        </div>
-      </div>
+
     </div>
   </div>
 </section>
@@ -240,9 +219,9 @@ export default function BlueprintPage() {
     <div className="sec-head">
       <div>
         <div className="sec-num">04 — PRODUCT ARCHITECTURE</div>
-        <h2 className="sec-title serif">Two products, one platform.</h2>
+        <h2 className="sec-title serif">Four products, one unified platform.</h2>
       </div>
-      <p className="sec-sub">A public-facing marketplace for buyers &amp; investors, and a private admin console for the team. They share one design system, one data model, and one source of truth.</p>
+      <p className="sec-sub">Inspired by TalkingLands' multi-product architecture, enhanced with 1acre.in's marketplace reach — Bhumi Estates serves every stakeholder: buyers, investors, developers, and enterprises.</p>
     </div>
 
     <div className="grid g2">
@@ -546,17 +525,18 @@ export default function BlueprintPage() {
     <div className="sec-head">
       <div>
         <div className="sec-num">09 — BUSINESS MODEL</div>
-        <h2 className="sec-title serif">Multiple, reinforcing revenue streams.</h2>
+        <h2 className="sec-title serif">Seven reinforcing revenue streams.</h2>
       </div>
-      <p className="sec-sub">Marketplace liquidity funds growth; high-value services and intelligence create margin.</p>
+      <p className="sec-sub">Combining 1acre.in's subscription model with TalkingLands' report + enterprise SaaS — creating diversified, resilient revenue architecture.</p>
     </div>
     <div className="grid g2" style={{ gap: '18px' }}>
-      <div className="stream"><span className="n">01</span><div><h4>Transaction / Brokerage Commission</h4><p>Percentage of deal value on closed sales &amp; JVs — the core engine.</p></div></div>
-      <div className="stream"><span className="n">02</span><div><h4>Listing &amp; Featured Placement</h4><p>Paid featured slots, priority listing for sellers/developers.</p></div></div>
-      <div className="stream"><span className="n">03</span><div><h4>Consultation &amp; Risk Reports</h4><p>Paid spatial-intelligence &amp; diligence reports (TalkingLands-style coin/report model).</p></div></div>
-      <div className="stream"><span className="n">04</span><div><h4>Immersive Media Services</h4><p>Drone shoots, 360° tours &amp; brochures for landowners/developers.</p></div></div>
-      <div className="stream"><span className="n">05</span><div><h4>Enterprise / Broker Tools</h4><p>SaaS subscriptions for developers &amp; brokers (pipeline, microsites).</p></div></div>
-      <div className="stream"><span className="n">06</span><div><h4>Financing Partnerships</h4><p>Referral fees from banks/NBFCs for land &amp; project loans.</p></div></div>
+      <div className="stream"><span className="n">01</span><div><h4>Freemium → Premium Subscription</h4><p>Free browse, paid premium for unlimited contacts, 150+ layers, alerts. ₹2K/qtr, ₹5K/yr.</p></div></div>
+      <div className="stream"><span className="n">02</span><div><h4>AI Property Reports</h4><p>Pay-per-report spatial intelligence from ₹100. Deep analysis reports at ₹2,500.</p></div></div>
+      <div className="stream"><span className="n">03</span><div><h4>Transaction Commission</h4><p>1–2% on facilitated deals — sales, JVs, leases. Hand-holding service for complex deals.</p></div></div>
+      <div className="stream"><span className="n">04</span><div><h4>Featured Listings</h4><p>Paid premium placement for sellers & developers. ₹5K–₹25K/month.</p></div></div>
+      <div className="stream"><span className="n">05</span><div><h4>Enterprise SaaS (Realm + Reos)</h4><p>Monthly subscriptions for land acquisition pipeline & developer OS. ₹50K–₹5L/month.</p></div></div>
+      <div className="stream"><span className="n">06</span><div><h4>Bhumi Certified™ Verification</h4><p>Premium 3-tier verification service. ₹5K–₹25K per parcel for full legal due diligence.</p></div></div>
+      <div className="stream"><span className="n">07</span><div><h4>Financing & Legal Referrals</h4><p>Referral commissions from bank/NBFC partners + legal service partnerships.</p></div></div>
     </div>
   </div>
 </section>
@@ -569,7 +549,7 @@ export default function BlueprintPage() {
     <div className="sec-head">
       <div>
         <div className="sec-num">10 — ROADMAP</div>
-        <h2 className="sec-title serif">From MVP to market leader, in four phases.</h2>
+        <h2 className="sec-title serif">From MVP to market leader, in five phases.</h2>
       </div>
       <p className="sec-sub">Ship a credible MVP fast, then layer intelligence, monetization, and scale.</p>
     </div>
@@ -577,27 +557,33 @@ export default function BlueprintPage() {
       <div className="timeline">
         <div className="phase">
           <div className="when">PHASE 1 · MONTHS 0–3</div>
-          <h4>Foundation MVP</h4>
-          <p>Brand &amp; design system, public marketplace (search, filter, grid, detail pages), admin CRUD + login, and lead capture via WhatsApp/email.</p>
-          <div className="deliver"><span>Marketplace</span><span>Admin CRUD</span><span>Auth</span><span>30 seed listings</span></div>
+          <h4>Foundation MVP — Bhumi Discover</h4>
+          <p>Launch marketplace with verified listings, admin CRUD, map view, lead capture. 50 seed parcels across 4 Bengaluru corridors. Premium subscription launch.</p>
+          <div className="deliver"><span>Marketplace</span><span>Admin</span><span>Map View</span><span>50 listings</span><span>Premium</span></div>
         </div>
         <div className="phase">
           <div className="when">PHASE 2 · MONTHS 3–6</div>
-          <h4>Map &amp; Media Layer</h4>
-          <p>Interactive map with pins &amp; draw-to-search, drone/360 media embedding, document downloads, and a richer detail experience.</p>
-          <div className="deliver"><span>Mapbox</span><span>Drone tours</span><span>Docs</span><span>100+ listings</span></div>
+          <h4>Intelligence Layer — Bhumi Insights</h4>
+          <p>AI-powered property reports. 50+ data layers. Drone/360° media. Featured listings. Bhumi Certified™ verification. 200+ parcels.</p>
+          <div className="deliver"><span>Bhumi Insights</span><span>AI Reports</span><span>50+ layers</span><span>Certified™</span><span>200 listings</span></div>
         </div>
         <div className="phase">
           <div className="when">PHASE 3 · MONTHS 6–10</div>
-          <h4>Spatial Intelligence</h4>
-          <p>Growth corridors, risk flags, connectivity scores, price-trend charts, and paid intelligence reports — the key differentiator.</p>
-          <div className="deliver"><span>Risk flags</span><span>Growth intel</span><span>Paid reports</span><span>150 layers</span></div>
+          <h4>Enterprise Suite — Bhumi Realm + Mobile</h4>
+          <p>Enterprise land acquisition pipeline. Mobile app with offline maps. 150+ data layers. Developer tools (JD calculator). Hyderabad expansion.</p>
+          <div className="deliver"><span>Bhumi Realm</span><span>Mobile App</span><span>150+ layers</span><span>JD tools</span><span>Hyderabad</span></div>
         </div>
         <div className="phase">
-          <div className="when">PHASE 4 · MONTHS 10–18</div>
-          <h4>Scale &amp; Ecosystem</h4>
-          <p>Mobile app, broker/enterprise SaaS, project microsites, financing partnerships, and expansion to neighbouring metros.</p>
-          <div className="deliver"><span>Mobile app</span><span>SaaS</span><span>Multi-city</span></div>
+          <div className="when">PHASE 4 · MONTHS 10–15</div>
+          <h4>Multi-City — Bhumi Reos</h4>
+          <p>Developer OS launch. Pune &amp; Chennai expansion. Financing partnerships. Broker network platform. API marketplace.</p>
+          <div className="deliver"><span>Bhumi Reos</span><span>Pune</span><span>Chennai</span><span>Financing</span><span>API</span></div>
+        </div>
+        <div className="phase">
+          <div className="when">PHASE 5 · MONTHS 15–24</div>
+          <h4>Pan-India + Ecosystem</h4>
+          <p>10+ cities. Managed farmland vertical. AI valuation tool. REIT partnerships. Series A fundraise.</p>
+          <div className="deliver"><span>10+ cities</span><span>Farmland</span><span>AI valuation</span><span>Series A</span></div>
         </div>
       </div>
       <div>
@@ -658,9 +644,9 @@ export default function BlueprintPage() {
   <div className="wrap">
     <div className="grid">
       <div>
-        <a href="/" className="brand"><span className="mark">ಭೂ</span><span style={{ color: '#fff' }}>Bhūmī<small>Bengaluru Land Exchange</small></span></a>
-        <p style={{ maxWidth: '34ch', fontSize: '.88rem', marginTop: '6px' }}>A world-class blueprint for a premium large-parcel land marketplace focused on Bengaluru — marketplace + admin, intelligence-rich and trust-first.</p>
-        <p className="mono" style={{ color: 'var(--gold-soft)', marginTop: '14px' }}>Blueprint v1.0 · 2026</p>
+        <a href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}><Logo variant="icon" theme="dark" style={{ transform: 'scale(0.8)' }} /><span style={{ color: '#fff' }}>Bhumi Estates<small>India's Spatial Land Intelligence Platform</small></span></a>
+        <p style={{ maxWidth: '34ch', fontSize: '.88rem', marginTop: '6px' }}>A world-class blueprint for India's most trusted spatial-intelligence-first land platform — combining marketplace reach, AI intelligence, and enterprise tools.</p>
+        <p className="mono" style={{ color: 'var(--gold-soft)', marginTop: '14px' }}>Blueprint v2.0 · 2026</p>
       </div>
       <div><h5>Blueprint</h5><a href="#summary">Summary</a><a href="#brand">Brand</a><a href="#design">Design System</a><a href="#data">Data Model</a><a href="#stack">Tech Stack</a></div>
       <div><h5>Prototypes</h5><a href="/marketplace" target="_blank">Marketplace</a><a href="/admin/login" target="_blank">Admin Dashboard</a></div>

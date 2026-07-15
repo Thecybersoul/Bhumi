@@ -1,10 +1,10 @@
-# ಭೂ Bhūmī — Bengaluru Land Exchange
+# ಭೂ Bhumi Estates — India's Spatial Land Intelligence Platform
 
-A world-class marketplace & admin platform for **large land parcels in and around Bengaluru** — purpose-built for villa & apartment townships, industries, resorts, agriculture, and strategic land-banking.
+A spatial-intelligence-first land platform combining a **verified land marketplace** with **AI-powered spatial intelligence**, **enterprise tools**, and a **3-tier verification system** — launching in Bengaluru, scaling pan-India.
 
-> **Find it. Understand it. Own it — with full clarity.**
+> **Discover. Analyze. Own — with full spatial intelligence.**
 
-This repository contains a complete, production-ready **static front-end** package: an interactive marketplace prototype, a login-protected admin dashboard, a plain-English founder's brief, and a full strategic + technical blueprint.
+This repository contains a production-ready **Next.js** application: an interactive marketplace prototype, a login-protected admin dashboard, a comprehensive feasibility plan, and a full strategic + technical blueprint. Inspired by the best of [1acre.in](https://1acre.in) and [TalkingLands](https://talkinglands.com).
 
 ---
 
@@ -98,7 +98,7 @@ The admin dashboard (`prototype/admin.html`) ships with demo credentials **pre-f
 
 | Field | Value |
 |---|---|
-| Email | `admin@bhumi.land` |
+| Email | `admin@bhumiestates.com` |
 | Password | `bhumi2026` |
 
 > ⚠️ This is a front-end-only demo. There is **no real backend or authentication** — the login is simulated in JavaScript. Before going live, wire it to a real auth provider and API (see the Blueprint's tech-stack section).
@@ -123,4 +123,4 @@ MIT — see [LICENSE](LICENSE). Free to use, modify, and deploy.
 
 ---
 
-*Bengaluru · India · 2026 — Bhūmī v1.0*
+*Bengaluru · India · 2026 — Bhumi Estates v2.0 · bhumiestates.com*

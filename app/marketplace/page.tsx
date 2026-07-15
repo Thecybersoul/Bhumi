@@ -4,7 +4,9 @@ import { Property } from '@/lib/types'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDrawer from '@/components/PropertyDrawer'
 import SellFormModal from '@/components/SellFormModal'
+import Link from 'next/link'
 import Footer from '@/components/Footer'
+import Logo from '@/components/Logo'
 import styles from './marketplace.module.css'
 
 const SEGMENTS = ['Residential', 'Commercial', 'Industrial', 'Agricultural']
@@ -77,10 +79,10 @@ export default function MarketplacePage() {
       {/* Topbar */}
       <header className="topbar">
         <div className={`wrap topbar-inner`}>
-          <a href="/" className="brand">
-            <span className="mark">ಭೂ</span>
-            <span>Bhūmī<small>Bengaluru Land Exchange</small></span>
-          </a>
+          <Link href="/" className="brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+            <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
+            <span>Bhumi Estates<small>BENGALURU LAND EXCHANGE</small></span>
+          </Link>
           <nav className="topbar-nav">
             <button className="btn btn-ghost" onClick={() => setSellModalOpen(true)}>
               List Your Land

@@ -1,15 +1,19 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import WhatsAppFloat from '@/components/WhatsAppFloat'
 
 export const metadata: Metadata = {
-  title: 'Bhūmī — Bengaluru Land Exchange',
-  description: 'Premium marketplace for large land parcels in and around Bengaluru.',
+  title: 'Bhumi Estates — India\'s Spatial Land Intelligence Platform',
+  description: 'Premium verified marketplace for large land parcels across India.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <WhatsAppFloat />
+      </body>
     </html>
   )
 }

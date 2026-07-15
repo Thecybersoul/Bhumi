@@ -1,14 +1,16 @@
+import Link from 'next/link'
 import Footer from '@/components/Footer'
+import Logo from '@/components/Logo'
 
 export default function PrivacyPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#fdfbf7' }}>
       <header className="topbar">
         <div className="wrap topbar-inner">
-          <a href="/" className="brand">
-            <span className="mark">ಭೂ</span>
-            <span>Bhūmī<small>Bengaluru Land Exchange</small></span>
-          </a>
+          <Link href="/" className="brand" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}>
+            <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
+            <span>Bhumi Estates<small>BENGALURU LAND EXCHANGE</small></span>
+          </Link>
         </div>
       </header>
 

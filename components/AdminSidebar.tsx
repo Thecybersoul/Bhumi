@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import styles from '@/app/admin/(authenticated)/dashboard/dashboard.module.css'
+import Logo from './Logo'
 
 export default function AdminSidebar({ onClose }: { onClose?: () => void }) {
   const router = useRouter()
@@ -20,8 +21,8 @@ export default function AdminSidebar({ onClose }: { onClose?: () => void }) {
   return (
     <>
       <Link href="/" className={styles.sbrand}>
-        <span className="mark" style={{width: 32, height: 32}}>ಭೂ</span>
-        <span>Bhūmī <small>ADMIN</small></span>
+        <Logo variant="icon" theme="light" style={{ transform: 'scale(0.8)' }} />
+        <span>Bhumi Estates <small>ADMIN</small></span>
       </Link>
 
       <nav className={styles.sidenav}>
@@ -34,12 +35,12 @@ export default function AdminSidebar({ onClose }: { onClose?: () => void }) {
           <span>Dashboard</span>
         </Link>
         <Link
-          href="/admin/vision"
+          href="/admin/feasibility"
           onClick={handleNavClick}
-          className={`${styles.navItem} ${pathname === '/admin/vision' ? styles.navItemActive : ''}`}
+          className={`${styles.navItem} ${pathname === '/admin/feasibility' ? styles.navItemActive : ''}`}
         >
-          <span>👁</span>
-          <span>Vision Brief</span>
+          <span>📊</span>
+          <span>Feasibility Plan</span>
         </Link>
         <Link
           href="/admin/blueprint"
