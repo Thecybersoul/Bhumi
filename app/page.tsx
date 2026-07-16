@@ -36,9 +36,6 @@ export default async function Home() {
 
       <div className={styles.hero} id="top">
         <div className="wrap" style={{ position: 'relative', zIndex: 2 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: '100px', backdropFilter: 'blur(10px)', marginBottom: '30px', border: '1px solid rgba(255,255,255,0.2)' }}>
-              <Logo theme="dark" style={{ height: '28px' }} />
-            </div>
           <div className={styles.eyebrow} style={{ marginTop: '24px' }}>
             <span className={styles.dot}></span> Premium Land Marketplace · Bengaluru
           </div>
