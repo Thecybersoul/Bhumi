@@ -1,8 +1,16 @@
 'use client'
 
 import React from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function WhatsAppFloat() {
+  const pathname = usePathname()
+  
+  // Do not show on admin dashboard
+  if (pathname?.startsWith('/admin')) {
+    return null
+  }
+
   const phoneNumber = '918123845749'
   const message = 'Hello! I am interested in exploring properties with Bhumi Estates.'
 

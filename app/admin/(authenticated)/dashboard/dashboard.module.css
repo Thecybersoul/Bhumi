@@ -17,23 +17,15 @@
   transition: transform 0.3s ease;
 }
 
-.mobileToggle {
+.mobileTopbar {
   display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: var(--green);
-  color: #fff;
+}
+.mobileMenuBtn {
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  color: #fff;
   font-size: 1.5rem;
-  z-index: 101;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   cursor: pointer;
-  align-items: center;
-  justify-content: center;
 }
 
 .overlay {
@@ -56,8 +48,16 @@
     transform: translateX(0);
     box-shadow: 2px 0 20px rgba(0,0,0,0.15);
   }
-  .mobileToggle {
+  .mobileTopbar {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--green);
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   }
   .overlayOpen {
     display: block;

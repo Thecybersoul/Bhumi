@@ -71,6 +71,10 @@ img { max-width: 100%; display: block; }
 .btn-ghost:hover { border-color: var(--green); color: var(--green); }
 .btn-danger { background: #fdf0ee; border-color: #f3d0cb; color: #c0392b; }
 .btn-danger:hover { background: #fce2de; }
+.btn-outline { background: transparent; border-color: rgba(0,0,0,0.15); color: var(--ink); }
+.btn-outline:hover { border-color: var(--ink); color: var(--ink); }
+.btn-outline-light { background: transparent; border-color: rgba(255,255,255,0.4); color: #fff; }
+.btn-outline-light:hover { background: rgba(255,255,255,0.1); border-color: #fff; color: #fff; }
 .btn-sm { padding: 6px 12px; font-size: .78rem; border-radius: 8px; }
 .btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 8px; }
 

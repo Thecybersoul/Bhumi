@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import AdminSidebar from '@/components/AdminSidebar'
+import Logo from '@/components/Logo'
 import styles from '@/app/admin/(authenticated)/dashboard/dashboard.module.css'
 
 export default function AuthenticatedAdminLayout({ children }: { children: React.ReactNode }) {
@@ -21,16 +22,20 @@ export default function AuthenticatedAdminLayout({ children }: { children: React
       </div>
 
       <main className={styles.main}>
+        {/* Mobile Topbar */}
+        <div className={styles.mobileTopbar}>
+          <Logo variant="horizontal" theme="light" style={{ height: '32px' }} />
+          <button 
+            className={styles.mobileMenuBtn} 
+            onClick={() => setIsSidebarOpen(true)}
+            aria-label="Open Menu"
+          >
+            ☰
+          </button>
+        </div>
+
         {children}
       </main>
-
-      {/* Mobile Toggle Button */}
-      <button 
-        className={styles.mobileToggle} 
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-      >
-        {isSidebarOpen ? '✕' : '☰'}
-      </button>
     </div>
   )
 }

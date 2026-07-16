@@ -49,7 +49,7 @@ export default async function Home() {
           </p>
           <div className={styles.cta}>
             <Link className="btn btn-gold" href="/marketplace">Explore the Marketplace →</Link>
-            <a href="tel:+918123845749" className="btn btn-outline" style={{ background: '#fff', marginLeft: '12px' }}>Call expert</a>
+            <a href="tel:+918123845749" className="btn btn-outline-light">Call expert</a>
           </div>
           
           <div className={styles.heroStats}>

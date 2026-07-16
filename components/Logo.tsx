@@ -14,13 +14,15 @@ interface LogoProps {
 export default function Logo({ variant = 'horizontal', className = '', style, theme = 'light' }: LogoProps) {
   const isDark = theme === 'dark'
   
-  // Use the cropped high-res images we generated with Pillow
-  const logoSrc = isDark ? "/img/logos/logo_dark_cropped.png" : "/img/logos/logo_light_cropped.png"
+  let variantName = variant
+  if (variant === 'stacked') {
+    variantName = 'primary' as any
+  }
 
-  // Since the user's PDF contains the entire logo (icon + text), we just render the image itself.
-  // We don't render HTML text next to it because it would look duplicated and ridiculous.
+  const logoSrc = `/img/logos/bhumi-estates-${variantName}-${theme}.svg`
+
   return (
-    <div className={`logo-wrapper ${className}`} style={{ display: 'inline-flex', alignItems: 'center', height: '48px', ...style }}>
+    <div className={`logo-wrapper logo-${variant} ${className}`} style={{ display: 'inline-flex', alignItems: 'center', height: '100%', ...style }}>
       <img 
         src={logoSrc} 
         alt="Bhumi Estates Logo" 
