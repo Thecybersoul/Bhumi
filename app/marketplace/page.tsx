@@ -7,6 +7,7 @@ import SellFormModal from '@/components/SellFormModal'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 import Logo from '@/components/Logo'
+import { intelBanner } from '@/lib/copy/marketplace'
 import styles from './marketplace.module.css'
 
 const SEGMENTS = ['Residential', 'Commercial', 'Industrial', 'Agricultural']
@@ -204,8 +205,9 @@ export default function MarketplacePage() {
         {/* Main content */}
         <main className={styles.main}>
           <div className={styles.insightsBanner}>
-            <div className={styles.insightsTitle}>Market Intelligence</div>
-            <p><strong>78%</strong> of new large-scale developments in North Bengaluru are currently zoned for logistics and industrial parks. Prices in the Devanahalli corridor have appreciated 14% YoY.</p>
+            <div className={styles.insightsTitle}>{intelBanner.eyebrow}</div>
+            <p>{intelBanner.body}</p>
+            <div style={{ fontSize: '.74rem', color: 'var(--muted)', marginTop: 10 }}>{intelBanner.source}</div>
           </div>
           
           {loading ? (

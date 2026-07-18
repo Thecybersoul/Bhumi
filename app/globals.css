@@ -227,9 +227,21 @@ img { max-width: 100%; display: block; }
 .data-table .actions { display: flex; gap: 6px; }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .featuredGrid { grid-template-columns: repeat(2, 1fr) !important; }
+  .feature-row { grid-template-columns: 1fr !important; gap: 32px !important; }
+}
 @media (max-width: 768px) {
   .wrap { padding: 0 18px; }
   .form-grid { grid-template-columns: 1fr; }
   .form-grid.cols3 { grid-template-columns: 1fr; }
   .form-group.span2, .form-group.span3 { grid-column: span 1; }
+  .featuredGrid { grid-template-columns: 1fr !important; }
+  .feature-row { grid-template-columns: 1fr !important; gap: 24px !important; }
 }
+
+/* Phase 1 utilities (home sections) */
+.tool-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.06); border-color: var(--green); }
+.city-pill:hover { border-color: var(--green) !important; color: var(--green) !important; background: #f7f3e8 !important; }
+details[open] summary span { transform: rotate(45deg); }
+details summary::-webkit-details-marker { display: none; }

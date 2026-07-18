@@ -1,126 +1,136 @@
-# ಭೂ Bhumi Estates — India's Spatial Land Intelligence Platform
+# ಭೂ Bhūmī Estates — Bengaluru's Verified Land Marketplace
 
-A spatial-intelligence-first land platform combining a **verified land marketplace** with **AI-powered spatial intelligence**, **enterprise tools**, and a **3-tier verification system** — launching in Bengaluru, scaling pan-India.
+A Next.js 16 + Supabase application that combines a verified land marketplace with spatial intelligence, a 9-point verification standard, and a content-led insights channel — built for serious land buyers in Bengaluru.
 
 > **Discover. Analyze. Own — with full spatial intelligence.**
 
-This repository contains a production-ready **Next.js** application: an interactive marketplace prototype, a login-protected admin dashboard, a comprehensive feasibility plan, and a full strategic + technical blueprint. Inspired by the best of [1acre.in](https://1acre.in) and [TalkingLands](https://talkinglands.com).
+---
+
+## Stack
+
+- **Framework**: Next.js 16 (App Router, Turbopack, React 19)
+- **Database**: Supabase (Postgres + Row Level Security)
+- **Styling**: CSS Modules + design tokens in `app/globals.css` (green / gold / cream, Fraunces + Inter)
+- **Auth**: Cookie-based admin session (`/admin/login`)
+- **Hosting**: Vercel-ready (`vercel.json` included) or Netlify (`netlify.toml`)
 
 ---
 
-## 📦 What's inside
+## Quick start
 
-```
-bhumi-platform/
-├── index.html              # Root landing page (entry point) — links to everything
-├── founders-brief.html     # Plain-English vision document for the founding team
-├── blueprint.html          # Full strategic & technical blueprint
-├── prototype/
-│   ├── marketplace.html    # Public marketplace (search, filter, map, detail drawer)
-│   ├── admin.html          # Admin dashboard (login + CRUD + leads + analytics)
-│   └── img/                # Generated hero & property imagery (.jpg)
-├── README.md               # This file
-├── LICENSE                 # MIT
-├── .gitignore
-├── package.json            # Optional: local dev server helper
-├── vercel.json             # Deploy config for Vercel
-└── netlify.toml            # Deploy config for Netlify
-```
-
-| Deliverable | What it is | How to open |
-|---|---|---|
-| **Marketplace** | Interactive buyer site with sample inventory | `prototype/marketplace.html` |
-| **Admin Dashboard** | Login-protected console (demo creds pre-filled) | `prototype/admin.html` |
-| **Executive Brief** | The strategic vision and market opportunity brief | `founders-brief.html` |
-| **Blueprint** | Brand, design system, data model, tech, roadmap | `blueprint.html` |
-
----
-
-## 🚀 Quick start (run locally)
-
-This is a **static site** — no build step required. Pick any one option:
-
-### Option A — just open it
-Double-click `index.html`, or open it in your browser.
-
-### Option B — local server (recommended, so relative paths & images behave)
-```bash
-# Python 3 (pre-installed on most systems)
-python3 -m http.server 8080
-
-# or Node
-npx serve .
-```
-Then visit **http://localhost:8080**.
-
-### Option C — npm script
 ```bash
 npm install
+npm run dev
+# open http://localhost:3000
+```
+
+Build:
+```bash
+npm run build
 npm start
 ```
 
----
+### Environment
 
-## 🌐 Deploy
-
-Because it's 100% static HTML/CSS/JS, it deploys anywhere. Two one-click options:
-
-### Vercel
-1. Push this repo to GitHub.
-2. Go to [vercel.com/new](https://vercel.com/new) → import the repo.
-3. Framework preset: **Other** · Build command: *(none)* · Output dir: *(root)*.
-4. Deploy. (`vercel.json` is included for sane defaults.)
-
-…or CLI:
-```bash
-npm i -g vercel
-vercel
+Copy `.env.example` to `.env.local` and fill in:
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...   # for admin / service fetches only
 ```
 
-### Netlify
-1. Push to GitHub.
-2. [app.netlify.com](https://app.netlify.com) → "Add new site" → "Import from Git".
-3. Build command: *(leave empty)* · Publish directory: *(root)*.
-4. Deploy. (`netlify.toml` is included.)
+---
 
-…or drag-and-drop: zip the folder and drop it into Netlify's manual deploy.
+## Project structure
 
-### GitHub Pages
-1. Push to GitHub.
-2. Settings → Pages → Source: `main` branch / root.
-3. Save. Live at `https://<user>.github.io/<repo>/`.
+```
+app/
+  page.tsx                       # Homepage
+  marketplace/                   # Public marketplace (list + filters + drawer)
+  insights/                      # Insights index + [slug] (Phase 3)
+  admin/                         # Admin dashboard (login-gated)
+  privacy/  terms/               # Legal pages
+  api/                           # Route handlers
+components/
+  home/                          # One component per homepage section
+  marketplace/                   # PropertyCard, PropertyDrawer, etc.
+  admin/                         # AdminShell, StatTile
+lib/
+  supabase.ts                    # createServiceClient / createBrowserClient
+  types.ts                       # Property, Enquiry, Insight
+  copy/                          # All visible copy in one place
+  geo.ts                         # Map helpers (Phase 2)
+  auth.ts                        # assertAdmin() helper (Phase 4)
+supabase/
+  schema.sql                     # Initial schema + 7 seed properties
+  migrations/                    # Phase 2+ migrations
+```
 
 ---
 
-## 🔐 Admin demo login
+## Public site
 
-The admin dashboard (`prototype/admin.html`) ships with demo credentials **pre-filled** — just click **Sign in**:
+- `/` — Home (hero, city pills, KPI strip, 3 feature rows, trust strip, featured parcels, tools, testimonials, FAQ, insights teaser)
+- `/marketplace` — Filterable, searchable, drawer-based marketplace
+- `/insights` — Insight index (Phase 3) + `/insights/[slug]`
+- `/privacy`, `/terms` — Legal
+- `/tools/survey-lookup`, `/tools/price-estimator`, `/tools/land-evaluator` — Free land tools (Phase 4)
 
-| Field | Value |
-|---|---|
-| Email | `admin@bhumiestates.com` |
-| Password | `bhumi2026` |
+## Admin
 
-> ⚠️ This is a front-end-only demo. There is **no real backend or authentication** — the login is simulated in JavaScript. Before going live, wire it to a real auth provider and API (see the Blueprint's tech-stack section).
+Login at `/admin/login`. Demo credentials are pre-filled on the form. Admin is gated by a cookie session set by `POST /api/admin/login`.
 
----
-
-## 🛠 Tech notes
-
-- **No dependencies, no build step.** Plain HTML + CSS + vanilla JS.
-- Fonts load from Google Fonts CDN (requires internet; falls back gracefully).
-- Images are bundled locally in `prototype/img/`.
-- Sample property & lead data lives inline in each prototype's `<script>`.
-- Fully responsive (mobile, tablet, desktop).
-
-To turn this into a real product, see the **Blueprint** (`blueprint.html`) → "Tech Stack & Architecture" for the recommended Next.js + Postgres/PostGIS + Mapbox stack.
+Once logged in:
+- `/admin/dashboard` — Stats + recent enquiries + pending verifications
+- `/admin/properties` — CRUD properties
+- `/admin/insights` — Author/insight pages (Phase 4)
+- `/admin/blueprint`, `/admin/feasibility`, `/admin/vision` — Strategic documents
 
 ---
 
-## 📝 License
+## Database
 
-MIT — see [LICENSE](LICENSE). Free to use, modify, and deploy.
+Schema lives in `supabase/schema.sql`. It seeds 7 Bengaluru parcels with real-world location, pricing, and verification metadata.
+
+Phase 2 adds:
+- `lat` / `lng` on `properties` (centroid coordinates for the map)
+- `gallery_urls`, `verified_tier`, `appreciation_5yr_pct`, `nearby_infra`, `video_url`
+- `market_stats` table for the homepage + marketplace KPI strip
+
+Phase 3 adds the `insights` table.
+
+Run migrations in the Supabase SQL editor, in order: `schema.sql` → `migrations/002_redesign.sql` → `migrations/003_insights.sql`.
 
 ---
 
-*Bengaluru · India · 2026 — Bhumi Estates v2.0 · bhumiestates.com*
+## Design tokens
+
+| Token | Value | Use |
+|---|---|---|
+| `--green` | `#0E3B2E` | Primary brand, headings on light, primary CTA |
+| `--gold` | `#C2974A` | Accent, eyebrows, hover, secondary CTA |
+| `--cream` | `#F6F3EC` | Page background |
+| `--ink` | `#10231B` | Body text |
+| `--serif` | Fraunces | Display, headlines, big numerals |
+| `--sans` | Inter | UI, body, captions |
+
+Add new utility classes to `app/globals.css`. Do **not** rename or recolour existing tokens.
+
+---
+
+## Deploy
+
+**Vercel**
+```bash
+vercel
+```
+Set the three Supabase env vars in the Vercel project settings.
+
+**Netlify**
+Connect the repo, set the build command to `npm run build` and the publish directory to `.next`. Set the env vars in the Netlify dashboard.
+
+---
+
+## License
+
+MIT — see `LICENSE`.
