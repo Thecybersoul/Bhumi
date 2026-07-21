@@ -50,7 +50,7 @@ export default function FeasibilityPage() {
       <div className="card">
         <div className="ico">◆</div>
         <h3>The Problem</h3>
-        <p>Large-parcel buyers waste weeks hunting across brokers, WhatsApp groups, and vague listings. 90%+ of India's $300B annual land transactions happen offline with zero data transparency.</p>
+        <p>Large-parcel buyers waste weeks hunting across agents, WhatsApp groups, and vague listings. 90%+ of India's $300B annual land transactions happen offline with zero data transparency.</p>
       </div>
       <div className="card">
         <div className="ico">✦</div>
@@ -80,7 +80,7 @@ export default function FeasibilityPage() {
   <div className="wrap">
     <span className="sec-tag">02 · Market Opportunity</span>
     <h2 className="big">A <em>$300 billion</em> market waiting to be organized.</h2>
-    <p className="body">India's land market is one of the largest unorganized markets in the world. While residential real estate has been transformed by platforms like MagicBricks, 99acres, and NoBroker — the raw land segment remains stuck in the broker-and-WhatsApp era.</p>
+    <p className="body">India's land market is one of the largest unorganized markets in the world. While residential real estate has been transformed by platforms like MagicBricks, 99acres, and Noagents — the raw land segment remains stuck in the agents-and-WhatsApp era.</p>
 
     <div className="grid g2" style={{ marginTop: '28px' }}>
       <div className="card">
@@ -243,7 +243,7 @@ export default function FeasibilityPage() {
           <li><span className="c" style={{ color: 'var(--moss)' }}>→</span>Live booking dashboard & transaction ledger</li>
           <li><span className="c" style={{ color: 'var(--moss)' }}>→</span>Auto-generated project microsites with map integration</li>
           <li><span className="c" style={{ color: 'var(--moss)' }}>→</span>Inventory management with unit-level tracking</li>
-          <li><span className="c" style={{ color: 'var(--moss)' }}>→</span>CRM for broker channel management</li>
+          <li><span className="c" style={{ color: 'var(--moss)' }}>→</span>CRM for agents channel management</li>
           <li><span className="c" style={{ color: 'var(--moss)' }}>→</span>Payment gateway integration (Razorpay)</li>
           <li><span className="c" style={{ color: 'var(--moss)' }}>→</span>Analytics: views, enquiries, conversion, inventory health</li>
         </ul>
@@ -259,7 +259,7 @@ export default function FeasibilityPage() {
   <div className="wrap">
     <span className="sec-tag">05 · Revenue Model</span>
     <h2 className="big">Seven streams — <em>multiple, reinforcing</em> revenue engines.</h2>
-    <p className="body">We combine 1acre.in's subscription model with TalkingLands' report + enterprise SaaS model, plus traditional brokerage — creating a diversified, resilient revenue architecture.</p>
+    <p className="body">We combine 1acre.in's subscription model with TalkingLands' report + enterprise SaaS model, plus traditional agency — creating a diversified, resilient revenue architecture.</p>
 
     <div className="grid" style={{ gap: '14px', marginTop: '24px' }}>
       <div className="stream">
@@ -357,7 +357,7 @@ export default function FeasibilityPage() {
       </div>
       <div className="card">
         <h3>Data Acquisition Strategy</h3>
-        <p>Government open data (CDP/RMP masterplans, revenue records), ISRO satellite imagery, OpenStreetMap, proprietary drone surveys, crowd-sourced broker data, and partnerships with municipal authorities for zoning and buffer data.</p>
+        <p>Government open data (CDP/RMP masterplans, revenue records), ISRO satellite imagery, OpenStreetMap, proprietary drone surveys, crowd-sourced agents data, and partnerships with municipal authorities for zoning and buffer data.</p>
       </div>
     </div>
   </div>
@@ -479,7 +479,7 @@ export default function FeasibilityPage() {
           <div className="gtm-card"><div className="emoji">🤝</div><div><h4>Developer Partnerships</h4><p>Onboard 5 institutional developers on Bhumi Realm. Each brings 20-50 parcels into pipeline.</p></div></div>
           <div className="gtm-card"><div className="emoji">📝</div><div><h4>Content & SEO</h4><p>Corridor analysis reports, investment guides, market trend blogs. SEO for "land near [location]" queries.</p></div></div>
           <div className="gtm-card"><div className="emoji">🌐</div><div><h4>NRI Targeting</h4><p>Digital campaigns targeting Indian diaspora in US, UAE, Singapore. Virtual site tours + hand-holding service.</p></div></div>
-          <div className="gtm-card"><div className="emoji">🏘</div><div><h4>Broker Network Activation</h4><p>Onboard top 50 land brokers per city. Free listing tools + commission structure for facilitated deals.</p></div></div>
+          <div className="gtm-card"><div className="emoji">🏘</div><div><h4>agents Network Activation</h4><p>Onboard top 50 land agents per city. Free listing tools + commission structure for facilitated deals.</p></div></div>
           <div className="gtm-card"><div className="emoji">📺</div><div><h4>YouTube & Social</h4><p>Land investment education content, drone tours, corridor deep-dives. Build authority and trust.</p></div></div>
         </div>
       </div>
@@ -572,7 +572,7 @@ export default function FeasibilityPage() {
       <div className="phase">
         <div className="when">PHASE 4 · MONTHS 10–15</div>
         <h4>Multi-city + Bhumi Reos</h4>
-        <p>Launch Bhumi Reos (developer OS). Expand to Pune and Chennai. Financing partnerships with banks/NBFCs. Broker network platform. API marketplace for data layers.</p>
+        <p>Launch Bhumi Reos (developer OS). Expand to Pune and Chennai. Financing partnerships with banks/NBFCs. agents network platform. API marketplace for data layers.</p>
         <div className="deliver"><span>Bhumi Reos</span><span>Pune</span><span>Chennai</span><span>Financing</span><span>API</span></div>
       </div>
       <div className="phase">
@@ -596,7 +596,7 @@ export default function FeasibilityPage() {
     <div className="risk-grid">
       <div className="risk-row">
         <div><h4>Inventory cold-start</h4></div>
-        <div><p>Mitigate with own/known inventory first, WhatsApp-first seller onboarding (zero friction), and broker network partnerships for immediate liquidity.</p></div>
+        <div><p>Mitigate with own/known inventory first, WhatsApp-first seller onboarding (zero friction), and agents network partnerships for immediate liquidity.</p></div>
         <div><span className="risk-level risk-med">Medium</span></div>
       </div>
       <div className="risk-row">
@@ -645,7 +645,7 @@ export default function FeasibilityPage() {
       <div className="team-card"><div className="emoji">✅</div><h4>Verification Lead</h4><p>On-ground verification, legal coordination, quality</p></div>
       <div className="team-card"><div className="emoji">🎨</div><h4>Product Designer</h4><p>UI/UX, design system, marketplace & enterprise UX</p></div>
       <div className="team-card"><div className="emoji">📈</div><h4>Growth / Marketing</h4><p>SEO, content, social, NRI campaigns, brand</p></div>
-      <div className="team-card"><div className="emoji">🤝</div><h4>Field Operations</h4><p>Site visits, drone shoots, broker network management</p></div>
+      <div className="team-card"><div className="emoji">🤝</div><h4>Field Operations</h4><p>Site visits, drone shoots, agents network management</p></div>
       <div className="team-card"><div className="emoji">⚖</div><h4>Legal Advisor</h4><p>Title opinions, RERA compliance, DPDP, contracts</p></div>
     </div>
   </div>

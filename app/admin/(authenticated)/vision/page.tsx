@@ -36,11 +36,11 @@ export default function VisionPage() {
   <div className="wrap">
     <span className="sec-tag">01 · The one idea</span>
     <h2 className="big">We are building the <em>most trusted place</em> to buy &amp; sell large land in Bengaluru.</h2>
-    <p className="body">Today, finding a large plot of land in Bengaluru — for a villa project, a factory, a resort, a farm, or just as an investment — is messy. Buyers waste weeks jumping between brokers, WhatsApp messages, and vague listings that hide more than they reveal.</p>
+    <p className="body">Today, finding a large plot of land in Bengaluru — for a villa project, a factory, a resort, a farm, or just as an investment — is messy. Buyers waste weeks jumping between agents, WhatsApp messages, and vague listings that hide more than they reveal.</p>
     <div style={{ margin: '34px 0' }}>
       <p className="lede">We bring every great parcel of land into one trusted, transparent marketplace — with all the important facts in one place, so a buyer can confidently choose from their screen.</p>
     </div>
-    <p className="body"><strong>That's it.</strong> Be the first place serious land buyers think of, and the easiest place for landowners to be seen. Everything else flows from that.</p>
+    <p className="body"><strong>That's it.</strong> Be the first place serious land buyers think of, and the easiest place for sellers to be seen. Everything else flows from that.</p>
   </div>
 </section>
 <hr className="hr-soft" />
@@ -121,7 +121,7 @@ export default function VisionPage() {
   <div className="wrap">
     <span className="sec-tag">05 · Our promise to every buyer</span>
     <h2 className="big">Every parcel tells the <em>whole story</em>.</h2>
-    <p className="body">This is what makes us different from every broker and listing site. For each piece of land, we don't just post a photo and a price — we answer the questions a buyer would otherwise spend weeks chasing.</p>
+    <p className="body">This is what makes us different from every agents and listing site. For each piece of land, we don't just post a photo and a price — we answer the questions a buyer would otherwise spend weeks chasing.</p>
     <div className="flow">
       <div className="step"><div className="n">WHERE</div><h4>Location</h4><p>Exactly where, what's nearby, how connected</p></div>
       <div className="arrow">→</div>
@@ -147,7 +147,7 @@ export default function VisionPage() {
       <div className="col bad">
         <h4><span className="ic">✕</span> Buying land today</h4>
         <ul>
-          <li><span className="ic">✕</span>Days of calling random brokers</li>
+          <li><span className="ic">✕</span>Days of calling random agents</li>
           <li><span className="ic">✕</span>Vague listings with one photo &amp; no details</li>
           <li><span className="ic">✕</span>No idea if the title is clear or risky</li>
           <li><span className="ic">✕</span>Visiting plots that turn out to be wrong</li>
@@ -178,9 +178,9 @@ export default function VisionPage() {
     <p className="body">The business earns from multiple streams, but most of our money comes from successfully connecting buyers and sellers of land.</p>
     <div className="money">
       <div className="row"><div className="num">01</div><div><h4>Success commission on deals</h4><p>When a deal closes because of us — a sale, a joint venture, a lease — we earn a percentage. This is the heart of the business.</p><span className="pill core">CORE · from day one</span></div></div>
-      <div className="row"><div className="num">02</div><div><h4>Paid featured listings</h4><p>Landowners or developers who want their parcel shown first and highlighted pay for premium placement.</p><span className="pill core">CORE · from day one</span></div></div>
+      <div className="row"><div className="num">02</div><div><h4>Paid featured listings</h4><p>sellers or developers who want their parcel shown first and highlighted pay for premium placement.</p><span className="pill core">CORE · from day one</span></div></div>
       <div className="row"><div className="num">03</div><div><h4>Expert consultation &amp; reports</h4><p>Buyers pay for deep due-diligence — location analysis, risk checks, valuation reports.</p><span className="pill later">LATER · once trust is built</span></div></div>
-      <div className="row"><div className="num">04</div><div><h4>Drone, photo &amp; media services</h4><p>We shoot and create beautiful media (drone tours, brochures) for landowners who want to list well.</p><span className="pill later">LATER · as we grow</span></div></div>
+      <div className="row"><div className="num">04</div><div><h4>Drone, photo &amp; media services</h4><p>We shoot and create beautiful media (drone tours, brochures) for sellers who want to list well.</p><span className="pill later">LATER · as we grow</span></div></div>
       <div className="row"><div className="num">05</div><div><h4>Loan &amp; financing referrals</h4><p>Banks pay us when we connect a buyer to a land or project loan.</p><span className="pill later">LATER · partnerships</span></div></div>
     </div>
   </div>
@@ -207,7 +207,7 @@ export default function VisionPage() {
       </div>
       <div className="ph">
         <div className="when">STEP 4<b>Months 10+</b></div>
-        <div><h4>Scale &amp; expand</h4><p>A mobile app, tools for brokers &amp; developers, and eventually take this model to the next cities.</p></div>
+        <div><h4>Scale &amp; expand</h4><p>A mobile app, tools for agents &amp; developers, and eventually take this model to the next cities.</p></div>
       </div>
     </div>
   </div>
@@ -242,8 +242,8 @@ export default function VisionPage() {
         <div className="opts"><span>Bhūmī ✓</span><span>TerraBengaluru</span><span>Acreage</span><span>Something else</span></div></div>
       <div className="q"><div className="qt">Decision 2</div><h4>Which corridors do we launch with?</h4><p>We can't cover all of Bengaluru on day one. Which 3–4 zones (e.g. Devanahalli, Sarjapur, Hoskote) do we own first?</p>
         <div className="opts"><span>North / Airport</span><span>East / Sarjapur</span><span>South / Kanakapura</span><span>West / Tumkur</span></div></div>
-      <div className="q"><div className="qt">Decision 3</div><h4>Where do our first listings come from?</h4><p>Do we list our own/known inventory, partner with landowners, or recruit broker networks? A mix?</p>
-        <div className="opts"><span>Own inventory</span><span>Landowner partnerships</span><span>Broker network</span><span>Mix of all</span></div></div>
+      <div className="q"><div className="qt">Decision 3</div><h4>Where do our first listings come from?</h4><p>Do we list our own/known inventory, partner with sellers, or recruit agents networks? A mix?</p>
+        <div className="opts"><span>Own inventory</span><span>seller partnerships</span><span>agents network</span><span>Mix of all</span></div></div>
       <div className="q"><div className="qt">Decision 4</div><h4>How aggressive is our commission model?</h4><p>Lower fees to win share early, or premium fees with premium service? What's our pricing philosophy?</p>
         <div className="opts"><span>Win share first</span><span>Premium from start</span><span>Tiered</span></div></div>
       <div className="q"><div className="qt">Decision 5</div><h4>Who builds &amp; runs it?</h4><p>In-house team, an agency, or technical co-founder? This shapes speed, cost and control.</p>

@@ -82,7 +82,7 @@ export default function BlueprintPage() {
       <div className="card">
         <div className="ico">◆</div>
         <h3>The Problem</h3>
-        <p>India's $300B annual land market is 90%+ offline. Buyers waste weeks across brokers and WhatsApp. Existing platforms offer either marketplace reach (1acre.in) OR spatial depth (TalkingLands) — never both together.</p>
+        <p>India's $300B annual land market is 90%+ offline. Buyers waste weeks across agents and WhatsApp. Existing platforms offer either marketplace reach (1acre.in) OR spatial depth (TalkingLands) — never both together.</p>
       </div>
       <div className="card">
         <div className="ico">✦</div>
@@ -575,7 +575,7 @@ export default function BlueprintPage() {
         <div className="phase">
           <div className="when">PHASE 4 · MONTHS 10–15</div>
           <h4>Multi-City — Bhumi Reos</h4>
-          <p>Developer OS launch. Pune &amp; Chennai expansion. Financing partnerships. Broker network platform. API marketplace.</p>
+          <p>Developer OS launch. Pune &amp; Chennai expansion. Financing partnerships. agents network platform. API marketplace.</p>
           <div className="deliver"><span>Bhumi Reos</span><span>Pune</span><span>Chennai</span><span>Financing</span><span>API</span></div>
         </div>
         <div className="phase">

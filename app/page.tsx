@@ -5,11 +5,8 @@ import PropertyCard from '@/components/PropertyCard'
 import Footer from '@/components/Footer'
 import Logo from '@/components/Logo'
 import Hero from '@/components/home/Hero'
-import CityPills from '@/components/home/CityPills'
-import NumbersStrip from '@/components/home/NumbersStrip'
 import FeatureRow from '@/components/home/FeatureRow'
 import TrustStrip from '@/components/home/TrustStrip'
-import ToolsGrid from '@/components/home/ToolsGrid'
 import TestimonialGrid from '@/components/home/TestimonialGrid'
 import Faq from '@/components/home/Faq'
 import InsightTeaser from '@/components/home/InsightTeaser'
@@ -33,8 +30,6 @@ export default async function Home() {
   return (
     <>
       <Hero />
-      <CityPills />
-      <NumbersStrip />
 
       {features.map((f, i) => (
         <FeatureRow key={f.title.italic} feature={f} index={i} />
@@ -66,7 +61,6 @@ export default async function Home() {
         </section>
       )}
 
-      <ToolsGrid />
       <TestimonialGrid />
       <Faq />
       <InsightTeaser />

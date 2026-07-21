@@ -85,16 +85,7 @@ export default function Hero() {
             <span className={styles.statNumber}>9</span>
             <span className={styles.statLabel}>Verification Points</span>
           </div>
-          <div className={styles.statDivider} />
-          <div className={styles.stat}>
-            <span className={styles.statNumber}>0</span>
-            <span className={styles.statLabel}>Brokered Listings</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.stat}>
-            <span className={styles.statNumber}>4 hrs</span>
-            <span className={styles.statLabel}>Avg. Reply Time</span>
-          </div>
+
         </div>
       </div>
     </section>
