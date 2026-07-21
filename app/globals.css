@@ -245,3 +245,30 @@ img { max-width: 100%; display: block; }
 .city-pill:hover { border-color: var(--green) !important; color: var(--green) !important; background: #f7f3e8 !important; }
 details[open] summary span { transform: rotate(45deg); }
 details summary::-webkit-details-marker { display: none; }
+
+/* Section typography — used globally by home components */
+.secTag {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--gold);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.bigHeading {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 4.5vw, 2.9rem);
+  line-height: 1.1;
+  letter-spacing: -.015em;
+  max-width: 22ch;
+  margin-bottom: 16px;
+}
+
+.bigHeading em {
+  font-style: italic;
+  color: var(--green-700);
+}
+

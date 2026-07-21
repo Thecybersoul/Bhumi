@@ -3,70 +3,100 @@
 import Link from 'next/link'
 import Logo from '../Logo'
 import { hero } from '@/lib/copy/home'
+import styles from './Hero.module.css'
 
 export default function Hero() {
   const h = hero
   return (
-    <div className="hero">
-      <div className="wrap" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="navstrip" style={{ position: 'absolute', left: 0, right: 0, top: -16 }}>
-          <div className="wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link href="/" className="brand" style={{ color: '#fff' }}>
-              <Logo theme="dark" style={{ height: 38 }} />
-            </Link>
-            <nav style={{ display: 'flex', gap: 6 }}>
-              <Link href="/marketplace" style={{ color: 'rgba(255,255,255,.85)', fontSize: '.85rem', fontWeight: 500, padding: '8px 12px' }}>
-                Marketplace
-              </Link>
-              <Link href="/insights" style={{ color: 'rgba(255,255,255,.85)', fontSize: '.85rem', fontWeight: 500, padding: '8px 12px' }}>
-                Insights
-              </Link>
-              <a href={h.primaryCta.href} target="_blank" rel="noopener" style={{ color: 'var(--gold-soft)', fontSize: '.85rem', fontWeight: 600, padding: '8px 12px' }}>
-                WhatsApp →
-              </a>
-            </nav>
+    <section className={styles.hero}>
+      {/* Ambient glow orbs */}
+      <div className={styles.orbGold} aria-hidden="true" />
+      <div className={styles.orbGreen} aria-hidden="true" />
+
+      {/* Nav */}
+      <nav className={styles.nav}>
+        <div className={styles.navInner}>
+          <Link href="/" className="brand" style={{ color: '#fff' }}>
+            <Logo theme="dark" style={{ height: 36 }} />
+          </Link>
+          <div className={styles.navLinks}>
+            <Link href="/marketplace" className={styles.navLink}>Marketplace</Link>
+            <Link href="/insights" className={styles.navLink}>Insights</Link>
+            <a
+              href={h.primaryCta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${styles.navLink} ${styles.navLinkGold}`}
+            >
+              WhatsApp&nbsp;→
+            </a>
           </div>
         </div>
+      </nav>
 
-        <div style={{ marginTop: 24 }}>
-          <span className="eyebrow"><span className="dot" /> {h.eyebrow}</span>
-          <h1 className="heroTitle">
-            {h.title.before} <em>{h.title.italic}</em>{h.title.after}
-          </h1>
-          <p className="heroDesc">{h.subhead}</p>
+      {/* Content */}
+      <div className={styles.content}>
+        <span className={styles.eyebrow}>
+          <span className={styles.dot} />
+          {h.eyebrow}
+        </span>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 30 }}>
-            <a className="btn btn-gold" href={h.primaryCta.href} target="_blank" rel="noopener">
-              💬 {h.primaryCta.label}
-            </a>
-            <Link className="btn btn-outline-light" href={h.secondaryCta.href}>
-              {h.secondaryCta.label} →
-            </Link>
-            <a className="btn btn-outline-light" href={h.callCta.href}>
-              📞 {h.callCta.label}
-            </a>
+        <h1 className={styles.title}>
+          {h.title.before}{' '}
+          <em>{h.title.italic}</em>
+          {h.title.after}
+        </h1>
+
+        <p className={styles.subtitle}>{h.subhead}</p>
+
+        <div className={styles.actions}>
+          <a
+            className={styles.btnPrimary}
+            href={h.primaryCta.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+            </svg>
+            {h.primaryCta.label}
+          </a>
+          <Link className={styles.btnSecondary} href={h.secondaryCta.href}>
+            {h.secondaryCta.label}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </Link>
+          <a className={styles.btnTertiary} href={h.callCta.href}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            {h.callCta.label}
+          </a>
+        </div>
+
+        <div className={styles.stats}>
+          <div className={styles.stat}>
+            <span className={styles.statNumber}>120+</span>
+            <span className={styles.statLabel}>Verified Parcels</span>
           </div>
-
-          <div className="heroStats">
-            <div>
-              <div className="heroStatK">120+</div>
-              <div className="heroStatV">Verified parcels</div>
-            </div>
-            <div>
-              <div className="heroStatK">9</div>
-              <div className="heroStatV">Verification points</div>
-            </div>
-            <div>
-              <div className="heroStatK">0</div>
-              <div className="heroStatV">Brokered listings</div>
-            </div>
-            <div>
-              <div className="heroStatK">4 hrs</div>
-              <div className="heroStatV">Avg. enquiry reply</div>
-            </div>
+          <div className={styles.statDivider} />
+          <div className={styles.stat}>
+            <span className={styles.statNumber}>9</span>
+            <span className={styles.statLabel}>Verification Points</span>
+          </div>
+          <div className={styles.statDivider} />
+          <div className={styles.stat}>
+            <span className={styles.statNumber}>0</span>
+            <span className={styles.statLabel}>Brokered Listings</span>
+          </div>
+          <div className={styles.statDivider} />
+          <div className={styles.stat}>
+            <span className={styles.statNumber}>4 hrs</span>
+            <span className={styles.statLabel}>Avg. Reply Time</span>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   )
 }
