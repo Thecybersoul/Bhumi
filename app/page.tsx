@@ -44,7 +44,7 @@ export default async function Home() {
             <span className={styles.secTag}>Live Inventory</span>
             <h2 className={styles.bigHeading}>This week's <em>verified parcels.</em></h2>
             <p style={{ color: 'var(--ink-2)', fontSize: '1.04rem', maxWidth: '60ch', marginBottom: 40 }}>
-              Hand-picked from across the 120+ parcels currently on the platform. New listings every Tuesday.
+              Hand-picked from across the verified parcels currently on the platform. New listings every Tuesday.
             </p>
             <div className={styles.featuredGrid}>
               {featured.map(p => (
@@ -61,7 +61,6 @@ export default async function Home() {
         </section>
       )}
 
-      <TestimonialGrid />
       <Faq />
       <InsightTeaser />
       <Footer />

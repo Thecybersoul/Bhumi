@@ -74,10 +74,15 @@ export default function FeatureRow({ feature, index }) {
               display: 'grid',
               placeItems: 'center',
               color: 'var(--green-700)',
-              padding: 40,
+              overflow: 'hidden',
+              position: 'relative'
             }}
           >
-            {ICONS[feature.icon] || ICONS.shield}
+            {feature.image ? (
+              <img src={feature.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ padding: 40 }}>{ICONS[feature.icon] || ICONS.shield}</div>
+            )}
           </div>
         </div>
       </div>

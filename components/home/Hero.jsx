@@ -75,18 +75,7 @@ export default function Hero() {
           </a>
         </div>
 
-        <div className={styles.stats}>
-          <div className={styles.stat}>
-            <span className={styles.statNumber}>120+</span>
-            <span className={styles.statLabel}>Verified Parcels</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.stat}>
-            <span className={styles.statNumber}>9</span>
-            <span className={styles.statLabel}>Verification Points</span>
-          </div>
 
-        </div>
       </div>
     </section>
   )
