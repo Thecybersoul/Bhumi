@@ -1,67 +1,138 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getVerificationCases, deriveFromCases, update, insert } from '@/lib/db'
+import { assertAdmin } from '@/lib/auth'
+import type { StageStatus, VerificationStageKey } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-export type VerificationStatus = 'Verified' | 'Pending' | 'N/A' | 'Flagged'
+/* The verification pipeline (Plan §5) — the record that feeds
+   both the internal board and the public transparency dashboard.
+   Case-level detail is admin-only; only the aggregate is public. */
 
-export interface VerificationItem {
-  key: string
-  label: string
-  status: VerificationStatus
-  date: string
-  reviewer: string
-  note: string
-}
-
-export interface VerificationRecord {
-  property_id: string
-  updated_at: string
-  items: VerificationItem[]
-}
-
-// In-memory mock store for verifications (resets on serverless cold starts)
-const globalStore = global as typeof globalThis & { __VERIFICATIONS_MAP: Map<string, VerificationRecord> }
-if (!globalStore.__VERIFICATIONS_MAP) {
-  globalStore.__VERIFICATIONS_MAP = new Map()
-}
-
-const DEFAULT_ITEMS: VerificationItem[] = [
-  { key: 'title', label: 'Title Chain', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'ec', label: 'Encumbrance Certificate (EC)', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'khata', label: 'Khata', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'rtc', label: 'RTC / Pahani', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'survey', label: 'Survey Number & Boundary', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'zoning', label: 'Zoning & Land Use', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'conversion', label: 'Conversion Status', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'rera', label: 'RERA Applicability', status: 'Pending', date: '', reviewer: '', note: '' },
-  { key: 'scope', label: 'Scope Note', status: 'Pending', date: '', reviewer: '', note: '' }
+const STAGES: VerificationStageKey[] = [
+  'intake',
+  'title-chain',
+  'revenue-zoning',
+  'litigation',
+  'physical',
+  'report',
 ]
+const STATUSES: StageStatus[] = ['Not started', 'In progress', 'Flagged', 'Verified']
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const propertyId = searchParams.get('propertyId')
-  
-  if (!propertyId) return NextResponse.json({ error: 'propertyId required' }, { status: 400 })
+  const aggregateOnly = searchParams.get('aggregate') === '1'
 
-  let record = globalStore.__VERIFICATIONS_MAP.get(propertyId)
-  if (!record) {
-    // Generate an empty mock record
-    record = {
-      property_id: propertyId,
-      updated_at: new Date().toISOString(),
-      items: JSON.parse(JSON.stringify(DEFAULT_ITEMS))
-    }
+  const { data, source } = await getVerificationCases()
+
+  if (aggregateOnly) {
+    return NextResponse.json({ data: deriveFromCases(data), source })
   }
 
-  return NextResponse.json(record)
+  const denied = await assertAdmin()
+  if (denied) return denied
+
+  return NextResponse.json({ data, source, aggregate: deriveFromCases(data) })
 }
 
+/** Advance or flag a single stage on a case. */
+export async function PATCH(req: NextRequest) {
+  const denied = await assertAdmin()
+  if (denied) return denied
+
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  const id = String(body.id ?? '')
+  const stageKey = String(body.stage ?? '') as VerificationStageKey
+  const status = String(body.status ?? '') as StageStatus
+
+  if (!id) return NextResponse.json({ error: 'Missing case id' }, { status: 400 })
+  if (!STAGES.includes(stageKey)) return NextResponse.json({ error: 'Unknown stage' }, { status: 400 })
+  if (!STATUSES.includes(status)) return NextResponse.json({ error: 'Unknown status' }, { status: 400 })
+
+  const { data: cases } = await getVerificationCases()
+  const record = cases.find((c) => c.id === id)
+  if (!record) return NextResponse.json({ error: 'Case not found' }, { status: 404 })
+
+  const stages = record.stages.map((s) =>
+    s.key === stageKey
+      ? {
+          ...s,
+          status,
+          completed_at: status === 'Verified' || status === 'Flagged' ? new Date().toISOString() : null,
+          reviewer: String(body.reviewer ?? s.reviewer ?? ''),
+          note: String(body.note ?? s.note ?? ''),
+        }
+      : s
+  )
+
+  // A flag anywhere stops the case; all six verified closes it.
+  const flagged = stages.find((s) => s.status === 'Flagged')
+  const allVerified = stages.every((s) => s.status === 'Verified')
+  const outcome = flagged ? 'Flagged' : allVerified ? 'Verified' : 'In progress'
+  const closed = outcome !== 'In progress'
+
+  const patch: Record<string, unknown> = { stages, outcome }
+  if (closed) {
+    const closedAt = record.closed_at ?? new Date().toISOString()
+    patch.closed_at = closedAt
+    patch.turnaround_days = Math.max(
+      1,
+      Math.round((new Date(closedAt).getTime() - new Date(record.opened_at).getTime()) / 86400000)
+    )
+    if (flagged && body.flag_reason) patch.flag_reason = String(body.flag_reason).slice(0, 400)
+  } else {
+    patch.closed_at = null
+    patch.turnaround_days = null
+  }
+
+  const result = await update('verification_cases', id, patch)
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
+
+  return NextResponse.json({ ok: true, persisted: result.persisted, outcome })
+}
+
+/** Open a new verification case. */
 export async function POST(req: NextRequest) {
-  const body = await req.json() as VerificationRecord
-  if (!body.property_id) return NextResponse.json({ error: 'property_id required' }, { status: 400 })
+  const denied = await assertAdmin()
+  if (denied) return denied
 
-  body.updated_at = new Date().toISOString()
-  globalStore.__VERIFICATIONS_MAP.set(body.property_id, body)
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
 
-  return NextResponse.json({ success: true, record: body })
+  const label = String(body.parcel_label ?? '').trim()
+  if (!label) return NextResponse.json({ error: 'A parcel label is required' }, { status: 400 })
+
+  const reference = `VER-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 8999)}`
+
+  const result = await insert('verification_cases', {
+    id: reference,
+    reference,
+    parcel_label: label.slice(0, 200),
+    location: String(body.location ?? '').slice(0, 120),
+    survey_number: String(body.survey_number ?? '').slice(0, 120),
+    extent_acres: Number(body.extent_acres) || null,
+    client_name: String(body.client_name ?? '').slice(0, 160),
+    advisor: String(body.advisor ?? '').slice(0, 80),
+    outcome: 'In progress',
+    stages: STAGES.map((key, i) => ({
+      key,
+      status: i === 0 ? 'In progress' : 'Not started',
+      reviewer: String(body.advisor ?? ''),
+      note: '',
+    })),
+    opened_at: new Date().toISOString(),
+  })
+
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
+  return NextResponse.json({ ok: true, persisted: result.persisted, reference }, { status: 201 })
 }

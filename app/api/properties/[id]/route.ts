@@ -1,33 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { update, remove } from '@/lib/db'
+import { assertAdmin } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-// GET /api/properties/[id]
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = createServiceClient()
-  const { data, error } = await supabase.from('properties').select('*').eq('id', id).single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 })
-  return NextResponse.json(data)
-}
-
-// PUT /api/properties/[id]
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await assertAdmin()
+  if (denied) return denied
+
   const { id } = await params
-  const supabase = createServiceClient()
-  const body = await req.json()
-  const { data, error } = await supabase
-    .from('properties').update(body).eq('id', id).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json(data)
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  const result = await update('properties', id, body)
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+  return NextResponse.json({ ok: true, persisted: result.persisted })
 }
 
-// DELETE /api/properties/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await assertAdmin()
+  if (denied) return denied
+
   const { id } = await params
-  const supabase = createServiceClient()
-  const { error } = await supabase.from('properties').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json({ success: true })
+  const result = await remove('properties', id)
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+  return NextResponse.json({ ok: true, persisted: result.persisted })
 }

@@ -1,75 +1,120 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import Footer from '@/components/Footer'
-import Logo from '@/components/Logo'
-import styles from './Insights.module.css'
+import SiteHeader from '@/components/site/SiteHeader'
+import SiteFooter from '@/components/site/SiteFooter'
+import PageHero from '@/components/site/PageHero'
+import Reveal from '@/components/site/Reveal'
+import { insights, insightCategories } from '@/lib/content/insights'
 
-const reports = [
-  {
-    title: 'The Devanahalli Corridor: A 2026 Perspective',
-    date: 'Jul 10, 2026',
-    readTime: '6 min read',
-    excerpt: 'An in-depth analysis of the northward growth vector. With the upcoming infrastructure upgrades, how is land value reacting along the airport corridor?',
-    tag: 'Market Report'
-  },
-  {
-    title: 'Sarjapur & The Lake-Effect Pricing',
-    date: 'Jul 02, 2026',
-    readTime: '4 min read',
-    excerpt: 'How proximity to rejuvenated water bodies in East Bengaluru is creating micro-markets with outsized appreciation potentials.',
-    tag: 'Valuation'
-  },
-  {
-    title: 'Hoskote: The Logistics Gravity Shift',
-    date: 'Jun 18, 2026',
-    readTime: '5 min read',
-    excerpt: 'Tracking the eastward migration of warehousing and industrial parks. A look at the key junctions driving the next wave of commercial land demand.',
-    tag: 'Industrial'
-  }
-]
+export const metadata: Metadata = {
+  title: 'Insights — regulation explainers, corridor notes and market data',
+  description:
+    'Karnataka land conversion rules, why we never accept a seller\'s encumbrance certificate, area share vs revenue share, what a K-RERA number proves, Grade A warehouse specifications, and the real cost of registering property.',
+  alternates: { canonical: '/insights' },
+}
 
 export default function InsightsPage() {
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#fdfbf7' }}>
-      <header className="topbar">
-        <div className="wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" className="brand" style={{ display: 'inline-flex', alignItems: 'center' }}>
-            <Logo theme="light" style={{ height: 40 }} />
-          </Link>
-          <Link href="/marketplace" className="btn btn-ghost btn-sm">Browse Marketplace</Link>
-        </div>
-      </header>
-      
-      <main style={{ flex: 1, padding: '100px 24px' }}>
-        <div className="wrap">
-          <div style={{ maxWidth: 720, marginBottom: 60 }}>
-            <span className="secTag">Insights</span>
-            <h1 className="bigHeading" style={{ margin: '16px 0 24px' }}>
-              Market intel for <em>smarter land decisions.</em>
-            </h1>
-            <p style={{ color: 'var(--ink-2)', fontSize: '1.1rem', lineHeight: 1.7 }}>
-              Deep dives into Bengaluru's evolving micro-markets, infrastructure shifts, and valuation metrics.
-            </p>
-          </div>
+  const [lead, ...rest] = insights
 
-          <div className={styles.grid}>
-            {reports.map((report, idx) => (
-              <div key={idx} className={styles.card}>
-                <div className={styles.meta}>
-                  <span className={styles.tag}>{report.tag}</span>
-                  <span className={styles.time}>{report.date} · {report.readTime}</span>
+  return (
+    <>
+      <SiteHeader />
+
+      <main id="main">
+        <PageHero
+          eyebrow="Insights"
+          title="The reference material we wanted"
+          italic="and could not find."
+          lede="Written to be useful whether or not you ever engage us. Each piece answers a question people are actually searching for, and ends in a specific next step rather than a newsletter signup."
+          crumbs={[{ label: 'Insights' }]}
+        />
+
+        <section className="section">
+          <div className="wrap">
+            {/* Lead article */}
+            <Reveal>
+              <Link href={`/insights/${lead.slug}`} className="card card-hover" style={{ display: 'block', padding: 'clamp(28px, 4vw, 48px)', marginBottom: 32 }}>
+                <div className="listCard__meta" style={{ marginBottom: 14 }}>
+                  <span className="badge badge-gold">{lead.category}</span>
+                  <span>
+                    {new Date(lead.published).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  <span>{lead.read_minutes} min read</span>
                 </div>
-                <h3 className={styles.cardTitle}>{report.title}</h3>
-                <p className={styles.cardExcerpt}>{report.excerpt}</p>
-                <div style={{ marginTop: 'auto', paddingTop: 24 }}>
-                  <a href="#" className={styles.readMore}>Read Report →</a>
-                </div>
-              </div>
-            ))}
+                <h2 className="h1" style={{ maxWidth: '22ch' }}>
+                  {lead.title}
+                </h2>
+                <p className="lede">{lead.excerpt}</p>
+                <span className="link-arrow" style={{ marginTop: 18, display: 'inline-flex' }}>
+                  Read the explainer →
+                </span>
+              </Link>
+            </Reveal>
+
+            <div className="row-wrap" style={{ marginBottom: 24 }}>
+              <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>Topics:</span>
+              {insightCategories.map((c) => (
+                <span key={c} className="chip">
+                  {c}
+                </span>
+              ))}
+            </div>
+
+            <div className="grid g3">
+              {rest.map((n, i) => (
+                <Reveal key={n.slug} delay={i * 50}>
+                  <Link href={`/insights/${n.slug}`} className="listCard">
+                    <div className="listCard__meta">
+                      <span className="badge badge-gold">{n.category}</span>
+                      <span>{n.read_minutes} min read</span>
+                    </div>
+                    <h3>{n.title}</h3>
+                    <p>{n.excerpt}</p>
+                    <div className="listCard__foot">
+                      <span style={{ fontSize: '.76rem', color: 'var(--muted)' }}>
+                        {new Date(n.published).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
+
+        <section className="ctaBand">
+          <div className="wrap ctaBand__inner">
+            <div>
+              <span className="eyebrow eyebrow-light">No dead ends</span>
+              <h2 className="h1" style={{ color: '#fff' }}>
+                Reading is <em>not</em> diligence.
+              </h2>
+              <p>
+                Everything here is general. Your parcel is specific. A free preliminary review tells you which
+                of these actually applies to what you own.
+              </p>
+            </div>
+            <div className="ctaBand__actions">
+              <Link href="/verification#review" className="btn btn-gold btn-lg">
+                Get a free verification review
+              </Link>
+              <Link href="/checklist" className="btn btn-outline-light btn-lg">
+                Download the checklist
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
-      
-      <Footer />
-    </div>
+
+      <SiteFooter />
+    </>
   )
 }

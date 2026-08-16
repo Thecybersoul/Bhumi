@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+/** Guards the whole admin surface except the login page itself.
+ *  The admin layout re-checks server-side, so a matcher mistake
+ *  cannot leak a page on its own. */
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Protect /admin/dashboard routes
-  if (pathname.startsWith('/admin/dashboard')) {
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
     const auth = req.cookies.get('bhumi_admin')
     if (!auth || auth.value !== 'authenticated') {
-      return NextResponse.redirect(new URL('/admin/login', req.url))
+      const url = new URL('/admin/login', req.url)
+      return NextResponse.redirect(url)
     }
   }
 
@@ -15,5 +18,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/dashboard/:path*'],
+  matcher: ['/admin/:path*'],
 }

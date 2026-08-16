@@ -34,3 +34,6 @@ __pycache__/
 *.pyc
 
 .vercel
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

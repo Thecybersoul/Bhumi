@@ -1,0 +1,79 @@
+/* Brand-level constants. Single source of truth for identity,
+   contact routes and navigation — Plan §2 ("one consistent,
+   protectable brand identity across every page"). */
+
+export const brand = {
+  name: 'Bhumi Estates',
+  legalName: 'Bhumi Estates',
+  tagline: 'Land, verified before it is sold.',
+  promise: 'Publish the proof, not the pitch.',
+  city: 'Bengaluru',
+  phone: '+91 81238 45749',
+  phoneRaw: '918123845749',
+  email: 'contact@bhumiestates.in',
+  advisorEmail: 'advisory@bhumiestates.in',
+  address: {
+    line1: '7th Main, 4th Block, Jayanagar',
+    line2: 'Bengaluru 560011, Karnataka, India',
+  },
+  social: {
+    linkedin: 'https://www.linkedin.com/company/bhumiestates',
+    youtube: 'https://www.youtube.com/@bhumiestates',
+  },
+  reraNote:
+    'K-RERA agent registration number is displayed on every listing and in the footer of every advertisement, per Karnataka RERA advertising rules.',
+  reraNumber: 'PRM/KA/RERA/1251/446/AG/—',
+}
+
+/** Build a click-to-chat link. WhatsApp-first is the primary
+    conversion path across the site (Plan §3F). */
+export function whatsapp(message: string): string {
+  return `https://wa.me/${brand.phoneRaw}?text=${encodeURIComponent(message)}`
+}
+
+export const wa = {
+  general: whatsapp("Hi Bhumi Estates — I'd like to speak to someone about a property."),
+  verification: whatsapp(
+    "Hi Bhumi Estates — I'd like a free land verification review. My parcel is in:"
+  ),
+  largeParcel: whatsapp(
+    'Hi Bhumi Estates — I am enquiring about a large land parcel and would like to speak to an advisor.'
+  ),
+  jda: whatsapp("Hi Bhumi Estates — I'd like to understand JDA options for my land."),
+  construction: whatsapp('Hi Bhumi Estates — I need construction oversight for a project.'),
+  marketing: whatsapp('Hi Bhumi Estates — I need marketing and sales support for a project.'),
+}
+
+export type NavItem = { label: string; href: string; description?: string; children?: NavItem[] }
+
+export const primaryNav: NavItem[] = [
+  {
+    label: 'Land & Verification',
+    href: '/verification',
+    description: 'The six-stage protocol and our published diligence numbers',
+  },
+  {
+    label: 'Property Types',
+    href: '/property-types',
+    description: 'Commercial, residential, villas, land, warehouses, large parcels',
+    children: [
+      { label: 'Commercial buildings', href: '/property-types/commercial' },
+      { label: 'Residential / apartments', href: '/property-types/residential' },
+      { label: 'Villas', href: '/property-types/villas' },
+      { label: 'Land parcels', href: '/property-types/land-parcels' },
+      { label: 'Warehouses / industrial', href: '/property-types/warehouses' },
+      { label: 'Large land parcels', href: '/large-land-parcels' },
+    ],
+  },
+  { label: 'Services', href: '/services', description: 'The six-pillar value chain' },
+  { label: 'Corridors', href: '/corridors', description: 'Where we operate, and why' },
+  { label: 'Portfolio', href: '/portfolio', description: 'Real numbers from real mandates' },
+  { label: 'Tools', href: '/tools', description: 'Decision-support calculators' },
+  { label: 'Insights', href: '/insights', description: 'Explainers, corridor notes, market data' },
+]
+
+export const utilityNav: NavItem[] = [
+  { label: 'Marketplace', href: '/marketplace' },
+  { label: 'Verification checklist', href: '/checklist' },
+  { label: 'Contact', href: '/contact' },
+]

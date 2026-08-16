@@ -1,39 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { getProperties, insert } from '@/lib/db'
+import { assertAdmin, isAdmin } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-// GET /api/properties — returns all properties (admin sees all, public only 'Live')
+// GET /api/properties — public sees Live only; ?admin=1 requires a session
 export async function GET(req: NextRequest) {
-  const supabase = createServiceClient()
   const { searchParams } = new URL(req.url)
-  const admin = searchParams.get('admin') === '1'
+  const wantsAdmin = searchParams.get('admin') === '1'
 
-  let query = supabase
-    .from('properties')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (!admin) {
-    query = query.eq('status', 'Live')
+  if (wantsAdmin && !(await isAdmin())) {
+    return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
   }
 
-  const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  const { data, source } = await getProperties({ admin: wantsAdmin })
+
+  const type = searchParams.get('type')
+  const corridor = searchParams.get('corridor')
+  const filtered = data.filter(
+    (p) => (!type || p.property_type === type) && (!corridor || p.corridor === corridor)
+  )
+
+  return NextResponse.json({ data: filtered, source })
 }
 
-// POST /api/properties — create new property (admin only)
+// POST /api/properties — create (admin only)
 export async function POST(req: NextRequest) {
-  const supabase = createServiceClient()
-  const body = await req.json()
+  const denied = await assertAdmin()
+  if (denied) return denied
 
-  const { data, error } = await supabase
-    .from('properties')
-    .insert([body])
-    .select()
-    .single()
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json(data, { status: 201 })
+  if (!body.code || !body.title) {
+    return NextResponse.json({ error: 'Code and title are required' }, { status: 400 })
+  }
+
+  const result = await insert('properties', body)
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+  return NextResponse.json({ ok: true, persisted: result.persisted }, { status: 201 })
 }

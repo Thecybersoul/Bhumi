@@ -1,0 +1,207 @@
+import { wa } from './brand'
+import type { PropertyTypeSlug } from '@/lib/types'
+
+/* Dedicated campaign landing pages — Plan §7.
+
+   "Campaign and outreach traffic never lands on the homepage;
+   each has its own page built around one specific offer, and
+   around one property type where relevant."
+
+   Each page here is single-offer, single-audience, and carries
+   its own CTA naming the value rather than the action. */
+
+export interface LandingPage {
+  slug: string
+  campaign: string
+  audience: string
+  propertyType?: PropertyTypeSlug
+  corridor?: string
+  eyebrow: string
+  headline: string
+  headlineItalic: string
+  subhead: string
+  /** One offer. Not a menu. */
+  offer: { label: string; detail: string }
+  cta: { label: string; whatsapp: string }
+  proof: { value: string; label: string }[]
+  bullets: { title: string; body: string }[]
+  objections: { q: string; a: string }[]
+  formQualifier: { name: string; label: string; placeholder?: string; options?: string[] }
+}
+
+export const landingPages: LandingPage[] = [
+  {
+    slug: 'free-land-verification',
+    campaign: 'Verification — landowner outreach',
+    audience: 'Landowners in Bengaluru holding agricultural or unconverted land',
+    propertyType: 'land-parcels',
+    eyebrow: 'For landowners · Free preliminary review',
+    headline: 'Find out what is wrong with your land',
+    headlineItalic: 'before a buyer does.',
+    subhead:
+      'Send us a survey number. In two to three days we come back with what the records actually show, what is missing, and whether it would survive a serious buyer\'s diligence. No cost, no obligation.',
+    offer: {
+      label: 'A free preliminary verification read',
+      detail:
+        'We pull the encumbrance certificate and the RTC ourselves, check the revenue position against the title, and tell you plainly what a buyer\'s lawyer would find. If we think your parcel is clean, we will say so and you will owe us nothing.',
+    },
+    cta: {
+      label: 'Get my free verification review',
+      whatsapp: "Hi Bhumi Estates — I'd like the free land verification review. My survey number is:",
+    },
+    proof: [
+      { value: '412', label: 'Parcels put through diligence' },
+      { value: '31%', label: 'Carried a disqualifying red flag' },
+      { value: '2–3 days', label: 'For the preliminary read' },
+      { value: '₹0', label: 'For the first review' },
+    ],
+    bullets: [
+      {
+        title: 'We pull the records ourselves',
+        body: 'The EC comes from Kaveri 2.0 and the RTC from Bhoomi, obtained by us. A printout can be altered in minutes — a certificate we pull cannot.',
+      },
+      {
+        title: 'You get it in writing',
+        body: 'Not a phone call saying it looks fine. A written summary of what we found, what we could not check, and why.',
+      },
+      {
+        title: 'It is genuinely free',
+        body: 'The preliminary read costs you nothing. Full six-stage verification is a paid engagement, quoted before we start, and only if the parcel is worth it.',
+      },
+    ],
+    objections: [
+      {
+        q: 'What is the catch?',
+        a: 'There is not one. Around a third of parcels we look at carry a disqualifying problem, and in those cases we tell the owner to stop rather than sell them a full diligence engagement. The ones that are clean often become clients later. That trade works out for us.',
+      },
+      {
+        q: 'I already have my documents. Why do I need this?',
+        a: 'Because the documents you hold are the ones you were given. The records we pull are the ones the state holds. When those two disagree — and they disagree more often than anyone expects — that gap is the finding.',
+      },
+      {
+        q: 'Will you try to list my land?',
+        a: 'Only if you ask us to. The review is separate, and the result of it does not depend on whether you engage us for anything else.',
+      },
+    ],
+    formQualifier: {
+      name: 'survey_number',
+      label: 'Survey number and village',
+      placeholder: 'e.g. Sy. 44/2, Devanahalli',
+    },
+  },
+  {
+    slug: 'warehouse-specification-audit',
+    campaign: 'Industrial — occupier outreach',
+    audience: '3PL operators, manufacturers and industrial investors shortlisting a facility',
+    propertyType: 'warehouses',
+    corridor: 'hoskote',
+    eyebrow: 'For occupiers · Specification audit',
+    headline: 'The building is marketed as Grade A.',
+    headlineItalic: 'Has anyone measured it?',
+    subhead:
+      'We measure clear height at eaves, verify the floor load rating and flatness class, count docks against area, check apron depth for 40-foot trailers, and confirm sanctioned power with the utility. Findings in writing, in about a week.',
+    offer: {
+      label: 'An independent specification audit before you sign',
+      detail:
+        'Six measured checks against your actual operating requirement, not a generic Grade A definition. The report is written to be handed to the landlord — which is what makes it useful in a negotiation.',
+    },
+    cta: {
+      label: 'Book a specification audit',
+      whatsapp: 'Hi Bhumi Estates — I need a warehouse specification audit. The building is at:',
+    },
+    proof: [
+      { value: '620mm', label: 'Clear-height shortfall found on a live mandate' },
+      { value: '−9.5%', label: 'Rent renegotiated on that finding' },
+      { value: '6 days', label: 'Audit turnaround' },
+      { value: '6', label: 'Measured checks' },
+    ],
+    bullets: [
+      {
+        title: 'Measured, not quoted',
+        body: 'Clear height at eaves at six points. Apron depth with a tape. Turning circle tested with a loaded trailer. Marketing packs get things wrong, and not always by accident.',
+      },
+      {
+        title: 'Against your requirement',
+        body: 'Grade A is a market convention, not a standard. What matters is whether the building supports your racking height, your equipment load and your power draw.',
+      },
+      {
+        title: 'Findings you can negotiate with',
+        body: 'A written report with each variance quantified. That is what moves a rent, not an opinion in a meeting.',
+      },
+    ],
+    objections: [
+      {
+        q: 'The landlord has given me a specification sheet.',
+        a: 'Most are accurate. The ones that are not tend to be wrong on the two numbers that cost you the most: clear height at eaves, and sanctioned power rather than connected load. Both take an afternoon to verify.',
+      },
+      {
+        q: 'We are on a tight timeline.',
+        a: 'The audit takes about a week and runs in parallel with your legal review. Discovering a specification gap after you sign costs considerably more time than that.',
+      },
+    ],
+    formQualifier: {
+      name: 'requirement',
+      label: 'Area and clear height you need',
+      placeholder: 'e.g. 120,000 sq ft, 10m clear height, 900 KVA',
+    },
+  },
+  {
+    slug: 'jda-second-opinion',
+    campaign: 'JDA — landowner outreach',
+    audience: 'Landowners who have received a joint development proposal',
+    propertyType: 'land-parcels',
+    eyebrow: 'For landowners · Second opinion',
+    headline: 'You were offered one structure.',
+    headlineItalic: 'There are three.',
+    subhead:
+      'Area share, revenue share and outright sale produce materially different outcomes on the same parcel — and the tax treatment diverges sharply. Send us the proposal and we will model all three against your actual land.',
+    offer: {
+      label: 'A modelled second opinion on the proposal you have',
+      detail:
+        'All three structures on your parcel\'s numbers, plus a counterparty check on the developer\'s delivery record against their declared RERA completion dates. You will know what you are being offered relative to what else was possible.',
+    },
+    cta: {
+      label: 'Get a second opinion on my JDA',
+      whatsapp: "Hi Bhumi Estates — I've received a JDA proposal and would like a second opinion. My parcel is:",
+    },
+    proof: [
+      { value: '+18%', label: 'Improvement modelled on one mandate, same parcel' },
+      { value: '3', label: 'Structures modelled every time' },
+      { value: 'Sec 45(5A)', label: 'Capital gains timing most owners miss' },
+      { value: '11', label: 'Counterparty checks per developer' },
+    ],
+    bullets: [
+      {
+        title: 'The structure offered suits the developer',
+        body: 'Not necessarily you. Which is fine — it is their proposal. It is simply not the same thing as the best available structure for your position.',
+      },
+      {
+        title: 'The tax timing is worth real money',
+        body: 'Section 45(5A) shifts the capital gains event for an individual or HUF landowner to the year the completion certificate issues. Structure it wrong and you trigger a liability years early.',
+      },
+      {
+        title: 'We check who you are dealing with',
+        body: 'Their last several projects, measured against the completion dates they themselves declared on their RERA filings. A consistent gap tells you something about your project before it starts.',
+      },
+    ],
+    objections: [
+      {
+        q: 'The developer says this is the market standard.',
+        a: 'Percentages cluster around a market range, which is true and not the point. What varies is which structure suits your horizon, your cash needs, and your appetite for holding built inventory. That is what we model.',
+      },
+      {
+        q: 'I do not want to lose the deal by being difficult.',
+        a: 'A developer who withdraws because you modelled the alternatives was going to be difficult later. In our experience the serious ones expect it.',
+      },
+    ],
+    formQualifier: {
+      name: 'proposal',
+      label: 'Extent and the share you have been offered',
+      placeholder: 'e.g. 4.2 acres, 32% area share, Sarjapur',
+    },
+  },
+]
+
+export function getLandingPage(slug: string) {
+  return landingPages.find((l) => l.slug === slug)
+}
