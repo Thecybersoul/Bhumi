@@ -1,12 +1,14 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { ADMIN_COOKIE, verifySessionToken } from './session'
 
-export const ADMIN_COOKIE = 'bhumi_admin'
+export { ADMIN_COOKIE }
 
-/** True when the caller holds a valid admin session cookie. */
+/** True when the caller holds a valid, unexpired, correctly
+ *  signed admin session. */
 export async function isAdmin(): Promise<boolean> {
   const store = await cookies()
-  return store.get(ADMIN_COOKIE)?.value === 'authenticated'
+  return verifySessionToken(store.get(ADMIN_COOKIE)?.value)
 }
 
 /** Guard for admin API routes.

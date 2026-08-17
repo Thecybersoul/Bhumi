@@ -1,13 +1,17 @@
 'use client'
 
+import { Suspense } from 'react'
+
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 import Icon from '@/components/site/Icon'
 
-export default function AdminLogin() {
+function LoginForm() {
   const router = useRouter()
+  const params = useSearchParams()
+  const next = params.get('next') || '/admin/dashboard'
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -24,7 +28,7 @@ export default function AdminLogin() {
     })
 
     if (res.ok) {
-      router.push('/admin/dashboard')
+      router.push(next)
       router.refresh()
     } else {
       const body = await res.json().catch(() => ({}))
@@ -67,8 +71,8 @@ export default function AdminLogin() {
         </form>
 
         <p className="loginCard__note">
-          Credentials are set through the <code>ADMIN_EMAIL</code> and <code>ADMIN_PASSWORD</code> environment
-          variables. Change them before this reaches a public deployment.
+          Credentials come from the <code>ADMIN_EMAIL</code> and <code>ADMIN_PASSWORD</code> environment
+          variables. There is no default: until both are set, this deployment refuses admin sign-in.
         </p>
 
         <Link href="/" className="link-arrow" style={{ marginTop: 20, display: 'inline-flex' }}>
@@ -76,5 +80,13 @@ export default function AdminLogin() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function AdminLogin() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }
