@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: '%s · Bhumi Estates',
   },
   description:
-    'Bhumi Estates verifies land through a published six-stage protocol, structures the deal that follows, oversees construction, and takes the finished asset to market. Bengaluru and its growth corridors.',
+    'Bhumi Estates verifies land through a published six-stage protocol, delivers development through a managed partner network, and takes projects to market through site branding and outdoor advertising. Bengaluru and its growth corridors.',
   keywords: [
     'land verification Bengaluru',
     'title verification Karnataka',

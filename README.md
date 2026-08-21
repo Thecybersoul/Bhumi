@@ -1,6 +1,6 @@
 # Bhumi Estates
 
-**Land verification · JDA structuring · Construction oversight · Marketing**
+**Land sourcing · Verification · Development · Branding · Outdoor advertising**
 
 A Next.js 16 + Supabase application built from the Bhumi Estates Website Business Plan. The site's
 organising idea comes straight from the plan: **publish the proof, not the pitch.** A six-stage verification

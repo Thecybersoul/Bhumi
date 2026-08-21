@@ -171,7 +171,7 @@ export const propertyTypes: PropertyTypeDef[] = [
     href: '/property-types/land-parcels',
     iconTreatment: 'aerial',
     icon: 'land-parcels',
-    tagline: 'Survey number, zoning, conversion status and JDA-readiness — upfront.',
+    tagline: 'Survey number, zoning, conversion status and ownership position — upfront.',
     intro:
       'Land is the flagship. Everything else on this site is built on top of it. A parcel is worth what it can legally become, and that is decided by four things: the survey number and what it actually contains, the zoning, the conversion position, and whether there is recorded access to it.',
     shows: [
@@ -181,7 +181,7 @@ export const propertyTypes: PropertyTypeDef[] = [
       { label: 'Conversion status', detail: 'Converted, deemed converted under the 2025 rules, or agricultural' },
     ],
     criticalDetail: {
-      headline: 'Conversion status and JDA-readiness flagged upfront',
+      headline: 'Conversion status and ownership position flagged upfront',
       body:
         'Karnataka\'s 2025 amendment to the Land Revenue Rules changed the conversion picture materially — deemed approval where the Deputy Commissioner does not act inside the prescribed window, automatic conversion for certain strategic uses, and sharply higher penalties for misuse of a conversion once granted. We state the position plainly on every parcel: converted, deemed, in process, or agricultural — and separately, whether the ownership and access position makes the parcel workable for a joint development.',
     },
