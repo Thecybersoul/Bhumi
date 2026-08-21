@@ -9,33 +9,33 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhumiestates.in'
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Bhumi Estates — Land verified before it is bought',
+    default: 'Bhumi Estates — Land sourcing, branding and outdoor advertising',
     template: '%s · Bhumi Estates',
   },
   description:
-    'Bhumi Estates verifies land through a published six-stage protocol, delivers development through a managed partner network, and takes projects to market through site branding and outdoor advertising. Bengaluru and its growth corridors.',
+    'Bhumi Estates sources the parcel worth buying, builds the site identity a project is judged by, and runs the outdoor campaigns that put it in front of the right buyers. Bengaluru and its growth corridors.',
   keywords: [
-    'land verification Bengaluru',
-    'title verification Karnataka',
+    'land sourcing Bengaluru',
+    'site branding Bengaluru',
     'outdoor advertising Bengaluru',
+    'billboards hoardings Bengaluru',
     'large land parcels Bengaluru',
     'warehouse Bengaluru',
     'growth corridors Bengaluru',
-    'encumbrance certificate Karnataka',
   ],
   authors: [{ name: brand.name }],
   openGraph: {
     type: 'website',
     siteName: brand.name,
-    title: 'Bhumi Estates — Land verified before it is bought',
+    title: 'Bhumi Estates — Land sourcing, branding and outdoor advertising',
     description:
-      'A published six-stage verification protocol, real campaign numbers, and a transparency dashboard showing how many parcels we flag. Bengaluru land, verification and development advisory.',
+      'We find the parcel worth buying, build the identity a project is judged by, and make it impossible to miss. Bengaluru land, branding and outdoor advertising.',
     locale: 'en_IN',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bhumi Estates — Land verified before it is bought',
-    description: 'The verification protocol, published in full. And the numbers behind it.',
+    title: 'Bhumi Estates — Land sourcing, branding and outdoor advertising',
+    description: 'We find the land, and make it impossible to miss.',
   },
   robots: { index: true, follow: true },
   alternates: { canonical: '/' },
