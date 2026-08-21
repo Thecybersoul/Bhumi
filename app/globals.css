@@ -8,14 +8,14 @@
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* Primary — navy */
-  --navy: #0B2239;
-  --navy-900: #071829;
-  --navy-800: #0B2239;
-  --navy-700: #12324F;
-  --navy-600: #1B4468;
-  --navy-500: #2A5B85;
-  --navy-tint: #EAEFF4;
+  /* Primary — forest green (original brand) */
+  --navy: #0E3B2E;
+  --navy-900: #0A2A20;
+  --navy-800: #0E3B2E;
+  --navy-700: #13513C;
+  --navy-600: #1B6B4F;
+  --navy-500: #2F8462;
+  --navy-tint: #E8F0EC;
 
   /* Accent — gold (matches logo) */
   --gold: #C2974A;
