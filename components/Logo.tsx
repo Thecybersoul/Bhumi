@@ -2,7 +2,10 @@
 
 import React from 'react'
 
-export type LogoVariant = 'icon' | 'horizontal' | 'stacked'
+/* `wordmark` is the mark + BHUMI ESTATES without the tagline — used
+   wherever the logo renders below ~60px, where the tagline would be
+   an illegible smear. `horizontal` and `stacked` keep the full lockup. */
+export type LogoVariant = 'icon' | 'horizontal' | 'stacked' | 'wordmark'
 
 interface LogoProps {
   variant?: LogoVariant

@@ -19,36 +19,43 @@ export default function WhatsAppFloat() {
       href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`}
       target="_blank"
       rel="noopener noreferrer"
+      /* Deep brand green with a gold hairline rather than WhatsApp's
+         neon #25D366, which fights the palette on every page. */
       style={{
         position: 'fixed',
-        bottom: '24px',
-        right: '24px',
-        width: '60px',
-        height: '60px',
-        backgroundColor: '#25D366',
-        color: '#FFF',
+        bottom: '28px',
+        right: '28px',
+        width: '54px',
+        height: '54px',
+        backgroundColor: '#0E3B2E',
+        color: '#E8D9B5',
+        border: '1px solid rgba(194,151,74,.55)',
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 10px 25px -5px rgba(37, 211, 102, 0.4)',
+        boxShadow: '0 14px 30px -12px rgba(8, 26, 19, .7)',
         zIndex: 9999,
         cursor: 'pointer',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        transition: 'transform .25s ease, box-shadow .25s ease, background-color .25s ease',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'scale(1.08) translateY(-4px)'
-        e.currentTarget.style.boxShadow = '0 15px 30px -5px rgba(37, 211, 102, 0.5)'
+        e.currentTarget.style.transform = 'translateY(-3px)'
+        e.currentTarget.style.backgroundColor = '#C2974A'
+        e.currentTarget.style.color = '#0B2219'
+        e.currentTarget.style.boxShadow = '0 18px 34px -12px rgba(8, 26, 19, .8)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1) translateY(0)'
-        e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(37, 211, 102, 0.4)'
+        e.currentTarget.style.transform = 'translateY(0)'
+        e.currentTarget.style.backgroundColor = '#0E3B2E'
+        e.currentTarget.style.color = '#E8D9B5'
+        e.currentTarget.style.boxShadow = '0 14px 30px -12px rgba(8, 26, 19, .7)'
       }}
       aria-label="Chat with us on WhatsApp"
     >
       <svg
-        width="32"
-        height="32"
+        width="26"
+        height="26"
         viewBox="0 0 24 24"
         fill="currentColor"
         xmlns="http://www.w3.org/2000/svg"

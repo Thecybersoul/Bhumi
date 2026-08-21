@@ -165,13 +165,18 @@
 /* ─── Homepage hero ──────────────────────────────────────── */
 .homeHero {
   position: relative; background: var(--navy); color: #fff;
-  padding: clamp(64px, 9vw, 118px) 0 clamp(56px, 7vw, 92px); overflow: hidden;
+  padding: clamp(96px, 13vw, 168px) 0 clamp(72px, 9vw, 112px); overflow: hidden;
 }
+/* Land itself is the hero: a real aerial of the corridors we work in,
+   under a scrim heavy enough to keep the headline at full contrast. */
 .homeHero__bg {
   position: absolute; inset: 0; pointer-events: none;
-  background:
-    radial-gradient(760px 420px at 82% -8%, rgba(194,151,74,.2), transparent 66%),
-    radial-gradient(620px 400px at -6% 100%, rgba(42,91,133,.4), transparent 70%);
+  background-image:
+    linear-gradient(105deg, rgba(11,34,25,.94) 0%, rgba(11,34,25,.82) 42%, rgba(11,34,25,.45) 78%, rgba(11,34,25,.35) 100%),
+    linear-gradient(to top, rgba(11,34,25,.92) 0%, transparent 46%),
+    url('/img/hero.jpg');
+  background-size: cover, cover, cover;
+  background-position: center, center, center 38%;
 }
 /* Land itself is the hero (Plan §2, Glickman) — a topographic
    field rather than lifestyle photography or a logo wall. */
@@ -313,17 +318,22 @@
 
 /* ─── Property type cards ────────────────────────────────── */
 .typeGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+/* Mark beside the label rather than stacked above it: the stacked
+   form left every card padded out to the height of the longest title,
+   which read as empty boxes rather than a considered grid. */
 .typeCard {
-  display: flex; flex-direction: column; gap: 12px;
+  display: grid; grid-template-columns: auto 1fr; align-items: center;
+  column-gap: 16px; row-gap: 4px;
   background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
-  padding: 26px; transition: transform .24s var(--ease), box-shadow .24s var(--ease), border-color .24s var(--ease);
+  padding: 20px 22px; transition: transform .24s var(--ease), box-shadow .24s var(--ease), border-color .24s var(--ease);
 }
 .typeCard:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: rgba(194,151,74,.45); }
 .typeCard__icon {
-  width: 52px; height: 52px; border-radius: var(--r); display: grid; place-items: center;
+  grid-row: 1 / -1;
+  width: 46px; height: 46px; border-radius: var(--r); display: grid; place-items: center;
   background: linear-gradient(150deg, var(--navy), var(--navy-600)); color: var(--gold-soft);
 }
-.typeCard h3 { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; }
+.typeCard h3 { font-family: var(--serif); font-size: 1.04rem; font-weight: 600; line-height: 1.35; }
 .typeCard__tag { font-size: .86rem; color: var(--ink-2); line-height: 1.6; }
 .typeCard__critical {
   margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line-2);
