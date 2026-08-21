@@ -84,14 +84,14 @@ const implementation: {
   },
   {
     section: '§7',
-    requirement: 'Dedicated campaign landing pages, a gated lead magnet, a qualifying quiz, specific CTAs',
-    built: `${landingPages.length} landing pages, the verification checklist, the JDA-readiness quiz`,
+    requirement: 'Dedicated campaign landing pages, a gated lead magnet, specific CTAs',
+    built: `${landingPages.length} landing pages, the verification checklist`,
     href: '/lp/free-land-verification',
     state: 'Built',
   },
   {
     section: '§8',
-    requirement: 'Six decision-support tools, each doubling as a lead-qualification step',
+    requirement: 'Decision-support tools, each doubling as a lead-qualification step',
     built: `${tools.length} working tools; every one posts its inputs into the lead inbox`,
     href: '/tools',
     state: 'Built',
@@ -224,11 +224,18 @@ export default function PlanPage() {
           notes and even the footer carry one. An unconvertible page is illiquid trust.
         </p>
 
-        <h2>The six-pillar value chain</h2>
+        <h2>The five services</h2>
+        <p>
+          Land Sourcing, Branding and Outdoor Advertising are delivered directly and carry the most weight on
+          the site. Verification and Development are delivered through Bhumi&rsquo;s managed network of
+          empanelled, independent specialists — Bhumi holds the mandate and the quality bar; the people running
+          the checks and the build have no stake in either outcome, which is the point.
+        </p>
         <ul>
           {pillars.map((p) => (
             <li key={p.slug}>
-              <strong>{p.name}</strong> — {p.short}.{' '}
+              <strong>{p.name}</strong>
+              {p.featured ? ' · direct' : ' · partner network'} — {p.short}.{' '}
               <Link href={`/services/${p.slug}`} className="link-arrow">
                 /services/{p.slug}
               </Link>

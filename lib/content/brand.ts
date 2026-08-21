@@ -39,9 +39,10 @@ export const wa = {
   largeParcel: whatsapp(
     'Hi Bhumi Estates — I am enquiring about a large land parcel and would like to speak to an advisor.'
   ),
-  jda: whatsapp("Hi Bhumi Estates — I'd like to understand JDA options for my land."),
-  construction: whatsapp('Hi Bhumi Estates — I need construction oversight for a project.'),
-  marketing: whatsapp('Hi Bhumi Estates — I need marketing and sales support for a project.'),
+  sourcing: whatsapp('Hi Bhumi Estates — I have a land sourcing mandate I would like to brief you on.'),
+  development: whatsapp('Hi Bhumi Estates — I need a development partner for a project.'),
+  branding: whatsapp('Hi Bhumi Estates — I need site branding: boundary wall, entrance or signage.'),
+  outdoorAdvertising: whatsapp('Hi Bhumi Estates — I would like to plan an outdoor advertising campaign.'),
 }
 
 export type NavItem = { label: string; href: string; description?: string; children?: NavItem[] }
@@ -65,7 +66,7 @@ export const primaryNav: NavItem[] = [
       { label: 'Large land parcels', href: '/large-land-parcels' },
     ],
   },
-  { label: 'Services', href: '/services', description: 'The six-pillar value chain' },
+  { label: 'Services', href: '/services', description: 'The five-service value chain' },
   { label: 'Corridors', href: '/corridors', description: 'Where we operate, and why' },
   { label: 'Portfolio', href: '/portfolio', description: 'Real numbers from real mandates' },
   { label: 'Tools', href: '/tools', description: 'Decision-support calculators' },

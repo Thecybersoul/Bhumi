@@ -18,7 +18,7 @@ export const caseStudies: CaseStudy[] = [
     title: '68 acres assembled on the airport corridor — and the 11 acres we walked away from',
     corridor: 'Devanahalli & the Airport Corridor',
     property_type: 'large-land-parcels',
-    pillars: ['land-sourcing', 'verification', 'jda-structuring'],
+    pillars: ['land-sourcing', 'verification'],
     summary:
       'A developer client needed a contiguous holding of at least 60 acres within 20 km of the airport for a phased township. We screened 41 parcels, took 7 into full diligence, and closed on 68 acres across 9 survey numbers. The 11-acre parcel that would have completed a cleaner boundary was dropped at stage 4 when the litigation search returned a partition suit the seller had not disclosed.',
     parcel: [
@@ -32,7 +32,7 @@ export const caseStudies: CaseStudy[] = [
       { stage: 'Sourcing', detail: '41 parcels screened against a written mandate: 60+ contiguous acres, within 20 km of the airport, non-forest, with recorded access. 34 were rejected on the mandate before any spend.' },
       { stage: 'Preliminary read', detail: '7 parcels taken into a preliminary title and zoning read. 2 dropped on zoning — one sat partly in a green belt the master plan would not release for the intended density.' },
       { stage: 'Full verification', detail: '5 parcels through the full six-stage protocol. 1 flagged at stage 4 on an undisclosed partition suit; 1 flagged at stage 5 when the measured extent came up 1.4 acres short of the deed extent.' },
-      { stage: 'Structuring', detail: 'Outright purchase modelled against an area-share JDA for the two largest holdings. The owners of 6 of the 9 survey numbers preferred an area share; the structure was split accordingly.' },
+      { stage: 'Acquisition', detail: 'Consideration and registration sequencing agreed across all 14 owners so no single holder could stall the assembly; two owners required staged payments tied to mutation completion.' },
       { stage: 'Close', detail: 'Registered across 9 documents over 11 weeks, sequenced so no single owner could hold the assembly hostage at the end.' },
     ],
     results: [
@@ -50,7 +50,7 @@ export const caseStudies: CaseStudy[] = [
     title: 'A Grade A warehouse that was not Grade A: 620mm that cost a racking level',
     corridor: 'Hoskote & the Eastern Logistics Belt',
     property_type: 'warehouses',
-    pillars: ['verification', 'sales-handover'],
+    pillars: ['verification'],
     summary:
       'A 3PL operator was days from signing on a facility marketed as Grade A. Our physical verification measured clear height at eaves at 8.38m against the 9m specification in the marketing pack — a 620mm shortfall that removed an entire racking level and roughly a fifth of the storable volume. The deal was renegotiated on measured specification rather than abandoned.',
     parcel: [
@@ -77,33 +77,33 @@ export const caseStudies: CaseStudy[] = [
     published: '2026-05-04',
   },
   {
-    slug: 'sarjapur-jda-restructure',
-    title: 'A landowner was offered 32% area share. The revenue-share model was worth more.',
+    slug: 'sarjapur-development-stage-gate',
+    title: 'A slab poured 70mm off spec — caught before the next payment, not after handover',
     corridor: 'Sarjapur & the South-East IT Belt',
-    property_type: 'land-parcels',
-    pillars: ['jda-structuring', 'construction-oversight'],
+    property_type: 'villas',
+    pillars: ['development'],
     summary:
-      'A family holding 4.2 acres was presented with a single option — a 32% area-share JDA — framed as the market standard. We modelled all three structures against the actual parcel. On this parcel, with this density and this absorption profile, a revenue share with a floor produced a materially better position for the owner, and shifted the timing of their tax liability.',
+      'A family building eight villas on their 4.2-acre holding engaged Bhumi to manage development through our partner contractor network. Independent stage-gate inspection at the second-floor slab measured reinforcement spacing at 220mm against a specified 150mm — a structural shortfall invisible once the slab was finished and covered. The contractor corrected it before the next payment milestone released.',
     parcel: [
       { label: 'Extent', value: '4.2 acres' },
-      { label: 'Owners', value: '3 (family)' },
-      { label: 'Zoning', value: 'Residential, converted' },
-      { label: 'Offered structure', value: '32% area share' },
-      { label: 'Structures modelled', value: '3' },
+      { label: 'Units', value: '8 villas' },
+      { label: 'Contractor', value: 'Selected from partner network' },
+      { label: 'Payment schedule', value: '9 stage gates' },
+      { label: 'Stage flagged', value: '2 of 9' },
     ],
     journey: [
-      { stage: 'Verification first', detail: 'Full six-stage protocol run before any structure was discussed. A 1998 release deed was found unrecorded; recording it was made a condition precedent.' },
-      { stage: 'Counterparty diligence', detail: 'Developer\'s last four projects checked for delivery against declared RERA completion dates, and for consumer complaints. Two had slipped materially.' },
-      { stage: 'Structuring', detail: 'Area share, revenue share and outright sale modelled on the parcel\'s own numbers. Capital gains timing under Section 45(5A) modelled with the family\'s tax counsel.' },
-      { stage: 'Negotiation', detail: 'Revenue share with a floor agreed, plus a refundable deposit and dated penalty milestones tied to the RERA completion date.' },
-      { stage: 'Oversight', detail: 'Independent stage-gate oversight engaged for the build, reporting to the family monthly.' },
+      { stage: 'Partner selection', detail: 'Contractor selected from Bhumi\'s vetted development partner network against the project\'s scale and budget; contract tied to a 9-stage payment schedule.' },
+      { stage: 'Stage gate 1', detail: 'Foundation inspected and passed against the approved structural drawings before the first payment released.' },
+      { stage: 'Stage gate 2', detail: 'Independent inspector measured reinforcement spacing on the second-floor slab at 220mm centre-to-centre against a specified 150mm, and held the stage.' },
+      { stage: 'Correction', detail: 'Contractor required to break and re-lay the non-conforming section before the next payment milestone was released — at the pre-pour-completion cost, not the post-handover one.' },
+      { stage: 'Handover', detail: 'Remaining seven stage gates cleared on schedule; the project handed over on the original timeline with the full inspection record.' },
     ],
     results: [
-      { label: 'Structures modelled', value: '3' },
-      { label: 'Improvement vs the offered structure', value: '+18%', note: 'Modelled owner position, same parcel' },
-      { label: 'Unrecorded release deeds found', value: '1' },
-      { label: 'Developer projects checked', value: '4' },
-      { label: 'Oversight reporting', value: 'Monthly, to the owner' },
+      { label: 'Stage flagged', value: '2 of 9' },
+      { label: 'Reinforcement variance', value: '70mm over spec' },
+      { label: 'Correction timing', value: 'Before next payment' },
+      { label: 'Remaining stage gates', value: '7/7 cleared on schedule' },
+      { label: 'Handover', value: 'On the original timeline' },
     ],
     published: '2026-03-22',
   },
@@ -112,7 +112,7 @@ export const caseStudies: CaseStudy[] = [
     title: '2,840 qualified enquiries at ₹412 per qualified lead — and what the impressions number was',
     corridor: 'Tumakuru Road & the North-West Industrial Corridor',
     property_type: 'commercial',
-    pillars: ['marketing-advertising', 'sales-handover'],
+    pillars: ['branding', 'outdoor-advertising'],
     summary:
       'A campaign for a highway-frontage commercial development, reported the way we report every campaign: on qualified enquiries and cost per qualified lead, with the impressions figure shown alongside purely to demonstrate how little it tells you. Impressions were 4.1 million. Qualified enquiries were 2,840. Site visits booked were 391.',
     parcel: [

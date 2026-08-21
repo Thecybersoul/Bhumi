@@ -8,9 +8,9 @@ import Icon from '@/components/site/Icon'
 import { tools, toolsDisclaimer } from '@/lib/content/tools'
 
 export const metadata: Metadata = {
-  title: 'Decision tools — JDA comparator, cost estimator, readiness checks',
+  title: 'Decision tools — cost estimator, warehouse and zoning checks',
   description:
-    'Six decision-support tools: compare JDA structures, test whether your land is JDA-ready, estimate construction cost and timeline, check warehouse suitability, compare corridor prices, and check zoning.',
+    'Free decision-support tools: estimate construction cost and timeline, check warehouse suitability against Grade A thresholds, compare corridor prices, and check what a corridor typically permits.',
   alternates: { canonical: '/tools' },
 }
 
@@ -25,10 +25,10 @@ export default function ToolsPage() {
           title="A premium site helps you"
           italic="decide,"
           after=" not just browse."
-          lede="Six tools, each answering a question people ask us before they are ready to engage. They produce illustrative ranges in a couple of minutes, and each one tells you honestly what still needs checking at parcel level."
+          lede="Free tools, each answering a question people ask us before they are ready to engage. They produce illustrative ranges in a couple of minutes, and each one tells you honestly what still needs checking at parcel level."
           crumbs={[{ label: 'Tools' }]}
           stats={[
-            { value: '6', label: 'Tools' },
+            { value: String(tools.length), label: 'Tools' },
             { value: '1–3', label: 'Minutes each' },
             { value: 'Free', label: 'No signup wall' },
             { value: '2026', label: 'Rates and rules current to' },

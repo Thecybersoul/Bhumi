@@ -4,7 +4,7 @@ import SiteFooter from '@/components/site/SiteFooter'
 import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import { getTransparency } from '@/lib/db'
-import { pillars } from '@/lib/content/pillars'
+import { featuredPillars, partnerPillars } from '@/lib/content/pillars'
 import { propertyTypes } from '@/lib/content/propertyTypes'
 import { hero } from '@/lib/content/home'
 
@@ -71,21 +71,47 @@ export default async function Home() {
         {/* ── What we do ── */}
         <section className="section">
           <div className="wrap">
-            <div className="sectionHead">
-              <span className="eyebrow">What we do</span>
-              <h2 className="h1">Land, verified — start to finish.</h2>
+            <div className="sectionHead--split sectionHead">
+              <div>
+                <span className="eyebrow">What we do</span>
+                <h2 className="h1">Land, sourced, built and seen.</h2>
+              </div>
+              <Link href="/services" className="btn btn-ghost">
+                All services
+              </Link>
             </div>
 
-            <div className="pillarGrid">
-              {pillars.map((p) => (
-                <Link key={p.slug} href={`/services/${p.slug}`} className="pillarCard">
+            <div className="pillarGrid pillarGrid--featured">
+              {featuredPillars.map((p) => (
+                <Link key={p.slug} href={`/services/${p.slug}`} className="pillarCard pillarCard--featured">
                   <span className="pillarCard__icon">
-                    <Icon name={p.icon} size={22} />
+                    <Icon name={p.icon} size={24} />
                   </span>
                   <h3>{p.name}</h3>
                   <span className="pillarCard__short">{p.short}</span>
+                  <p className="pillarCard__promise">{p.promise}</p>
+                  <span className="link-arrow">Learn more →</span>
                 </Link>
               ))}
+            </div>
+
+            <div className="partnerStrip">
+              <div className="partnerStrip__label">
+                <Icon name="handshake" size={18} />
+                <div>
+                  <strong>Delivered through our managed partner network</strong>
+                  <span>Independent specialists, Bhumi&rsquo;s quality bar and single point of accountability.</span>
+                </div>
+              </div>
+              <div className="partnerStrip__items">
+                {partnerPillars.map((p) => (
+                  <Link key={p.slug} href={`/services/${p.slug}`} className="partnerStrip__item">
+                    <Icon name={p.icon} size={18} />
+                    <span>{p.name}</span>
+                    <Icon name="arrow" size={13} />
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </section>

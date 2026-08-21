@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   keywords: [
     'land verification Bengaluru',
     'title verification Karnataka',
-    'JDA structuring',
+    'outdoor advertising Bengaluru',
     'large land parcels Bengaluru',
     'warehouse Bengaluru',
     'growth corridors Bengaluru',
@@ -52,7 +52,7 @@ const organisationJsonLd = {
   '@type': 'RealEstateAgent',
   name: brand.name,
   description:
-    'Land verification, JDA structuring, construction oversight and marketing for land and property in Bengaluru.',
+    'Land sourcing, verification, development, branding and outdoor advertising for land and property in Bengaluru.',
   url: siteUrl,
   telephone: brand.phone,
   email: brand.email,

@@ -6,13 +6,10 @@ import SiteFooter from '@/components/site/SiteFooter'
 import PageHero from '@/components/site/PageHero'
 import Icon from '@/components/site/Icon'
 import { tools, getTool } from '@/lib/content/tools'
-import JdaComparator from '@/components/tools/JdaComparator'
-import JdaReadiness from '@/components/tools/JdaReadiness'
 import ConstructionEstimator from '@/components/tools/ConstructionEstimator'
 import WarehouseChecklist from '@/components/tools/WarehouseChecklist'
 import CorridorComparison from '@/components/tools/CorridorComparison'
 import ZoningChecker from '@/components/tools/ZoningChecker'
-import BuyVsJda from '@/components/tools/BuyVsJda'
 
 export function generateStaticParams() {
   return tools.map((t) => ({ slug: t.slug }))
@@ -34,13 +31,10 @@ export async function generateMetadata({
 }
 
 const registry: Record<string, React.ComponentType> = {
-  'jda-comparator': JdaComparator,
-  'jda-readiness': JdaReadiness,
   'construction-estimator': ConstructionEstimator,
   'warehouse-checklist': WarehouseChecklist,
   'corridor-comparison': CorridorComparison,
   'zoning-checker': ZoningChecker,
-  'buy-vs-jda': BuyVsJda,
 }
 
 export default async function ToolPage({ params }: { params: Promise<{ slug: string }> }) {

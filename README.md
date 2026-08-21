@@ -53,14 +53,14 @@ Run migrations in the Supabase SQL editor in order:
 
 | Route | Purpose |
 |---|---|
-| `/` | One-line pitch, credibility bar, six-pillar value chain, one clear next step |
+| `/` | One-line pitch, credibility bar, five-service value chain, one clear next step |
 | `/verification` | **The flagship.** Six-stage protocol as an interactive stepper + the Transparency Dashboard |
 | `/property-types` + `/property-types/[slug]` | Five asset classes, each with its own presentation and critical field |
 | `/large-land-parcels` | Institutional pillar with the NDA-gated data room |
-| `/services` + `/services/[slug]` | The six pillars, one page each |
+| `/services` + `/services/[slug]` | The five services, one page each |
 | `/corridors` + `/corridors/[slug]` | Interactive corridor map and six corridor notes |
 | `/portfolio` + `/portfolio/[slug]` | Case studies with mandate numbers, including the deals we walked away from |
-| `/tools` + `/tools/[slug]` | Seven working decision-support tools |
+| `/tools` + `/tools/[slug]` | Four working decision-support tools |
 | `/insights` + `/insights/[slug]` | Regulation explainers, corridor notes, market data |
 | `/marketplace` | Filterable inventory; every listing states its verification position |
 | `/checklist` | The gated lead magnet — and the full checklist printed on the same page |
@@ -107,7 +107,7 @@ Copy, corridor data, case studies, insights and tool reference rates are separat
 lib/content/
   brand.ts           identity, contact routes, navigation, WhatsApp helper
   verification.ts    the six stages — inputs, checks, outputs, deal-stoppers
-  pillars.ts         the six-pillar value chain
+  pillars.ts         the five-service value chain
   propertyTypes.ts   six asset classes with per-class diligence
   corridors.ts       six corridors with price bands and infrastructure status
   caseStudies.ts     mandates with real numbers

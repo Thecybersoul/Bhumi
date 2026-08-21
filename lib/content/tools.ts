@@ -13,49 +13,11 @@ export interface ToolDef {
   audience: string
   minutes: number
   qualifies: string
-  icon: 'balance' | 'fork' | 'calculator' | 'checklist' | 'compare' | 'map' | 'gauge'
+  icon: 'calculator' | 'checklist' | 'compare' | 'map'
   featured?: boolean
 }
 
 export const tools: ToolDef[] = [
-  {
-    slug: 'jda-comparator',
-    name: 'JDA Structure Comparator',
-    short: 'Area share vs revenue share vs plotted development',
-    description:
-      'Enter your land value, extent and corridor. See an illustrative side-by-side of what area share, revenue share and plotted development produce for you on the same parcel — including where the tax timing differs.',
-    outcome: 'Which structure suits your parcel and your horizon, before a developer frames the choice for you.',
-    audience: 'Landowners weighing a development proposal',
-    minutes: 3,
-    qualifies: 'Extent, corridor, indicative land value, preferred horizon',
-    icon: 'balance',
-    featured: true,
-  },
-  {
-    slug: 'jda-readiness',
-    name: 'Is Your Land JDA-Ready?',
-    short: 'A short qualifying check across the six readiness tests',
-    description:
-      'Eight questions covering ownership, access, zoning, conversion, litigation and encumbrance. You get a readiness score and, more usefully, a specific list of what would need to be fixed first.',
-    outcome: 'A named list of the blockers on your parcel — not a yes or a no.',
-    audience: 'Landowners considering a joint development',
-    minutes: 2,
-    qualifies: 'Ownership structure, access, zoning, conversion status',
-    icon: 'gauge',
-    featured: true,
-  },
-  {
-    slug: 'buy-vs-jda',
-    name: 'Buy vs JDA Decision Guide',
-    short: 'Which path fits your situation',
-    description:
-      'A short interactive guide for a landowner deciding between selling outright and entering a development agreement. It weighs your capital needs, horizon, risk appetite and appetite for becoming a seller of built product.',
-    outcome: 'A reasoned recommendation with the trade-off stated plainly, before you speak to anyone.',
-    audience: 'Landowners at the decision point',
-    minutes: 3,
-    qualifies: 'Horizon, capital need, risk posture',
-    icon: 'fork',
-  },
   {
     slug: 'construction-estimator',
     name: 'Construction Cost & Timeline Estimator',
@@ -63,7 +25,7 @@ export const tools: ToolDef[] = [
     description:
       'Rough, clearly-labelled-as-illustrative construction cost and timeline ranges by property type, built-up area and finish level, using current Bengaluru market rates. Built to set realistic expectations early rather than to quote a job.',
     outcome: 'A defensible budget range and timeline before you commission a detailed estimate.',
-    audience: 'Owners planning a build, and JDA landowners sense-checking a developer\'s numbers',
+    audience: 'Owners planning a build, and landowners sense-checking a partner\'s numbers',
     minutes: 2,
     qualifies: 'Property type, area, finish level, timeline',
     icon: 'calculator',

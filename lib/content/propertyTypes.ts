@@ -199,13 +199,13 @@ export const propertyTypes: PropertyTypeDef[] = [
         a: 'No — it is often the reason the price is attractive. The question is whether conversion is achievable for your intended use, how long it will take, and what it costs. We give you that position before you commit, not after.',
       },
       {
-        q: 'What makes a parcel JDA-ready?',
-        a: 'Clean single-window ownership or a documented consent from every co-owner, recorded road access, a zoning position that permits the intended development, and no subsisting litigation. Our free readiness check runs exactly those tests.',
+        q: 'What makes a parcel ready for a joint development?',
+        a: 'Clean single-window ownership or a documented consent from every co-owner, recorded road access, a zoning position that permits the intended development, and no subsisting litigation. Our verification protocol checks exactly those points, whatever you decide to do with the land afterward.',
       },
     ],
     metricLabels: { extent: 'Extent', price: 'Per acre' },
     audience: 'Landowners, developers and investors buying or holding raw land',
-    relatedTools: ['jda-readiness', 'jda-comparator', 'zoning-checker', 'corridor-comparison'],
+    relatedTools: ['zoning-checker', 'corridor-comparison'],
     cta: { label: 'Get a free land verification review', href: '/verification#review' },
   },
   {
@@ -294,7 +294,7 @@ export const propertyTypes: PropertyTypeDef[] = [
     ],
     metricLabels: { extent: 'Acreage', price: 'Per acre' },
     audience: 'Institutional buyers, developers land-banking, and family offices',
-    relatedTools: ['jda-comparator', 'corridor-comparison'],
+    relatedTools: ['corridor-comparison'],
     cta: { label: 'Request data room access', href: '/large-land-parcels#data-room' },
   },
 ]

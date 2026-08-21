@@ -1,14 +1,14 @@
 import { wa } from './brand'
 
 /* Homepage copy — Plan §6: "The one-line pitch, the credibility
-   bar (§3B), the six-pillar value chain, one clear next step."
+   bar (§3B), the five-service value chain, one clear next step."
    Every claim here has to be provable (Plan §2, Zell). */
 
 export const hero = {
-  eyebrow: 'Land verification · JDA structuring · Construction · Marketing',
+  eyebrow: 'Land Sourcing · Branding · Outdoor Advertising',
   title: { before: 'We publish the', italic: 'proof,', after: ' not the pitch.' },
   subhead:
-    'Bhumi Estates verifies land before it is bought, structures the deal that follows, oversees what gets built on it, and takes the finished asset to market. Our diligence protocol is published in full. So are our numbers.',
+    'Bhumi Estates sources and verifies land before it is bought, takes it through development, then builds and advertises the identity a finished asset is judged by. Our diligence protocol is published in full. So are our numbers.',
   primary: { label: 'Get a free land verification review', href: wa.verification },
   secondary: { label: 'See the verification protocol', href: '/verification' },
   tertiary: { label: 'Call an advisor', href: 'tel:+918123845749' },
@@ -98,7 +98,7 @@ export const faq = {
     },
     {
       q: 'Can I share your verification report with my bank or my partner?',
-      a: 'That is the point of it. The report is issued as a dated, shareable certificate with a reference number and stated scope limitations, precisely so it can be forwarded to a lender, a JDA partner or a buyer.',
+      a: 'That is the point of it. The report is issued as a dated, shareable certificate with a reference number and stated scope limitations, precisely so it can be forwarded to a lender or a buyer.',
     },
     {
       q: 'Why is WhatsApp the primary way to contact you?',

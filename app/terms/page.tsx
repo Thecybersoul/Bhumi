@@ -22,7 +22,7 @@ const sections = [
   },
   {
     heading: 'The decision-support tools',
-    body: 'Every tool on this site produces illustrative planning ranges. The JDA comparator is not a valuation and not a tax opinion. The construction estimator is not a quotation. The zoning checker is corridor-level guidance and not a zoning certificate. The warehouse checklist reflects market convention, not a statutory standard. Where a tool references tax treatment — including Section 45(5A) capital gains timing or GST — that is general information and your own tax counsel must advise on your facts.',
+    body: 'Every tool on this site produces illustrative planning ranges. The construction estimator is not a quotation. The zoning checker is corridor-level guidance and not a zoning certificate. The warehouse checklist reflects market convention, not a statutory standard. Where a tool references tax treatment — including Section 45(5A) capital gains timing or GST — that is general information and your own tax counsel must advise on your facts.',
   },
   {
     heading: 'Verification reports',

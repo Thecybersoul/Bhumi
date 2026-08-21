@@ -80,7 +80,7 @@ export default async function LargeLandParcelsPage() {
                 {
                   icon: 'structure' as const,
                   title: 'The full journey, shown end to end',
-                  body: 'Sourcing through verification, JDA structuring, construction oversight and finished-project marketing — the one narrative a firm that only brokers, or only builds, cannot tell you.',
+                  body: 'Sourcing through verification, development, and a finished asset that is branded and advertised — the one narrative a firm that only brokers, or only builds, cannot tell you.',
                 },
               ].map((c, i) => (
                 <Reveal key={c.title} delay={i * 60}>
@@ -96,10 +96,10 @@ export default async function LargeLandParcelsPage() {
 
               <Reveal delay={240}>
                 <div className="calloutBox" style={{ gridColumn: '1 / -1' }}>
-                  <h3>Construction and marketing, offered as a package — here specifically</h3>
+                  <h3>Development, branding and advertising, offered as a package — here specifically</h3>
                   <p>
-                    A large-parcel buyer or JDA partner is the audience most likely to want us involved from
-                    land through to final sale, so we make that offer explicit on this page rather than
+                    A large-parcel buyer is the audience most likely to want us involved from land through to
+                    a finished, visible asset, so we make that offer explicit on this page rather than
                     implying it elsewhere. One accountable party across{' '}
                     {pillars.map((p, i) => (
                       <span key={p.slug}>

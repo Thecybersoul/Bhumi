@@ -1,8 +1,18 @@
-/* The six-pillar value chain — Plan §6 (homepage) and the
-   Services section. Land, Construction Oversight and Marketing
-   & Advertising are the three named commercial pillars; the
-   other three are the diligence and structuring work that makes
-   the value chain end-to-end. */
+/* Our services.
+
+   Five lines of business. Land Sourcing, Branding, and Outdoor
+   Advertising are delivered directly and are where the business
+   concentrates its own energy. Verification and Development are
+   delivered through Bhumi's managed network of empanelled,
+   independent specialists — legal counsel and licensed surveyors
+   for verification, contractors and project managers for
+   development — with Bhumi holding the mandate, the quality bar,
+   and the single point of accountability for the client.
+
+   That structure is a deliberate strength, not a shortcut: an
+   advocate who is independent of the seller and independent of
+   the transaction has no reason to soften a finding, which is
+   precisely the credibility a verification claim needs. */
 
 export interface Pillar {
   slug: string
@@ -10,14 +20,18 @@ export interface Pillar {
   name: string
   short: string
   promise: string
-  /** Sell the judgment, not just the inventory (Plan §2, Zell). */
+  /** Sell the judgment, not just the inventory. */
   judgment: string
   deliverables: string[]
   proofPoints: { label: string; value: string }[]
   worksWellWith: string[]
   cta: { label: string; href: string }
   audience: string
-  icon: 'land' | 'shield' | 'structure' | 'crane' | 'megaphone' | 'handshake'
+  icon: 'land' | 'shield' | 'crane' | 'billboard' | 'megaphone'
+  /** Delivered directly by Bhumi, or through a managed partner network. */
+  delivery: 'Direct' | 'Partner network'
+  /** Given visual priority on the homepage and services page. */
+  featured: boolean
 }
 
 export const pillars: Pillar[] = [
@@ -41,23 +55,25 @@ export const pillars: Pillar[] = [
       { label: 'Typically reach full diligence', value: '4–6' },
       { label: 'Reach an offer', value: '1–2' },
     ],
-    worksWellWith: ['verification', 'jda-structuring'],
+    worksWellWith: ['verification', 'development'],
     cta: { label: 'Brief us on a sourcing mandate', href: '/contact?intent=sourcing' },
     audience: 'Developers, investors and family offices with a defined acquisition brief',
     icon: 'land',
+    delivery: 'Direct',
+    featured: true,
   },
   {
     slug: 'verification',
     number: '02',
-    name: 'Verification & Diligence',
+    name: 'Verification',
     short: 'The six-stage protocol, published in full',
     promise:
       'A dated, shareable certificate with a clear pass or flag decision — not a verbal assurance.',
     judgment:
-      'Diligence is only worth what its independence is worth. We pull the encumbrance certificate and the RTC ourselves rather than accepting the seller\'s copies, because the single cheapest fraud in this market is a well-photoshopped printout.',
+      'Diligence is only worth what its independence is worth. Every check on the protocol is run by an empanelled advocate or licensed surveyor with no relationship to the seller and no stake in the deal closing — the encumbrance certificate and the RTC are pulled by them, directly from the record, never accepted as a copy from the seller. Bhumi owns the mandate, sets the standard, and publishes the numbers; the independence of the people running the checks is what makes those numbers worth publishing.',
     deliverables: [
       'The full six-stage protocol — intake, title chain, revenue and zoning, litigation, physical survey, report',
-      'Independent EC from Kaveri 2.0 and digitally signed i-RTC from Bhoomi',
+      'Independent EC from Kaveri 2.0 and digitally signed i-RTC from Bhoomi, pulled by our empanelled counsel',
       'Licensed survey with geo-tagged boundary walk',
       'A shareable verification certificate with stated scope limitations',
     ],
@@ -66,113 +82,99 @@ export const pillars: Pillar[] = [
       { label: 'Title chain verified back', value: '30 years' },
       { label: 'Typical turnaround', value: '20–38 days' },
     ],
-    worksWellWith: ['land-sourcing', 'jda-structuring'],
+    worksWellWith: ['land-sourcing', 'development'],
     cta: { label: 'Get a free land verification review', href: '/verification#review' },
     audience: 'Anyone about to pay for land they have not independently checked',
     icon: 'shield',
+    delivery: 'Partner network',
+    featured: false,
   },
   {
-    slug: 'jda-structuring',
+    slug: 'development',
     number: '03',
-    name: 'JDA & Deal Structuring',
-    short: 'Area share, revenue share, or outright — decided on numbers',
+    name: 'Development',
+    short: 'From concept to completion, one point of accountability',
     promise:
-      'The structure that fits your position, modelled side by side before you commit to one.',
+      'Delivered through our vetted development and construction partner network — with Bhumi holding the single point of accountability from the first drawing to handover.',
     judgment:
-      'Landowners are routinely offered whichever structure suits the developer\'s cash position, presented as the only option. Area share, revenue share and outright sale produce very different outcomes for the same parcel — and the tax treatment diverges sharply, particularly the capital gains timing an individual landowner gets under Section 45(5A).',
+      'A landowner or investor rarely needs to own a construction company; they need one party who will not disappear between the architect, the contractor and the approvals desk when something goes wrong. We select and manage the partner for the job at hand rather than forcing every project through the same in-house crew, and we stay accountable for the outcome regardless of which partner is on site.',
     deliverables: [
-      'Side-by-side modelling of area share, revenue share and outright sale',
-      'Developer counterparty diligence — delivery record, litigation, balance sheet',
-      'Term sheet support: share ratio, refundable deposit, timelines, penalty clauses',
-      'Coordination with your tax counsel on GST and capital gains treatment',
-    ],
-    proofPoints: [
-      { label: 'Structures modelled per mandate', value: '3' },
-      { label: 'Capital gains timing (individual / HUF)', value: 'Sec 45(5A)' },
-      { label: 'Counterparty checks per developer', value: '11' },
-    ],
-    worksWellWith: ['verification', 'construction-oversight'],
-    cta: { label: 'Compare JDA structures', href: '/tools/jda-comparator' },
-    audience: 'Landowners weighing a developer proposal, and developers assembling land',
-    icon: 'structure',
-  },
-  {
-    slug: 'construction-oversight',
-    number: '04',
-    name: 'Construction Oversight',
-    short: 'Your representative on site, not the builder\'s',
-    promise:
-      'Independent stage-gate verification of quality, quantity and timeline — reported to you, monthly.',
-    judgment:
-      'The landowner in a joint development has the most at stake and the least visibility. Oversight is not a second project manager; it is an independent record of what was actually built, so that a dispute three years from now is settled by documentation instead of memory.',
-    deliverables: [
-      'Stage-gate inspections tied to the payment and delivery schedule',
-      'Independent material and workmanship verification against specification',
-      'Monthly progress report with dated photographic evidence',
-      'Approval and compliance tracking through to occupancy certificate',
+      'Feasibility, scoping and partner selection matched to the project',
+      'Contracting and stage-gate schedule tied to the delivery plan',
+      'Independent inspection of quality, quantity and timeline at every stage',
+      'Monthly progress reporting with dated photographic evidence, and sign-off through to handover',
     ],
     proofPoints: [
       { label: 'Stage gates per project', value: '9' },
       { label: 'Reporting cadence', value: 'Monthly' },
-      { label: 'Reports to', value: 'You, not the builder' },
+      { label: 'Reports to', value: 'You, not the contractor' },
     ],
-    worksWellWith: ['jda-structuring', 'marketing-advertising'],
-    cta: { label: 'Discuss construction oversight', href: '/services/construction-oversight' },
-    audience: 'JDA landowners and owners running a project through a contractor',
+    worksWellWith: ['land-sourcing', 'branding'],
+    cta: { label: 'Discuss a development mandate', href: '/services/development' },
+    audience: 'Landowners and investors taking a parcel from land to finished asset',
     icon: 'crane',
+    delivery: 'Partner network',
+    featured: false,
   },
   {
-    slug: 'marketing-advertising',
-    number: '05',
-    name: 'Marketing & Advertising',
-    short: 'Campaigns reported as scans and leads, not impressions',
+    slug: 'branding',
+    number: '04',
+    name: 'Branding',
+    short: 'Site identity, built to be seen and built to last',
     promise:
-      'A rate card is not a result. Every campaign is reported on what it actually produced.',
+      'Boundary walls, entrance pylons, highmasts and wall branding — the physical identity a project is judged by before a single unit is sold.',
     judgment:
-      'Price is what you pay; value is what you get. Most agencies in this market report impressions because impressions are unfalsifiable. We report the numbers a seller can act on — qualified enquiries, site visits booked, cost per qualified lead — and we publish the method alongside them.',
+      'A visitor decides what a project is worth before they reach the sales office — the compound wall, the entrance and the signage on the way in do that work. Most developers treat site branding as a finishing touch; we treat it as the first impression the project actually gets, and build it to survive weather, time and a construction site.',
     deliverables: [
-      'Site branding, boundary treatment and entrance identity',
-      'Drone and walkthrough film, plan visualisation and collateral',
-      'Digital campaigns with dedicated landing pages per offer and property type',
-      'Weekly reporting: qualified enquiries, visits booked, cost per qualified lead',
+      'Boundary and compound wall branding',
+      'Entrance pylons and project identity structures',
+      'Highmasts and large-format site signage',
+      'Hoarding and wall branding across the site and approach roads',
     ],
     proofPoints: [
-      { label: 'Landing page per offer', value: 'Always' },
+      { label: 'Structures engineered for', value: 'Monsoon + site conditions' },
+      { label: 'Typical install window', value: '2–4 weeks' },
+      { label: 'Built to last', value: 'Full project cycle' },
+    ],
+    worksWellWith: ['outdoor-advertising', 'development'],
+    cta: { label: 'Brief us on site branding', href: '/services/branding' },
+    audience: 'Developers and landowners with a project ready to be seen',
+    icon: 'billboard',
+    delivery: 'Direct',
+    featured: true,
+  },
+  {
+    slug: 'outdoor-advertising',
+    number: '05',
+    name: 'Outdoor Advertising',
+    short: 'Media that earns the spend, reported honestly',
+    promise:
+      'Site selection, buying and campaign management across billboards, hoardings and highmasts — reported on what it produced, not what it displayed.',
+    judgment:
+      'Most outdoor media is bought on rate card and reported on impressions, a number nobody can act on. We choose sites on visibility, traffic and audience fit, buy at the rate the market actually supports, and report the numbers that matter to a campaign that is trying to sell something — footfall at the site, enquiries generated, cost per qualified lead.',
+    deliverables: [
+      'Site and media selection across billboards, hoardings and highmasts',
+      'Campaign planning, buying and rate negotiation',
+      'Installation and maintenance coordination for the campaign duration',
+      'Performance reporting built around enquiries generated, not impressions served',
+    ],
+    proofPoints: [
       { label: 'Reported metric', value: 'Qualified leads' },
       { label: 'Reporting cadence', value: 'Weekly' },
+      { label: 'Media formats', value: 'Billboards · hoardings · highmasts' },
     ],
-    worksWellWith: ['construction-oversight', 'sales-handover'],
-    cta: { label: 'See campaign numbers', href: '/portfolio' },
-    audience: 'Developers and landowners taking a finished or launching project to market',
+    worksWellWith: ['branding', 'development'],
+    cta: { label: 'Plan an outdoor campaign', href: '/services/outdoor-advertising' },
+    audience: 'Developers and brands who need to be seen where it counts',
     icon: 'megaphone',
-  },
-  {
-    slug: 'sales-handover',
-    number: '06',
-    name: 'Sales & Handover',
-    short: 'From qualified buyer to registered document',
-    promise:
-      'The deal closes at the Sub-Registrar, not at the agreement. We stay until it does.',
-    judgment:
-      'A large number of transactions in this market stall between agreement and registration — e-Khata not in place, a release deed never recorded, a bank waiting on a document nobody owns. Closing is an operational discipline, and treating it as an afterthought is how six months of work evaporates.',
-    deliverables: [
-      'Buyer qualification and negotiation support',
-      'Documentation runway: e-Khata, EC, release deeds, no-dues and approvals',
-      'Stamp duty and registration computation, and Sub-Registrar coordination',
-      'Post-registration handover: mutation, khata transfer and record closure',
-    ],
-    proofPoints: [
-      { label: 'Statutory outlay modelled upfront', value: '~7.5%' },
-      { label: 'Registration blockers pre-cleared', value: 'Before agreement' },
-      { label: 'Closed at', value: 'Sub-Registrar' },
-    ],
-    worksWellWith: ['marketing-advertising', 'verification'],
-    cta: { label: 'Talk about a live transaction', href: '/contact?intent=transaction' },
-    audience: 'Sellers and buyers with a deal in motion',
-    icon: 'handshake',
+    delivery: 'Direct',
+    featured: true,
   },
 ]
 
 export function getPillar(slug: string) {
   return pillars.find((p) => p.slug === slug)
 }
+
+export const featuredPillars = pillars.filter((p) => p.featured)
+export const partnerPillars = pillars.filter((p) => !p.featured)

@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    Domain types — Bhumi Estates
-   Structured around the Website Business Plan: six-pillar value
+   Structured around the Website Business Plan: five-service value
    chain, six-stage verification protocol, six asset classes.
    ═══════════════════════════════════════════════════════════ */
 

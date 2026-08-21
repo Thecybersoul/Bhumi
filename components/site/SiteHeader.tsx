@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Logo from '@/components/Logo'
 import Icon from './Icon'
-import { primaryNav, utilityNav, wa, brand } from '@/lib/content/brand'
+import { primaryNav, utilityNav, brand } from '@/lib/content/brand'
 
 /* One consistent identity across every page (Plan §2) — the same
    header on the homepage, a corridor page and a tool. WhatsApp is
@@ -84,14 +84,9 @@ export default function SiteHeader({ variant = 'light' }: { variant?: 'light' | 
           <Link href="/marketplace" className="siteHeader__utility">
             Marketplace
           </Link>
-          <a
-            href={wa.general}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-gold btn-sm siteHeader__wa"
-          >
-            <Icon name="whatsapp" size={15} />
-            WhatsApp us
+          <a href={`tel:${brand.phoneRaw}`} className="btn btn-sm siteHeader__call">
+            <Icon name="phone" size={14} />
+            {brand.phone}
           </a>
           <button
             className="siteHeader__burger"
@@ -132,11 +127,8 @@ export default function SiteHeader({ variant = 'light' }: { variant?: 'light' | 
               ))}
             </div>
             <div className="siteHeader__mobileActions">
-              <a href={wa.general} target="_blank" rel="noopener noreferrer" className="btn btn-gold btn-block">
-                <Icon name="whatsapp" size={16} /> WhatsApp us
-              </a>
-              <a href={`tel:${brand.phoneRaw}`} className="btn btn-ghost btn-block">
-                <Icon name="phone" size={15} /> {brand.phone}
+              <a href={`tel:${brand.phoneRaw}`} className="btn btn-primary btn-block">
+                <Icon name="phone" size={15} /> Call {brand.phone}
               </a>
             </div>
           </nav>

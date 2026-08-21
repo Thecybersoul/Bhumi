@@ -169,7 +169,7 @@ export default async function VerificationPage() {
                 { icon: 'checklist' as const, title: 'A single decision', body: 'Verified, or Flagged with the specific reason. No third category, and no hedging language that leaves you to interpret it.' },
                 { icon: 'shield' as const, title: 'Evidence, traced', body: 'Every finding tied to a registered document number or a dated site observation. You can check our work.' },
                 { icon: 'flag' as const, title: 'Stated scope limits', body: 'What we could not verify and why — the pre-2004 gap, a document only a court can produce, a co-owner we could not reach.' },
-                { icon: 'download' as const, title: 'Shareable and dated', body: 'Issued with a reference number and a defined validity period, so a lender or a JDA partner can rely on it.' },
+                { icon: 'download' as const, title: 'Shareable and dated', body: 'Issued with a reference number and a defined validity period, so a lender or a buyer can rely on it.' },
               ].map((c, i) => (
                 <Reveal key={c.title} delay={i * 60}>
                   <div className="listCard">

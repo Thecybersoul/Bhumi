@@ -63,6 +63,17 @@
 .siteHeader.is-transparent .siteHeader__utility { color: rgba(255,255,255,.82); }
 .siteHeader__utility:hover { color: var(--gold-deep); }
 
+.siteHeader__call {
+  background: transparent; border: 1px solid rgba(11,34,57,.2); color: var(--navy);
+}
+.siteHeader__call:hover { border-color: var(--navy); background: var(--navy-tint); }
+.siteHeader.is-transparent .siteHeader__call {
+  border-color: rgba(255,255,255,.35); color: #fff;
+}
+.siteHeader.is-transparent .siteHeader__call:hover {
+  background: rgba(255,255,255,.1); border-color: #fff;
+}
+
 .siteHeader__burger {
   display: none; width: 40px; height: 40px; background: none; border: 0;
   cursor: pointer; position: relative; border-radius: var(--r-sm);
@@ -110,8 +121,8 @@
   .siteHeader__nav, .siteHeader__utility { display: none; }
   .siteHeader__burger { display: block; }
 }
-@media (max-width: 520px) {
-  .siteHeader__wa span { display: none; }
+@media (max-width: 640px) {
+  .siteHeader__call { display: none; }
 }
 
 /* ─── Page hero ──────────────────────────────────────────── */
@@ -257,6 +268,48 @@
 .pillarCard__foot { margin-top: auto; padding-top: 8px; }
 @media (max-width: 1000px) { .pillarGrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 680px) { .pillarGrid { grid-template-columns: 1fr; } }
+
+/* Featured services — Land Sourcing, Branding, Outdoor Advertising */
+.pillarGrid--featured { margin-bottom: 22px; }
+.pillarCard--featured {
+  padding: 34px 30px;
+  background: linear-gradient(165deg, #fff 0%, var(--paper) 100%);
+  border-color: rgba(194,151,74,.28);
+}
+.pillarCard--featured .pillarCard__icon {
+  width: 52px; height: 52px; background: var(--navy);
+  color: var(--gold-soft);
+}
+.pillarCard--featured h3 { font-size: 1.28rem; margin-top: 2px; }
+.pillarCard--featured .pillarCard__short { font-size: .92rem; margin-bottom: 4px; }
+.pillarCard__promise { font-size: .89rem; color: var(--ink-2); line-height: 1.68; flex: 1; }
+.pillarCard--featured .link-arrow { margin-top: 4px; }
+
+/* Partner-delivered services — quieter, grouped under one label */
+.partnerStrip {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  padding: 22px 26px; border: 1px dashed var(--line); border-radius: var(--r-lg);
+  background: var(--paper);
+}
+.partnerStrip__label { display: flex; align-items: flex-start; gap: 14px; max-width: 340px; }
+.partnerStrip__label svg { color: var(--gold-deep); flex-shrink: 0; margin-top: 2px; }
+.partnerStrip__label strong { display: block; font-size: .92rem; color: var(--navy); font-family: var(--serif); font-weight: 600; }
+.partnerStrip__label span { display: block; font-size: .8rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.partnerStrip__items { display: flex; gap: 10px; flex-wrap: wrap; }
+.partnerStrip__item {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 10px 16px; border-radius: 100px; background: #fff;
+  border: 1px solid var(--line); font-size: .85rem; font-weight: 600; color: var(--ink-2);
+  transition: .16s var(--ease);
+}
+.partnerStrip__item svg:first-child { color: var(--navy-500); }
+.partnerStrip__item svg:last-child { color: var(--muted); transition: transform .16s var(--ease); }
+.partnerStrip__item:hover { border-color: var(--navy-500); color: var(--navy); }
+.partnerStrip__item:hover svg:last-child { transform: translateX(2px); }
+@media (max-width: 720px) {
+  .partnerStrip { flex-direction: column; align-items: flex-start; }
+  .partnerStrip__label { max-width: none; }
+}
 
 /* ─── Property type cards ────────────────────────────────── */
 .typeGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }

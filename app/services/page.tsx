@@ -8,9 +8,9 @@ import Icon from '@/components/site/Icon'
 import { pillars } from '@/lib/content/pillars'
 
 export const metadata: Metadata = {
-  title: 'Services — the six-pillar value chain',
+  title: 'Services — land sourcing, branding and outdoor advertising',
   description:
-    'Land sourcing, verification and diligence, JDA and deal structuring, construction oversight, marketing and advertising, and sales and handover. One accountable party from land to final sale.',
+    'Land sourcing, verification, development, branding and outdoor advertising. One accountable party from land to a finished, visible asset.',
   alternates: { canonical: '/services' },
 }
 
@@ -21,15 +21,15 @@ export default function ServicesPage() {
 
       <main id="main">
         <PageHero
-          eyebrow="The six-pillar value chain"
+          eyebrow="Five services, one accountable party"
           title="Most firms broker land or build on it."
           italic="We do the whole chain."
-          lede="Which matters for one reason: it makes us answerable at every stage rather than only the one that suits us. A sourcing firm never has to live with its own diligence. We do."
+          lede="Land Sourcing, Branding and Outdoor Advertising are ours end to end. Verification and Development run through Bhumi's managed network of empanelled, independent specialists — Bhumi holds the mandate and the quality bar throughout."
           crumbs={[{ label: 'Services' }]}
           stats={[
-            { value: '6', label: 'Pillars, each engageable alone' },
-            { value: '1', label: 'Accountable party across all six' },
-            { value: 'Monthly', label: 'Oversight reporting to the owner' },
+            { value: '5', label: 'Services, each engageable alone' },
+            { value: '3', label: 'Delivered directly' },
+            { value: 'Independent', label: 'Verification & development partners' },
             { value: 'Weekly', label: 'Campaign reporting on qualified leads' },
           ]}
         />
@@ -39,17 +39,36 @@ export default function ServicesPage() {
             <div className="grid" style={{ gap: 22 }}>
               {pillars.map((p, i) => (
                 <Reveal key={p.slug} delay={i * 40}>
-                  <article className="card" style={{ padding: 'clamp(26px, 3.2vw, 38px)' }}>
+                  <article
+                    className="card"
+                    style={{
+                      padding: 'clamp(26px, 3.2vw, 38px)',
+                      borderColor: p.featured ? 'rgba(194,151,74,.35)' : 'var(--line)',
+                    }}
+                  >
                     <div className="splitRow" style={{ gap: 'clamp(24px, 4vw, 52px)', alignItems: 'start' }}>
                       <div>
                         <div className="row" style={{ marginBottom: 14 }}>
-                          <span className="pillarCard__icon" style={{ marginBottom: 0 }}>
+                          <span
+                            className="pillarCard__icon"
+                            style={{
+                              marginBottom: 0,
+                              background: p.featured ? 'var(--navy)' : undefined,
+                              color: p.featured ? 'var(--gold-soft)' : undefined,
+                            }}
+                          >
                             <Icon name={p.icon} size={22} />
                           </span>
                           <div>
                             <span className="pillarCard__num">{p.number}</span>
                             <h2 className="h2">{p.name}</h2>
                           </div>
+                          <span
+                            className={`badge ${p.featured ? 'badge-gold' : 'badge-navy'}`}
+                            style={{ marginLeft: 'auto' }}
+                          >
+                            {p.featured ? 'Delivered directly' : 'Partner network'}
+                          </span>
                         </div>
 
                         <p className="lede" style={{ fontSize: '1rem' }}>
@@ -58,7 +77,7 @@ export default function ServicesPage() {
 
                         <div className="calloutBox" style={{ marginTop: 20 }}>
                           <span className="eyebrow" style={{ marginBottom: 8 }}>
-                            The judgment we are selling
+                            {p.featured ? 'The judgment we are selling' : 'Why partner network, not in-house'}
                           </span>
                           <p>{p.judgment}</p>
                         </div>
@@ -109,12 +128,12 @@ export default function ServicesPage() {
         <section className="ctaBand">
           <div className="wrap ctaBand__inner">
             <div>
-              <span className="eyebrow eyebrow-light">Engage one, or all six</span>
+              <span className="eyebrow eyebrow-light">Engage one, or all five</span>
               <h2 className="h1" style={{ color: '#fff' }}>
                 Most clients start with <em>verification.</em>
               </h2>
               <p>
-                It is the cheapest pillar and the one that changes the most decisions. If the parcel does not
+                It is the cheapest service and the one that changes the most decisions. If the parcel does not
                 clear, nothing downstream matters — and you have saved the cost of finding that out later.
               </p>
             </div>
