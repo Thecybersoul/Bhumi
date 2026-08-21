@@ -27,17 +27,16 @@ export const credibilityBar = [
 export const positioning = {
   eyebrow: 'The standard we hold ourselves to',
   title: { before: 'Every claim on this site should be', italic: 'provable.' },
-  body: 'Real estate reputations are built on a permanent record. So we made three rules and applied them to every page: every claim is provable, land itself is the hero rather than logos or lifestyle photography, and every page ends in a specific next step. An unconvertible page is illiquid trust.',
+  body: 'Real estate reputations are built on a permanent record. Every claim on this site is provable, land is the hero rather than logos or lifestyle photography, and every page ends in a specific next step.',
   rules: [
     {
       rule: 'Every claim is provable',
-      detail:
-        'Case studies carry real mandate numbers, including the deals we walked away from. The diligence protocol is published in full rather than described as thorough.',
+      detail: 'Case studies carry real mandate numbers, including the deals we walked away from.',
     },
     {
       rule: 'Land is the flagship, not a sub-page',
       detail:
-        'The Land & Verification page gets the best content and placement on this site, because the best investment on earth is earth, and everything else we do is built on top of it.',
+        'The Land & Verification page gets the best content and placement on this site — everything else we do is built on top of it.',
     },
     {
       rule: 'No dead ends',
@@ -75,7 +74,7 @@ export const largeParcelTeaser = {
     'Full-parcel aerial presentation, not ground-level photography',
     'Headline details public; the memorandum released to verified buyers',
     'Enquiries route to a named advisor, never a shared inbox',
-    'Land through verification, structuring, construction and final sale — one narrative',
+    'Land through verification, development, branding and advertising — one narrative',
   ],
   cta: { label: 'Enter the large-parcel pillar', href: '/large-land-parcels' },
 }

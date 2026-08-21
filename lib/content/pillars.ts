@@ -43,11 +43,10 @@ export const pillars: Pillar[] = [
     promise:
       'We bring you parcels chosen for a reason we will write down, not whatever is currently available.',
     judgment:
-      'Most parcels that reach us fail on something structural before price is ever discussed — no recorded access, an unresolved family interest, a buffer that no design can work around. Sourcing is mostly the discipline of saying no early, in writing, with the reason recorded.',
+      'Most parcels fail on something structural before price is even discussed. We say no early, in writing, with the reason recorded.',
     deliverables: [
       'A written sourcing mandate: use, corridor, extent band, budget and hard constraints',
       'Off-market parcel origination through corridor-level landowner relationships',
-      'A shortlist with a stated reason for inclusion, and a rejection log with reasons',
       'Preliminary title and zoning read before you spend on full diligence',
     ],
     proofPoints: [
@@ -70,10 +69,9 @@ export const pillars: Pillar[] = [
     promise:
       'A dated, shareable certificate with a clear pass or flag decision — not a verbal assurance.',
     judgment:
-      'Diligence is only worth what its independence is worth. Every check on the protocol is run by an empanelled advocate or licensed surveyor with no relationship to the seller and no stake in the deal closing — the encumbrance certificate and the RTC are pulled by them, directly from the record, never accepted as a copy from the seller. Bhumi owns the mandate, sets the standard, and publishes the numbers; the independence of the people running the checks is what makes those numbers worth publishing.',
+      'Diligence is only worth what its independence is worth. Every check is run by an empanelled advocate or surveyor with no relationship to the seller — documents are pulled directly from the record, never accepted as a seller\'s copy.',
     deliverables: [
       'The full six-stage protocol — intake, title chain, revenue and zoning, litigation, physical survey, report',
-      'Independent EC from Kaveri 2.0 and digitally signed i-RTC from Bhoomi, pulled by our empanelled counsel',
       'Licensed survey with geo-tagged boundary walk',
       'A shareable verification certificate with stated scope limitations',
     ],
@@ -97,10 +95,9 @@ export const pillars: Pillar[] = [
     promise:
       'Delivered through our vetted development and construction partner network — with Bhumi holding the single point of accountability from the first drawing to handover.',
     judgment:
-      'A landowner or investor rarely needs to own a construction company; they need one party who will not disappear between the architect, the contractor and the approvals desk when something goes wrong. We select and manage the partner for the job at hand rather than forcing every project through the same in-house crew, and we stay accountable for the outcome regardless of which partner is on site.',
+      'You rarely need to own a construction company — you need one party who will not disappear between the architect, the contractor and the approvals desk. We select the right partner for the job and stay accountable for the outcome.',
     deliverables: [
       'Feasibility, scoping and partner selection matched to the project',
-      'Contracting and stage-gate schedule tied to the delivery plan',
       'Independent inspection of quality, quantity and timeline at every stage',
       'Monthly progress reporting with dated photographic evidence, and sign-off through to handover',
     ],
@@ -124,7 +121,7 @@ export const pillars: Pillar[] = [
     promise:
       'Boundary walls, entrance pylons, highmasts and wall branding — the physical identity a project is judged by before a single unit is sold.',
     judgment:
-      'A visitor decides what a project is worth before they reach the sales office — the compound wall, the entrance and the signage on the way in do that work. Most developers treat site branding as a finishing touch; we treat it as the first impression the project actually gets, and build it to survive weather, time and a construction site.',
+      'A visitor decides what a project is worth before they reach the sales office. Most developers treat site branding as a finishing touch — we treat it as the first impression, built to survive weather and time.',
     deliverables: [
       'Boundary and compound wall branding',
       'Entrance pylons and project identity structures',
@@ -151,7 +148,7 @@ export const pillars: Pillar[] = [
     promise:
       'Site selection, buying and campaign management across billboards, hoardings and highmasts — reported on what it produced, not what it displayed.',
     judgment:
-      'Most outdoor media is bought on rate card and reported on impressions, a number nobody can act on. We choose sites on visibility, traffic and audience fit, buy at the rate the market actually supports, and report the numbers that matter to a campaign that is trying to sell something — footfall at the site, enquiries generated, cost per qualified lead.',
+      'Most outdoor media is bought on rate card and reported on impressions — a number nobody can act on. We choose sites on visibility and traffic, and report what actually matters: enquiries generated, cost per qualified lead.',
     deliverables: [
       'Site and media selection across billboards, hoardings and highmasts',
       'Campaign planning, buying and rate negotiation',
