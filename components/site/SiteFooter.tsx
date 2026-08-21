@@ -17,13 +17,13 @@ export default function SiteFooter() {
         <div className="siteFooter__cta">
           <div>
             <span className="eyebrow eyebrow-light">One next step</span>
-            <h2 className="h2">Send us a survey number.</h2>
-            <p>A preliminary read on what you own, or what you are about to buy — back in a couple of days, at no cost.</p>
+            <h2 className="h2">Tell us what you are trying to do.</h2>
+            <p>A sourcing brief, a site that needs branding, or a campaign that needs to be seen.</p>
           </div>
           <div className="siteFooter__ctaActions">
-            <a href={wa.verification} target="_blank" rel="noopener noreferrer" className="btn btn-gold btn-lg">
-              <Icon name="whatsapp" size={17} /> Get a free verification review
-            </a>
+            <Link href="/contact" className="btn btn-gold btn-lg">
+              Brief us on a mandate <Icon name="arrow" size={15} />
+            </Link>
             <a href={`tel:${brand.phoneRaw}`} className="btn btn-outline-light btn-lg">
               <Icon name="phone" size={15} /> {brand.phone}
             </a>
@@ -93,13 +93,12 @@ export default function SiteFooter() {
           <div className="siteFooter__col">
             <h3>Resources</h3>
             <ul>
-              <li><Link href="/verification">Verification protocol</Link></li>
-              <li><Link href="/verification#transparency">Transparency dashboard</Link></li>
-              <li><Link href="/tools">Decision tools</Link></li>
-              <li><Link href="/checklist">Verification checklist</Link></li>
-              <li><Link href="/portfolio">Case studies</Link></li>
-              <li><Link href="/insights">Insights</Link></li>
+              <li><Link href="/resources#work">Our work</Link></li>
+              <li><Link href="/resources#corridors">Corridors</Link></li>
+              <li><Link href="/resources#tools">Decision tools</Link></li>
+              <li><Link href="/resources#insights">Insights</Link></li>
               <li><Link href="/marketplace">Marketplace</Link></li>
+              <li><Link href="/verification">Verification protocol</Link></li>
               <li><Link href="/contact">Contact</Link></li>
             </ul>
           </div>

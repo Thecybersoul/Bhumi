@@ -13,16 +13,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const fixed: MetadataRoute.Sitemap = [
     { url: `${base}/`, priority: 1, changeFrequency: 'weekly', lastModified: now },
-    // The flagship page carries the highest priority after the homepage (Plan §3C).
-    { url: `${base}/verification`, priority: 0.95, changeFrequency: 'weekly', lastModified: now },
+    // Sourcing, branding and advertising are the commercial lines, so
+    // Services carries the highest priority after the homepage.
+    { url: `${base}/services`, priority: 0.95, changeFrequency: 'monthly', lastModified: now },
     { url: `${base}/large-land-parcels`, priority: 0.9, changeFrequency: 'weekly', lastModified: now },
     { url: `${base}/property-types`, priority: 0.85, changeFrequency: 'monthly', lastModified: now },
-    { url: `${base}/services`, priority: 0.85, changeFrequency: 'monthly', lastModified: now },
-    { url: `${base}/corridors`, priority: 0.85, changeFrequency: 'weekly', lastModified: now },
-    { url: `${base}/portfolio`, priority: 0.8, changeFrequency: 'monthly', lastModified: now },
-    { url: `${base}/tools`, priority: 0.8, changeFrequency: 'monthly', lastModified: now },
-    { url: `${base}/insights`, priority: 0.8, changeFrequency: 'weekly', lastModified: now },
-    { url: `${base}/marketplace`, priority: 0.8, changeFrequency: 'daily', lastModified: now },
+    { url: `${base}/marketplace`, priority: 0.85, changeFrequency: 'daily', lastModified: now },
+    // The four former index pages now redirect into this one hub.
+    { url: `${base}/resources`, priority: 0.8, changeFrequency: 'weekly', lastModified: now },
+    { url: `${base}/verification`, priority: 0.7, changeFrequency: 'monthly', lastModified: now },
     { url: `${base}/checklist`, priority: 0.75, changeFrequency: 'monthly', lastModified: now },
     { url: `${base}/contact`, priority: 0.7, changeFrequency: 'yearly', lastModified: now },
     { url: `${base}/privacy`, priority: 0.2, changeFrequency: 'yearly', lastModified: now },

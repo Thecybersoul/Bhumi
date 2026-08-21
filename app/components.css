@@ -1076,3 +1076,21 @@
   margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line);
 }
 .loginCard code { font-family: var(--mono); font-size: .72rem; background: var(--navy-tint); padding: 1px 5px; border-radius: 4px; }
+
+/* ─── Resource hub jump nav ──────────────────────────────── */
+.resourceNav {
+  position: sticky; top: var(--header-h, 68px); z-index: 40;
+  background: rgba(255,255,255,.88); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.resourceNav__inner { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.resourceNav__inner::-webkit-scrollbar { display: none; }
+.resourceNav__link {
+  padding: 15px 18px; font-size: .8rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  white-space: nowrap; border-bottom: 2px solid transparent;
+  transition: color .2s var(--ease), border-color .2s var(--ease);
+}
+.resourceNav__link:hover { color: var(--navy); border-bottom-color: var(--gold); }
+/* Clear the sticky header + jump bar when an anchor is followed. */
+.resourceNav ~ section[id] { scroll-margin-top: 124px; }

@@ -47,11 +47,21 @@ export const wa = {
 
 export type NavItem = { label: string; href: string; description?: string; children?: NavItem[] }
 
+/* Five top-level destinations, not nine. Sourcing, Branding and
+   Outdoor Advertising lead the Services menu; the two partner-network
+   services sit below a divider rather than competing for the eye. */
 export const primaryNav: NavItem[] = [
   {
-    label: 'Land & Verification',
-    href: '/verification',
-    description: 'The six-stage protocol and our published diligence numbers',
+    label: 'Services',
+    href: '/services',
+    description: 'Sourcing, branding and outdoor advertising',
+    children: [
+      { label: 'Land Sourcing', href: '/services/land-sourcing' },
+      { label: 'Branding', href: '/services/branding' },
+      { label: 'Outdoor Advertising', href: '/services/outdoor-advertising' },
+      { label: 'Development', href: '/services/development' },
+      { label: 'Verification', href: '/services/verification' },
+    ],
   },
   {
     label: 'Property Types',
@@ -66,15 +76,11 @@ export const primaryNav: NavItem[] = [
       { label: 'Large land parcels', href: '/large-land-parcels' },
     ],
   },
-  { label: 'Services', href: '/services', description: 'The five-service value chain' },
-  { label: 'Corridors', href: '/corridors', description: 'Where we operate, and why' },
-  { label: 'Portfolio', href: '/portfolio', description: 'Real numbers from real mandates' },
-  { label: 'Tools', href: '/tools', description: 'Decision-support calculators' },
-  { label: 'Insights', href: '/insights', description: 'Explainers, corridor notes, market data' },
+  { label: 'Marketplace', href: '/marketplace', description: 'Parcels currently on the platform' },
+  { label: 'Resources', href: '/resources', description: 'Work, corridors, tools and insights' },
+  { label: 'Contact', href: '/contact', description: 'Talk to an advisor' },
 ]
 
 export const utilityNav: NavItem[] = [
-  { label: 'Marketplace', href: '/marketplace' },
   { label: 'Verification checklist', href: '/checklist' },
-  { label: 'Contact', href: '/contact' },
 ]

@@ -206,7 +206,7 @@ export const propertyTypes: PropertyTypeDef[] = [
     metricLabels: { extent: 'Extent', price: 'Per acre' },
     audience: 'Landowners, developers and investors buying or holding raw land',
     relatedTools: ['zoning-checker', 'corridor-comparison'],
-    cta: { label: 'Get a free land verification review', href: '/verification#review' },
+    cta: { label: 'Brief us on a sourcing mandate', href: '/contact?intent=sourcing' },
   },
   {
     slug: 'warehouses',

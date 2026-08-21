@@ -81,7 +81,7 @@ export const pillars: Pillar[] = [
       { label: 'Typical turnaround', value: '20–38 days' },
     ],
     worksWellWith: ['land-sourcing', 'development'],
-    cta: { label: 'Get a free land verification review', href: '/verification#review' },
+    cta: { label: 'Discuss a verification mandate', href: '/contact?intent=verification' },
     audience: 'Anyone about to pay for land they have not independently checked',
     icon: 'shield',
     delivery: 'Partner network',

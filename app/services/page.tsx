@@ -130,19 +130,20 @@ export default function ServicesPage() {
             <div>
               <span className="eyebrow eyebrow-light">Engage one, or all five</span>
               <h2 className="h1" style={{ color: '#fff' }}>
-                Most clients start with <em>verification.</em>
+                Most mandates start with <em>sourcing.</em>
               </h2>
               <p>
-                It is the cheapest service and the one that changes the most decisions. If the parcel does not
-                clear, nothing downstream matters — and you have saved the cost of finding that out later.
+                Find the right parcel and everything downstream gets easier — what gets built on it, how it is
+                branded, and how hard it is to sell. Branding and advertising are where a good asset stops
+                being a secret.
               </p>
             </div>
             <div className="ctaBand__actions">
-              <Link href="/verification#review" className="btn btn-gold btn-lg">
-                Get a free verification review
+              <Link href="/contact" className="btn btn-gold btn-lg">
+                Brief us on a mandate
               </Link>
-              <Link href="/contact" className="btn btn-outline-light btn-lg">
-                Discuss a full mandate
+              <Link href="/services/branding" className="btn btn-outline-light btn-lg">
+                See branding &amp; advertising
               </Link>
             </div>
           </div>

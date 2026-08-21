@@ -81,9 +81,6 @@ export default function SiteHeader({ variant = 'light' }: { variant?: 'light' | 
         </nav>
 
         <div className="siteHeader__actions">
-          <Link href="/marketplace" className="siteHeader__utility">
-            Marketplace
-          </Link>
           <a href={`tel:${brand.phoneRaw}`} className="btn btn-sm siteHeader__call">
             <Icon name="phone" size={14} />
             {brand.phone}

@@ -1,16 +1,14 @@
-import { wa } from './brand'
-
 /* Homepage copy — Plan §6: "The one-line pitch, the credibility
    bar (§3B), the five-service value chain, one clear next step."
    Every claim here has to be provable (Plan §2, Zell). */
 
 export const hero = {
   eyebrow: 'Land Sourcing · Branding · Outdoor Advertising',
-  title: { before: 'We publish the', italic: 'proof,', after: ' not the pitch.' },
+  title: { before: 'We find the land, and make it', italic: 'impossible', after: ' to miss.' },
   subhead:
-    'Bhumi Estates sources and verifies land before it is bought, takes it through development, then builds and advertises the identity a finished asset is judged by. Our diligence protocol is published in full. So are our numbers.',
-  primary: { label: 'Get a free land verification review', href: wa.verification },
-  secondary: { label: 'See the verification protocol', href: '/verification' },
+    'Bhumi Estates sources the parcel worth buying, builds the identity a project is judged by, and puts it in front of the people who matter — across Bengaluru and its growth corridors.',
+  primary: { label: 'Brief us on a mandate', href: '/contact' },
+  secondary: { label: 'See what we do', href: '/services' },
   tertiary: { label: 'Call an advisor', href: 'tel:+918123845749' },
 }
 
@@ -112,8 +110,8 @@ export const faq = {
 
 export const closingCta = {
   eyebrow: 'One next step',
-  title: { before: 'Send us a survey number.', italic: 'We will tell you what we find.' },
-  body: 'No obligation, no pitch deck. A preliminary read on what you own or what you are about to buy, back to you in a couple of days.',
-  primary: { label: 'Get a free land verification review', href: wa.verification },
-  secondary: { label: 'Download the verification checklist', href: '/checklist' },
+  title: { before: 'Tell us what you are trying', italic: 'to do.' },
+  body: 'A sourcing brief, a site that needs branding, or a campaign that needs to be seen. We will tell you what is realistic before we quote it.',
+  primary: { label: 'Brief us on a mandate', href: '/contact' },
+  secondary: { label: 'See what we do', href: '/services' },
 }
