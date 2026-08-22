@@ -25,7 +25,7 @@ const sections = [
   },
   {
     heading: 'Data room requests',
-    body: 'A data room request records your name, organisation, role, contact details, buyer type, indicative ticket size and your acceptance of the confidentiality undertaking. That record exists because access to a seller\'s survey documents and verification report has to be attributable to a named person. It is retained for the life of the mandate and for a reasonable period afterwards.',
+    body: 'A data room request records your name, organisation, role, contact details, buyer type, indicative ticket size and your acceptance of the confidentiality undertaking. That record exists because access to a seller\'s survey documents and verification report has to be attributable to a named person. It is retained for the life of the engagement and for a reasonable period afterwards.',
   },
   {
     heading: 'How it is stored',

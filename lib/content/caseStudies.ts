@@ -5,9 +5,9 @@ import type { CaseStudy } from '@/lib/types'
    must be provable — case studies carry real numbers, not
    adjectives").
 
-   These are representative mandate records. Client names are
-   withheld where the mandate was confidential; every number
-   shown is a mandate figure, and the "what we would do
+   These are representative project records. Client names are
+   withheld where the work was confidential; every number
+   shown is a project figure, and the "what we would do
    differently" note is included because a case study without
    one is marketing, not a record.
    ═══════════════════════════════════════════════════════════ */
@@ -29,7 +29,7 @@ export const caseStudies: CaseStudy[] = [
       { label: 'Intended use', value: 'Phased township' },
     ],
     journey: [
-      { stage: 'Sourcing', detail: '41 parcels screened against a written mandate: 60+ contiguous acres, within 20 km of the airport, non-forest, with recorded access. 34 were rejected on the mandate before any spend.' },
+      { stage: 'Sourcing', detail: '41 parcels screened against a written brief: 60+ contiguous acres, within 20 km of the airport, non-forest, with recorded access. 34 were rejected against that brief before any spend.' },
       { stage: 'Preliminary read', detail: '7 parcels taken into a preliminary title and zoning read. 2 dropped on zoning — one sat partly in a green belt the master plan would not release for the intended density.' },
       { stage: 'Full verification', detail: '5 parcels through the full six-stage protocol. 1 flagged at stage 4 on an undisclosed partition suit; 1 flagged at stage 5 when the measured extent came up 1.4 acres short of the deed extent.' },
       { stage: 'Acquisition', detail: 'Consideration and registration sequencing agreed across all 14 owners so no single holder could stall the assembly; two owners required staged payments tied to mutation completion.' },

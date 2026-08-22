@@ -212,7 +212,7 @@ export default function WarehouseChecklist() {
           <div className="toolDisclaimer">
             Thresholds reflect prevailing Grade A market convention in India, not a statutory standard.
             Measure clear height at eaves at several points yourself — a 620mm variance from a marketing pack
-            is a real finding we have made on a live mandate.
+            is a real finding we have made on a live project.
           </div>
         </div>
       </div>

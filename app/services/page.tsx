@@ -24,7 +24,7 @@ export default function ServicesPage() {
           eyebrow="Five services, one accountable party"
           title="Most firms broker land or build on it."
           italic="We do the whole chain."
-          lede="Land Sourcing, Branding and Outdoor Advertising are ours end to end. Verification and Development run through Bhumi's managed network of empanelled, independent specialists — Bhumi holds the mandate and the quality bar throughout."
+          lede="Land Sourcing, Branding and Outdoor Advertising are ours end to end. Verification and Development run through Bhumi's managed network of empanelled, independent specialists — Bhumi holds the relationship and the quality bar throughout."
           crumbs={[{ label: 'Services' }]}
           stats={[
             { value: '5', label: 'Services, each engageable alone' },
@@ -130,7 +130,7 @@ export default function ServicesPage() {
             <div>
               <span className="eyebrow eyebrow-light">Engage one, or all five</span>
               <h2 className="h1" style={{ color: '#fff' }}>
-                Most mandates start with <em>sourcing.</em>
+                Most projects start with <em>sourcing.</em>
               </h2>
               <p>
                 Find the right parcel and everything downstream gets easier — what gets built on it, how it is
@@ -140,7 +140,7 @@ export default function ServicesPage() {
             </div>
             <div className="ctaBand__actions">
               <Link href="/contact" className="btn btn-gold btn-lg">
-                Brief us on a mandate
+                Tell us what you need
               </Link>
               <Link href="/services/branding" className="btn btn-outline-light btn-lg">
                 See branding &amp; advertising

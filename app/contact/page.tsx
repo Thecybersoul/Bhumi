@@ -26,7 +26,7 @@ const routes = [
   },
   {
     label: 'Land sourcing',
-    detail: 'Brief us on a mandate — extent, corridor, budget and intended use.',
+    detail: 'Tell us what you need — extent, corridor, budget and intended use.',
     href: wa.sourcing,
     icon: 'land' as const,
   },

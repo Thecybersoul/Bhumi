@@ -18,7 +18,7 @@ const sections = [
   },
   {
     heading: 'Indicative information',
-    body: 'Corridor price bands, infrastructure timelines, tool outputs and listing figures are indicative. They are compiled from publicly reported transactions, listing data, published announcements and our own mandate history. They are not valuations, and infrastructure timelines routinely move. Confirm anything you intend to rely on at parcel level.',
+    body: 'Corridor price bands, infrastructure timelines, tool outputs and listing figures are indicative. They are compiled from publicly reported transactions, listing data, published announcements and our own transaction history. They are not valuations, and infrastructure timelines routinely move. Confirm anything you intend to rely on at parcel level.',
   },
   {
     heading: 'The decision-support tools',
@@ -34,7 +34,7 @@ const sections = [
   },
   {
     heading: 'Our role',
-    body: 'We act on mandates for clients. Where we hold or represent inventory, the listing says so, because you should always know which side of a table we are on. We are not an escrow agent, and we do not hold transaction funds.',
+    body: 'We act for clients. Where we hold or represent inventory, the listing says so, because you should always know which side of a table we are on. We are not an escrow agent, and we do not hold transaction funds.',
   },
   {
     heading: 'Fees',

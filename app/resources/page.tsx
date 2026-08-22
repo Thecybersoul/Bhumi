@@ -18,7 +18,7 @@ import { getPropertyType } from '@/lib/content/propertyTypes'
 export const metadata: Metadata = {
   title: 'Resources — work, corridors, tools and insights',
   description:
-    'Case studies with mandate figures, corridor price bands across Bengaluru, decision tools, and written explainers — in one place.',
+    'Case studies with project figures, corridor price bands across Bengaluru, decision tools, and written explainers — in one place.',
   alternates: { canonical: '/resources' },
 }
 
@@ -47,7 +47,7 @@ export default function ResourcesPage() {
           eyebrow="Resources"
           title="The work, and the thinking"
           italic="behind it."
-          lede="Mandates we have run with the numbers attached, the corridors we operate in, the tools we use to reach a decision early, and what we have written down."
+          lede="Projects we have run with the numbers attached, the corridors we operate in, the tools we use to reach a decision early, and what we have written down."
           crumbs={[{ label: 'Resources' }]}
         />
 
@@ -68,7 +68,7 @@ export default function ResourcesPage() {
             <div className="sectionHead">
               <span className="eyebrow">Work</span>
               <h2 className="h1">
-                Mandates, with the numbers <em>left in.</em>
+                Projects, with the numbers <em>left in.</em>
               </h2>
               <p>Each one names what went wrong, or what we walked away from.</p>
             </div>
@@ -225,7 +225,7 @@ export default function ResourcesPage() {
         <section className="ctaBand">
           <div className="wrap ctaBand__inner">
             <div>
-              <span className="eyebrow eyebrow-light">Your mandate</span>
+              <span className="eyebrow eyebrow-light">Your project</span>
               <h2 className="h1" style={{ color: '#fff' }}>
                 Tell us what you are trying <em>to do.</em>
               </h2>
@@ -236,7 +236,7 @@ export default function ResourcesPage() {
             </div>
             <div className="ctaBand__actions">
               <Link href="/contact" className="btn btn-gold btn-lg">
-                Brief us on a mandate
+                Tell us what you need
                 <Icon name="arrow" size={15} />
               </Link>
               <Link href="/services" className="btn btn-outline-light btn-lg">

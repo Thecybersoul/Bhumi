@@ -51,7 +51,7 @@ export default async function PropertyTypesPage() {
                             <span style={{ fontSize: '.78rem', color: 'var(--muted)' }}>
                               {countFor(t.slug) > 0
                                 ? `${countFor(t.slug)} live on the marketplace`
-                                : 'Advisory mandates'}
+                                : 'Advisory work'}
                               {' · '}
                               {t.iconTreatment} presentation
                             </span>

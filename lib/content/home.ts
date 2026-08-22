@@ -7,7 +7,7 @@ export const hero = {
   title: { before: 'We find the land, and make it', italic: 'impossible', after: ' to miss.' },
   subhead:
     'Bhumi Estates sources the parcel worth buying, builds the identity a project is judged by, and puts it in front of the people who matter — across Bengaluru and its growth corridors.',
-  primary: { label: 'Brief us on a mandate', href: '/contact' },
+  primary: { label: 'Tell us what you need', href: '/contact' },
   secondary: { label: 'See what we do', href: '/services' },
   tertiary: { label: 'Call an advisor', href: 'tel:+918123845749' },
 }
@@ -29,7 +29,7 @@ export const positioning = {
   rules: [
     {
       rule: 'Every claim is provable',
-      detail: 'Case studies carry real mandate numbers, including the deals we walked away from.',
+      detail: 'Case studies carry real project numbers, including the deals we walked away from.',
     },
     {
       rule: 'Land is the flagship, not a sub-page',
@@ -60,7 +60,7 @@ export const typesTeaser = {
 
 export const proofTeaser = {
   eyebrow: 'Proof, organised by corridor',
-  title: { before: 'Real mandates.', italic: 'Real numbers.' },
+  title: { before: 'Real projects.', italic: 'Real numbers.' },
   body: 'Including the 620mm clear-height shortfall that renegotiated a warehouse lease, and the 11 acres we dropped at stage four over a partition suit the seller had not mentioned.',
 }
 
@@ -91,7 +91,7 @@ export const faq = {
     },
     {
       q: 'Do you buy land yourself?',
-      a: 'We act on mandates for clients. Where we hold or represent inventory, it is marked as such on the listing, because you should always know which side of a table we are on.',
+      a: 'We act for clients. Where we hold or represent inventory, it is marked as such on the listing, because you should always know which side of a table we are on.',
     },
     {
       q: 'Can I share your verification report with my bank or my partner?',
@@ -112,6 +112,6 @@ export const closingCta = {
   eyebrow: 'One next step',
   title: { before: 'Tell us what you are trying', italic: 'to do.' },
   body: 'A sourcing brief, a site that needs branding, or a campaign that needs to be seen. We will tell you what is realistic before we quote it.',
-  primary: { label: 'Brief us on a mandate', href: '/contact' },
+  primary: { label: 'Tell us what you need', href: '/contact' },
   secondary: { label: 'See what we do', href: '/services' },
 }

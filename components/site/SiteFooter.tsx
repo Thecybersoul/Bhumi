@@ -22,7 +22,7 @@ export default function SiteFooter() {
           </div>
           <div className="siteFooter__ctaActions">
             <Link href="/contact" className="btn btn-gold btn-lg">
-              Brief us on a mandate <Icon name="arrow" size={15} />
+              Tell us what you need <Icon name="arrow" size={15} />
             </Link>
             <a href={`tel:${brand.phoneRaw}`} className="btn btn-outline-light btn-lg">
               <Icon name="phone" size={15} /> {brand.phone}

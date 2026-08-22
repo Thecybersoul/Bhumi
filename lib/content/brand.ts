@@ -39,7 +39,7 @@ export const wa = {
   largeParcel: whatsapp(
     'Hi Bhumi Estates — I am enquiring about a large land parcel and would like to speak to an advisor.'
   ),
-  sourcing: whatsapp('Hi Bhumi Estates — I have a land sourcing mandate I would like to brief you on.'),
+  sourcing: whatsapp('Hi Bhumi Estates — I am looking for land and would like to talk it through.'),
   development: whatsapp('Hi Bhumi Estates — I need a development partner for a project.'),
   branding: whatsapp('Hi Bhumi Estates — I need site branding: boundary wall, entrance or signage.'),
   outdoorAdvertising: whatsapp('Hi Bhumi Estates — I would like to plan an outdoor advertising campaign.'),

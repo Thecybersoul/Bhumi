@@ -69,7 +69,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         <section className="section" style={{ background: 'var(--paper)', borderTop: '1px solid var(--line)' }}>
           <div className="wrap">
             <div className="sectionHead">
-              <span className="eyebrow">The mandate, stage by stage</span>
+              <span className="eyebrow">The project, stage by stage</span>
               <h2 className="h1">
                 What actually <em>happened.</em>
               </h2>
@@ -94,7 +94,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 Results, <em>not adjectives.</em>
               </h2>
               <p>
-                Every figure below is a mandate number. Where a metric is not actionable, we say so rather
+                Every figure below is a project number. Where a metric is not actionable, we say so rather
                 than letting it flatter the result.
               </p>
             </div>
@@ -132,7 +132,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 <div>
                   <span className="eyebrow">Similar situation?</span>
                   <h2 className="h1">
-                    Most mandates start with a <em>single question.</em>
+                    Most projects start with a <em>single question.</em>
                   </h2>
                   <p className="body-text">
                     Tell us what you are looking at and what you are trying to achieve. If we have run
@@ -141,7 +141,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
                   <div style={{ marginTop: 26 }}>
                     <span className="eyebrow" style={{ marginBottom: 12 }}>
-                      Other mandates
+                      Other case studies
                     </span>
                     <div className="stack">
                       {others.map((o) => (
@@ -164,10 +164,10 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 <LeadForm
                   kind="Enquiry"
                   source={`/portfolio/${study.slug}`}
-                  heading="Brief us on your mandate"
+                  heading="Tell us about your project"
                   blurb="Straight to the advisory desk, not a shared inbox."
                   qualifier={{
-                    name: 'mandate',
+                    name: 'project',
                     label: 'What are you trying to achieve?',
                     placeholder: 'Extent, corridor, intended use, timeline',
                   }}

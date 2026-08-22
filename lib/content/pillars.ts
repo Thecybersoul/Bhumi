@@ -6,7 +6,7 @@
    delivered through Bhumi's managed network of empanelled,
    independent specialists — legal counsel and licensed surveyors
    for verification, contractors and project managers for
-   development — with Bhumi holding the mandate, the quality bar,
+   development — with Bhumi holding the relationship, the quality bar,
    and the single point of accountability for the client.
 
    That structure is a deliberate strength, not a shortcut: an
@@ -45,17 +45,17 @@ export const pillars: Pillar[] = [
     judgment:
       'Most parcels fail on something structural before price is even discussed. We say no early, in writing, with the reason recorded.',
     deliverables: [
-      'A written sourcing mandate: use, corridor, extent band, budget and hard constraints',
+      'A written sourcing brief: use, corridor, extent band, budget and hard constraints',
       'Off-market parcel origination through corridor-level landowner relationships',
       'Preliminary title and zoning read before you spend on full diligence',
     ],
     proofPoints: [
-      { label: 'Parcels screened per mandate', value: '30–60' },
+      { label: 'Parcels screened per search', value: '30–60' },
       { label: 'Typically reach full diligence', value: '4–6' },
       { label: 'Reach an offer', value: '1–2' },
     ],
     worksWellWith: ['verification', 'development'],
-    cta: { label: 'Brief us on a sourcing mandate', href: '/contact?intent=sourcing' },
+    cta: { label: 'Tell us what you are looking for', href: '/contact?intent=sourcing' },
     audience: 'Developers, investors and family offices with a defined acquisition brief',
     icon: 'land',
     delivery: 'Direct',
@@ -81,7 +81,7 @@ export const pillars: Pillar[] = [
       { label: 'Typical turnaround', value: '20–38 days' },
     ],
     worksWellWith: ['land-sourcing', 'development'],
-    cta: { label: 'Discuss a verification mandate', href: '/contact?intent=verification' },
+    cta: { label: 'Talk to us about verification', href: '/contact?intent=verification' },
     audience: 'Anyone about to pay for land they have not independently checked',
     icon: 'shield',
     delivery: 'Partner network',
@@ -107,7 +107,7 @@ export const pillars: Pillar[] = [
       { label: 'Reports to', value: 'You, not the contractor' },
     ],
     worksWellWith: ['land-sourcing', 'branding'],
-    cta: { label: 'Discuss a development mandate', href: '/services/development' },
+    cta: { label: 'Talk to us about development', href: '/services/development' },
     audience: 'Landowners and investors taking a parcel from land to finished asset',
     icon: 'crane',
     delivery: 'Partner network',

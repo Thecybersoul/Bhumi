@@ -204,7 +204,7 @@ export default function PlanPage() {
 
         <h3>Every claim must be provable</h3>
         <p>
-          Case studies carry mandate numbers, including the deals that were dropped. The diligence protocol is
+          Case studies carry project numbers, including the deals that were dropped. The diligence protocol is
           published in full rather than described as thorough. The transparency dashboard publishes the flag
           rate — the number a firm has the strongest incentive to hide. If a claim on this site cannot be
           traced to a record, it should be removed rather than softened.
@@ -228,7 +228,7 @@ export default function PlanPage() {
         <p>
           Land Sourcing, Branding and Outdoor Advertising are delivered directly and carry the most weight on
           the site. Verification and Development are delivered through Bhumi&rsquo;s managed network of
-          empanelled, independent specialists — Bhumi holds the mandate and the quality bar; the people running
+          empanelled, independent specialists — Bhumi holds the relationship and the quality bar; the people running
           the checks and the build have no stake in either outcome, which is the point.
         </p>
         <ul>

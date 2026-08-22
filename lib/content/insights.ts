@@ -121,7 +121,7 @@ export const insights: Insight[] = [
     read_minutes: 5,
     body: [
       {
-        text: 'K-RERA mandates that project advertisements display the registration number and the K-RERA website address. The intent is straightforward: you should be able to check the claim before you spend a Saturday at a site office. Non-compliance carries real penalties, extending to a percentage of project cost.',
+        text: 'K-RERA requires that project advertisements display the registration number and the K-RERA website address. The intent is straightforward: you should be able to check the claim before you spend a Saturday at a site office. Non-compliance carries real penalties, extending to a percentage of project cost.',
       },
       {
         heading: 'What the number actually gets you',

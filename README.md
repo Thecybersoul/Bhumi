@@ -59,7 +59,7 @@ Run migrations in the Supabase SQL editor in order:
 | `/large-land-parcels` | Institutional pillar with the NDA-gated data room |
 | `/services` + `/services/[slug]` | The five services, one page each |
 | `/corridors` + `/corridors/[slug]` | Interactive corridor map and six corridor notes |
-| `/portfolio` + `/portfolio/[slug]` | Case studies with mandate numbers, including the deals we walked away from |
+| `/portfolio` + `/portfolio/[slug]` | Case studies with project numbers, including the deals we walked away from |
 | `/tools` + `/tools/[slug]` | Four working decision-support tools |
 | `/insights` + `/insights/[slug]` | Regulation explainers, corridor notes, market data |
 | `/marketplace` | Filterable inventory; every listing states its verification position |
@@ -110,7 +110,7 @@ lib/content/
   pillars.ts         the five-service value chain
   propertyTypes.ts   six asset classes with per-class diligence
   corridors.ts       six corridors with price bands and infrastructure status
-  caseStudies.ts     mandates with real numbers
+  caseStudies.ts     case studies with real numbers
   insights.ts        long-form explainers
   tools.ts           tool registry + construction rates, statutory costs, warehouse thresholds
   landingPages.ts    campaign pages

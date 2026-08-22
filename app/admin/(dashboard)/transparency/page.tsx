@@ -52,7 +52,7 @@ export default async function AdminTransparency() {
         <Icon name="flag" size={15} />
         <span>
           <strong>The one rule.</strong> The flag rate is the figure that makes this dashboard worth
-          publishing. Do not smooth it, do not exclude withdrawn mandates from the denominator, and do not
+          publishing. Do not smooth it, do not exclude withdrawn parcels from the denominator, and do not
           restate a previously published period downward. A diligence firm whose published flag rate falls
           toward zero has stopped being believable.
         </span>

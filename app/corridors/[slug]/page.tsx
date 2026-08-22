@@ -191,7 +191,7 @@ export default async function CorridorPage({ params }: { params: Promise<{ slug:
                 <div>
                   <span className="eyebrow">In this corridor</span>
                   <h2 className="h1">
-                    Currently <em>mandated.</em>
+                    Currently <em>listed.</em>
                   </h2>
                 </div>
                 <Link href="/marketplace" className="btn btn-ghost">

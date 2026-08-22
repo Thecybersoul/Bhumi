@@ -165,7 +165,7 @@ export default function CorridorComparison() {
 
           <div className="toolDisclaimer">
             Bands are indicative ranges compiled from publicly reported transactions, listing data and our own
-            mandate history. A specific parcel can sit outside its corridor band in either direction for good
+            transaction history. A specific parcel can sit outside its corridor band in either direction for good
             reasons — frontage, access, conversion status and assembly all move it.
           </div>
         </div>

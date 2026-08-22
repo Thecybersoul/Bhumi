@@ -26,7 +26,7 @@ export default function ChecklistPage() {
           eyebrow="Free resource"
           title="The Land Verification"
           italic="Checklist."
-          lede="Built directly from the six-stage protocol we run on paid mandates. Every document to collect, every check to run, and the findings that should stop you from paying. Useful, self-contained, and genuinely free."
+          lede="Built directly from the six-stage protocol we run on paid engagements. Every document to collect, every check to run, and the findings that should stop you from paying. Useful, self-contained, and genuinely free."
           crumbs={[{ label: 'Verification checklist' }]}
           stats={[
             { value: '6', label: 'Stages' },

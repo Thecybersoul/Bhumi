@@ -110,7 +110,7 @@ export const landingPages: LandingPage[] = [
       whatsapp: 'Hi Bhumi Estates — I need a warehouse specification audit. The building is at:',
     },
     proof: [
-      { value: '620mm', label: 'Clear-height shortfall found on a live mandate' },
+      { value: '620mm', label: 'Clear-height shortfall found on a live project' },
       { value: '−9.5%', label: 'Rent renegotiated on that finding' },
       { value: '6 days', label: 'Audit turnaround' },
       { value: '6', label: 'Measured checks' },

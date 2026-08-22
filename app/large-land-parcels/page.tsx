@@ -39,8 +39,8 @@ export default async function LargeLandParcelsPage() {
           lede="Bulk buyers, developers land-banking ahead of a corridor, and family offices decide differently from an individual buyer. This pillar is built for how those deals actually transact — aerial-first, assembly-aware, and gated."
           crumbs={[{ label: 'Large Land Parcels' }]}
           stats={[
-            { value: String(parcels.length), label: 'Assemblies currently mandated' },
-            { value: `${totalAcres.toFixed(0)} ac`, label: 'Under mandate' },
+            { value: String(parcels.length), label: 'Assemblies currently listed' },
+            { value: `${totalAcres.toFixed(0)} ac`, label: 'Total extent available' },
             { value: 'NDA', label: 'Gate on the memorandum' },
             { value: 'Named', label: 'Advisor, not a shared inbox' },
           ]}
@@ -121,7 +121,7 @@ export default async function LargeLandParcelsPage() {
         <section className="section" style={{ background: 'var(--paper)', borderTop: '1px solid var(--line)' }}>
           <div className="wrap">
             <div className="sectionHead">
-              <span className="eyebrow">Current mandates</span>
+              <span className="eyebrow">Current assemblies</span>
               <h2 className="h1">
                 Headline details are <em>public.</em>
               </h2>

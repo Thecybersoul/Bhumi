@@ -126,7 +126,7 @@ export default async function PillarPage({ params }: { params: Promise<{ slug: s
                   <h2 className="h1">
                     Where this pillar did the <em>work.</em>
                   </h2>
-                  <p>Mandates where {pillar.name.toLowerCase()} was central, with the numbers it produced.</p>
+                  <p>Projects where {pillar.name.toLowerCase()} was central, with the numbers it produced.</p>
                 </div>
                 <Link href="/portfolio" className="btn btn-ghost">
                   All case studies

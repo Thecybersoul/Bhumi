@@ -728,7 +728,7 @@ export const seedTransparency: TransparencyStats = {
     { stage: 'report', cleared: 271, flagged: 0 },
   ],
   methodology:
-    'Every parcel that enters stage 1 is counted, including mandates later withdrawn by the client. A parcel is "flagged" when a stage produces a finding that we consider disqualifying for the client\'s stated intent — not merely a defect that can be cured. Turnaround is measured from intake to the date the certificate is issued, and excludes time where we are waiting on a document only the client can supply. Figures are updated monthly and never restated downward.',
+    'Every parcel that enters stage 1 is counted, including parcels later withdrawn by the client. A parcel is "flagged" when a stage produces a finding that we consider disqualifying for the client\'s stated intent — not merely a defect that can be cured. Turnaround is measured from intake to the date the certificate is issued, and excludes time where we are waiting on a document only the client can supply. Figures are updated monthly and never restated downward.',
 }
 
 /* ─── Leads and data-room requests (admin demo data) ─────── */

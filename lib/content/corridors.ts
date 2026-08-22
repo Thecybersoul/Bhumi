@@ -208,4 +208,4 @@ export function getCorridor(slug: string) {
 }
 
 export const corridorDisclaimer =
-  'Price bands are indicative ranges compiled from publicly reported transactions, listing data and our own mandate history in each corridor. They are a comparison aid, not a valuation, and they will not reflect a specific parcel\'s position. Infrastructure timelines are as publicly announced and routinely move.'
+  'Price bands are indicative ranges compiled from publicly reported transactions, listing data and our own transaction history in each corridor. They are a comparison aid, not a valuation, and they will not reflect a specific parcel\'s position. Infrastructure timelines are as publicly announced and routinely move.'
