@@ -275,7 +275,7 @@ export default async function LargeLandParcelsPage() {
                     <div>
                       <strong>Large-parcel advisory desk</strong>
                       <small>
-                        Direct: <a href={`mailto:${brand.advisorEmail}`}>{brand.advisorEmail}</a> ·{' '}
+                        <a href={`mailto:${brand.email}`}>{brand.email}</a> ·{' '}
                         <a href={`tel:${brand.phoneRaw}`}>{brand.phone}</a>
                       </small>
                     </div>

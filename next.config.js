@@ -68,7 +68,7 @@ const nextConfig = {
     return [
       { source: '/tools/survey-lookup', destination: '/verification#review', permanent: true },
       { source: '/tools/price-estimator', destination: '/tools/corridor-comparison', permanent: true },
-      { source: '/tools/land-evaluator', destination: '/tools/jda-readiness', permanent: true },
+      { source: '/tools/land-evaluator', destination: '/tools/zoning-checker', permanent: true },
       { source: '/admin/blueprint', destination: '/admin/plan', permanent: true },
       { source: '/admin/feasibility', destination: '/admin/plan', permanent: true },
       { source: '/admin/vision', destination: '/admin/plan', permanent: true },

@@ -45,7 +45,8 @@ ADMIN_PASSWORD=...
 ```
 
 Run migrations in the Supabase SQL editor in order:
-`supabase/schema.sql` → `supabase/migrations/004_business_plan_restructure.sql`.
+`supabase/schema.sql` → `supabase/migrations/004_business_plan_restructure.sql` →
+`supabase/migrations/005_language_cleanup.sql`.
 
 ---
 

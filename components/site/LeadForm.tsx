@@ -18,7 +18,15 @@ export interface LeadFormProps {
   heading?: string
   blurb?: string
   /** The single qualifying question for this context. */
-  qualifier?: { name: string; label: string; placeholder?: string; type?: 'text' | 'number'; options?: string[] }
+  qualifier?: {
+    name: string
+    label: string
+    placeholder?: string
+    type?: 'text' | 'number'
+    options?: string[]
+    /** Pre-selects an option (e.g. from a ?intent= link). */
+    defaultValue?: string
+  }
   whatsappMessage: string
   whatsappLabel?: string
   submitLabel?: string
@@ -139,7 +147,15 @@ export default function LeadForm({
             <div className="form-group">
               <label htmlFor={`${source}-${qualifier.name}`}>{qualifier.label}</label>
               {qualifier.options ? (
-                <select id={`${source}-${qualifier.name}`} name={qualifier.name} defaultValue="">
+                <select
+                  id={`${source}-${qualifier.name}`}
+                  name={qualifier.name}
+                  defaultValue={
+                    qualifier.defaultValue && qualifier.options.includes(qualifier.defaultValue)
+                      ? qualifier.defaultValue
+                      : ''
+                  }
+                >
                   <option value="" disabled>
                     Select…
                   </option>

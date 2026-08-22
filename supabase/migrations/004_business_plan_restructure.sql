@@ -226,5 +226,5 @@ SELECT
     {"stage":"physical","cleared":284,"flagged":29},
     {"stage":"report","cleared":271,"flagged":0}
   ]'::jsonb,
-  'Every parcel that enters stage 1 is counted, including mandates later withdrawn by the client. A parcel is "flagged" when a stage produces a finding we consider disqualifying for the client''s stated intent — not merely a defect that can be cured. Turnaround is measured from intake to certificate issue, excluding time spent waiting on a document only the client can supply. Figures are updated monthly and never restated downward.'
+  'Every parcel that enters stage 1 is counted, including parcels later withdrawn by the client. A parcel is "flagged" when a stage produces a finding we consider disqualifying for the client''s stated intent — not merely a defect that can be cured. Turnaround is measured from intake to certificate issue, excluding time spent waiting on a document only the client can supply. Figures are updated monthly and never restated downward.'
 WHERE NOT EXISTS (SELECT 1 FROM transparency_stats);

@@ -222,29 +222,6 @@ export default function ResourcesPage() {
           </div>
         </section>
 
-        <section className="ctaBand">
-          <div className="wrap ctaBand__inner">
-            <div>
-              <span className="eyebrow eyebrow-light">Your project</span>
-              <h2 className="h1" style={{ color: '#fff' }}>
-                Tell us what you are trying <em>to do.</em>
-              </h2>
-              <p>
-                A sourcing brief, a site that needs branding, or a campaign that needs to be seen. We will
-                tell you what is realistic before we quote it.
-              </p>
-            </div>
-            <div className="ctaBand__actions">
-              <Link href="/contact" className="btn btn-gold btn-lg">
-                Tell us what you need
-                <Icon name="arrow" size={15} />
-              </Link>
-              <Link href="/services" className="btn btn-outline-light btn-lg">
-                See what we do
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
       <SiteFooter />

@@ -4,7 +4,7 @@ import SiteFooter from '@/components/site/SiteFooter'
 import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import { getTransparency } from '@/lib/db'
-import { featuredPillars, partnerPillars } from '@/lib/content/pillars'
+import { featuredPillars, secondaryPillars } from '@/lib/content/pillars'
 import { propertyTypes } from '@/lib/content/propertyTypes'
 import { hero } from '@/lib/content/home'
 
@@ -95,23 +95,17 @@ export default async function Home() {
               ))}
             </div>
 
-            <div className="partnerStrip">
-              <div className="partnerStrip__label">
-                <Icon name="handshake" size={18} />
-                <div>
-                  <strong>Delivered through our managed partner network</strong>
-                  <span>Independent specialists, Bhumi&rsquo;s quality bar and single point of accountability.</span>
-                </div>
-              </div>
-              <div className="partnerStrip__items">
-                {partnerPillars.map((p) => (
-                  <Link key={p.slug} href={`/services/${p.slug}`} className="partnerStrip__item">
-                    <Icon name={p.icon} size={18} />
-                    <span>{p.name}</span>
-                    <Icon name="arrow" size={13} />
-                  </Link>
-                ))}
-              </div>
+            <div className="alsoStrip">
+              {secondaryPillars.map((p) => (
+                <Link key={p.slug} href={`/services/${p.slug}`} className="alsoStrip__item">
+                  <Icon name={p.icon} size={18} />
+                  <div>
+                    <strong>{p.name}</strong>
+                    <span>{p.short}</span>
+                  </div>
+                  <Icon name="arrow" size={14} />
+                </Link>
+              ))}
             </div>
           </div>
         </section>

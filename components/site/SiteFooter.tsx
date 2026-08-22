@@ -68,7 +68,7 @@ export default function SiteFooter() {
             </ul>
           </div>
 
-          <div className="siteFooter__col">
+          <div className="siteFooter__col siteFooter__col--secondary">
             <h3>Property types</h3>
             <ul>
               {propertyTypes.map((t) => (
@@ -79,7 +79,7 @@ export default function SiteFooter() {
             </ul>
           </div>
 
-          <div className="siteFooter__col">
+          <div className="siteFooter__col siteFooter__col--secondary">
             <h3>Corridors</h3>
             <ul>
               {corridors.map((c) => (
@@ -93,10 +93,7 @@ export default function SiteFooter() {
           <div className="siteFooter__col">
             <h3>Resources</h3>
             <ul>
-              <li><Link href="/resources#work">Our work</Link></li>
-              <li><Link href="/resources#corridors">Corridors</Link></li>
-              <li><Link href="/resources#tools">Decision tools</Link></li>
-              <li><Link href="/resources#insights">Insights</Link></li>
+              <li><Link href="/resources">Work &amp; insights</Link></li>
               <li><Link href="/marketplace">Marketplace</Link></li>
               <li><Link href="/verification">Verification protocol</Link></li>
               <li><Link href="/contact">Contact</Link></li>

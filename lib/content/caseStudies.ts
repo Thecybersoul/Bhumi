@@ -83,16 +83,16 @@ export const caseStudies: CaseStudy[] = [
     property_type: 'villas',
     pillars: ['development'],
     summary:
-      'A family building eight villas on their 4.2-acre holding engaged Bhumi to manage development through our partner contractor network. Independent stage-gate inspection at the second-floor slab measured reinforcement spacing at 220mm against a specified 150mm — a structural shortfall invisible once the slab was finished and covered. The contractor corrected it before the next payment milestone released.',
+      'A family building eight villas on their 4.2-acre holding engaged Bhumi to manage the development. Independent stage-gate inspection at the second-floor slab measured reinforcement spacing at 220mm against a specified 150mm — a structural shortfall invisible once the slab was finished and covered. The contractor corrected it before the next payment milestone released.',
     parcel: [
       { label: 'Extent', value: '4.2 acres' },
       { label: 'Units', value: '8 villas' },
-      { label: 'Contractor', value: 'Selected from partner network' },
+      { label: 'Contractor', value: 'Appointed and supervised by Bhumi' },
       { label: 'Payment schedule', value: '9 stage gates' },
       { label: 'Stage flagged', value: '2 of 9' },
     ],
     journey: [
-      { stage: 'Partner selection', detail: 'Contractor selected from Bhumi\'s vetted development partner network against the project\'s scale and budget; contract tied to a 9-stage payment schedule.' },
+      { stage: 'Contractor appointment', detail: 'Contractor appointed against the project\'s scale and budget, with the contract tied to a 9-stage payment schedule.' },
       { stage: 'Stage gate 1', detail: 'Foundation inspected and passed against the approved structural drawings before the first payment released.' },
       { stage: 'Stage gate 2', detail: 'Independent inspector measured reinforcement spacing on the second-floor slab at 220mm centre-to-centre against a specified 150mm, and held the stage.' },
       { stage: 'Correction', detail: 'Contractor required to break and re-lay the non-conforming section before the next payment milestone was released — at the pre-pour-completion cost, not the post-handover one.' },

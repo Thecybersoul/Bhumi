@@ -226,16 +226,16 @@ export default function PlanPage() {
 
         <h2>The five services</h2>
         <p>
-          Land Sourcing, Branding and Outdoor Advertising are delivered directly and carry the most weight on
-          the site. Verification and Development are delivered through Bhumi&rsquo;s managed network of
-          empanelled, independent specialists — Bhumi holds the relationship and the quality bar; the people running
-          the checks and the build have no stake in either outcome, which is the point.
+          Land Sourcing, Branding and Outdoor Advertising carry the most weight across the site — they are
+          where the business concentrates its energy and where the revenue is. Verification and Development
+          complete the chain. The site presents all five as Bhumi services, without distinguishing how any
+          of them is resourced internally.
         </p>
         <ul>
           {pillars.map((p) => (
             <li key={p.slug}>
               <strong>{p.name}</strong>
-              {p.featured ? ' · direct' : ' · partner network'} — {p.short}.{' '}
+              {p.featured ? ' · featured' : ''} — {p.short}.{' '}
               <Link href={`/services/${p.slug}`} className="link-arrow">
                 /services/{p.slug}
               </Link>

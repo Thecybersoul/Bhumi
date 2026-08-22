@@ -38,7 +38,7 @@ const routes = [
   },
   {
     label: 'Development',
-    detail: 'Taking a parcel from land to finished asset, through our partner network.',
+    detail: 'Taking a parcel from land to a finished asset.',
     href: wa.development,
     icon: 'crane' as const,
   },
@@ -56,7 +56,28 @@ const routes = [
   },
 ]
 
-export default function ContactPage() {
+/* Service pages link here as /contact?intent=<slug>. Map those onto the
+   dropdown so the form arrives pre-filled instead of asking again. */
+const INTENT_TO_OPTION: Record<string, string> = {
+  verification: 'Land verification',
+  sourcing: 'Land sourcing',
+  commercial: 'Land sourcing',
+  residential: 'Land verification',
+  villa: 'Land verification',
+  'large-parcel': 'Large land parcel',
+  development: 'Development',
+  branding: 'Branding',
+  advertising: 'Outdoor advertising',
+}
+
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ intent?: string }>
+}) {
+  const { intent } = await searchParams
+  const preselected = intent ? INTENT_TO_OPTION[intent] : undefined
+
   return (
     <>
       <SiteHeader />
@@ -111,31 +132,19 @@ export default function ContactPage() {
                     ))}
                   </div>
 
-                  <div className="factGrid" style={{ marginTop: 30 }}>
-                    <div>
-                      <span className="factGrid__label">Phone</span>
-                      <span className="factGrid__value" style={{ fontSize: '1rem' }}>
-                        <a href={`tel:${brand.phoneRaw}`}>{brand.phone}</a>
-                      </span>
-                    </div>
-                    <div>
-                      <span className="factGrid__label">General</span>
-                      <span className="factGrid__value" style={{ fontSize: '.9rem' }}>
-                        <a href={`mailto:${brand.email}`}>{brand.email}</a>
-                      </span>
-                    </div>
-                    <div>
-                      <span className="factGrid__label">Large parcels</span>
-                      <span className="factGrid__value" style={{ fontSize: '.9rem' }}>
-                        <a href={`mailto:${brand.advisorEmail}`}>{brand.advisorEmail}</a>
-                      </span>
-                    </div>
-                    <div>
-                      <span className="factGrid__label">Office</span>
-                      <span className="factGrid__value" style={{ fontSize: '.88rem', lineHeight: 1.5 }}>
-                        {brand.address.line1}
-                        <br />
-                        {brand.address.line2}
+                  <div className="contactLines">
+                    <a href={`tel:${brand.phoneRaw}`} className="contactLines__row">
+                      <Icon name="phone" size={17} />
+                      <span>{brand.phone}</span>
+                    </a>
+                    <a href={`mailto:${brand.email}`} className="contactLines__row">
+                      <Icon name="mail" size={17} />
+                      <span>{brand.email}</span>
+                    </a>
+                    <div className="contactLines__row">
+                      <Icon name="pin" size={17} />
+                      <span>
+                        {brand.address.line1}, {brand.address.line2}
                       </span>
                     </div>
                   </div>
@@ -162,6 +171,7 @@ export default function ContactPage() {
                         'Selling land or a property',
                         'Something else',
                       ],
+                      defaultValue: preselected,
                     }}
                     whatsappMessage="Hi Bhumi Estates — I'd like to speak to someone about:"
                   />

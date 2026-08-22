@@ -24,13 +24,12 @@ export default function ServicesPage() {
           eyebrow="Five services, one accountable party"
           title="Most firms broker land or build on it."
           italic="We do the whole chain."
-          lede="Land Sourcing, Branding and Outdoor Advertising are ours end to end. Verification and Development run through Bhumi's managed network of empanelled, independent specialists — Bhumi holds the relationship and the quality bar throughout."
+          lede="Find the parcel, check it properly, build on it, and make it impossible to miss. Engage one service or all five."
           crumbs={[{ label: 'Services' }]}
           stats={[
             { value: '5', label: 'Services, each engageable alone' },
-            { value: '3', label: 'Delivered directly' },
-            { value: 'Independent', label: 'Verification & development partners' },
-            { value: 'Weekly', label: 'Campaign reporting on qualified leads' },
+            { value: '6', label: 'Verification stages' },
+            { value: 'Weekly', label: 'Campaign reporting' },
           ]}
         />
 
@@ -63,12 +62,6 @@ export default function ServicesPage() {
                             <span className="pillarCard__num">{p.number}</span>
                             <h2 className="h2">{p.name}</h2>
                           </div>
-                          <span
-                            className={`badge ${p.featured ? 'badge-gold' : 'badge-navy'}`}
-                            style={{ marginLeft: 'auto' }}
-                          >
-                            {p.featured ? 'Delivered directly' : 'Partner network'}
-                          </span>
                         </div>
 
                         <p className="lede" style={{ fontSize: '1rem' }}>
@@ -77,7 +70,7 @@ export default function ServicesPage() {
 
                         <div className="calloutBox" style={{ marginTop: 20 }}>
                           <span className="eyebrow" style={{ marginBottom: 8 }}>
-                            {p.featured ? 'The judgment we are selling' : 'Why partner network, not in-house'}
+                            How we think about it
                           </span>
                           <p>{p.judgment}</p>
                         </div>

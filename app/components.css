@@ -5,13 +5,13 @@
 
 /* ─── Header ─────────────────────────────────────────────── */
 .siteHeader {
-  --header-h: 74px;
+  --header-h: 62px;
   position: sticky; top: 0; z-index: 80;
   transition: background .28s var(--ease), box-shadow .28s var(--ease), border-color .28s var(--ease);
   border-bottom: 1px solid transparent;
 }
 .siteHeader.is-solid {
-  background: rgba(252, 251, 248, .92);
+  background: rgba(252, 251, 248, .94);
   backdrop-filter: blur(18px) saturate(1.4);
   border-bottom-color: var(--line);
 }
@@ -26,102 +26,125 @@
 }
 .siteHeader__inner {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 20px; height: 74px;
+  gap: 20px; height: var(--header-h);
 }
 .siteHeader__brand { display: inline-flex; align-items: center; flex-shrink: 0; }
 
-.siteHeader__nav { display: flex; align-items: center; gap: 2px; }
+.siteHeader__nav { display: flex; align-items: center; gap: 4px; }
 .siteHeader__item { position: relative; }
+/* Quiet by default; the active page is marked with a hairline rule
+   rather than a filled pill, which reads as chrome, not decoration. */
 .siteHeader__link {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: .845rem; font-weight: 500; padding: 9px 12px;
-  border-radius: var(--r-sm); color: var(--ink-2); transition: .16s var(--ease);
-  white-space: nowrap;
+  font-size: .8rem; font-weight: 500; letter-spacing: .01em;
+  padding: 8px 11px; color: var(--ink-2);
+  transition: color .16s var(--ease); white-space: nowrap;
+  position: relative;
 }
-.siteHeader.is-transparent .siteHeader__link { color: rgba(255,255,255,.82); }
-.siteHeader__link:hover, .siteHeader__link.is-active { background: var(--navy-tint); color: var(--navy); }
-.siteHeader.is-transparent .siteHeader__link:hover,
-.siteHeader.is-transparent .siteHeader__link.is-active {
-  background: rgba(255,255,255,.12); color: #fff;
+.siteHeader__link::after {
+  content: ''; position: absolute; left: 11px; right: 11px; bottom: 2px;
+  height: 1px; background: currentColor; opacity: 0; transition: opacity .16s var(--ease);
 }
+.siteHeader.is-transparent .siteHeader__link { color: rgba(255,255,255,.8); }
+.siteHeader__link:hover { color: var(--navy); }
+.siteHeader.is-transparent .siteHeader__link:hover { color: #fff; }
+.siteHeader__link.is-active { color: var(--navy); }
+.siteHeader.is-transparent .siteHeader__link.is-active { color: #fff; }
+.siteHeader__link.is-active::after { opacity: .45; }
 
 .siteHeader__dropdown {
-  position: absolute; top: calc(100% + 6px); left: 0; min-width: 254px;
-  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
-  box-shadow: var(--shadow-md); padding: 8px; display: flex; flex-direction: column;
-  animation: dropIn .16s var(--ease);
+  position: absolute; top: calc(100% + 4px); left: 0; min-width: 216px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-md);
+  box-shadow: var(--shadow-md); padding: 6px; display: flex; flex-direction: column;
+  animation: dropIn .14s var(--ease);
 }
-@keyframes dropIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .siteHeader__dropLink {
-  font-size: .85rem; font-weight: 500; color: var(--ink-2);
-  padding: 9px 12px; border-radius: var(--r-sm); transition: .14s;
+  font-size: .82rem; font-weight: 500; color: var(--ink-2);
+  padding: 8px 11px; border-radius: var(--r-sm); transition: .14s;
 }
 .siteHeader__dropLink:hover { background: var(--navy-tint); color: var(--navy); }
 
-.siteHeader__actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.siteHeader__utility { font-size: .845rem; font-weight: 500; color: var(--ink-2); padding: 8px 4px; }
-.siteHeader.is-transparent .siteHeader__utility { color: rgba(255,255,255,.82); }
-.siteHeader__utility:hover { color: var(--gold-deep); }
+.siteHeader__actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
+/* A plain phone link, not a button — one CTA per screen is enough,
+   and the floating WhatsApp action already carries the primary one. */
 .siteHeader__call {
-  background: transparent; border: 1px solid rgba(11,34,57,.2); color: var(--navy);
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .8rem; font-weight: 600; color: var(--navy);
+  padding: 8px 4px; white-space: nowrap; transition: color .16s var(--ease);
 }
-.siteHeader__call:hover { border-color: var(--navy); background: var(--navy-tint); }
-.siteHeader.is-transparent .siteHeader__call {
-  border-color: rgba(255,255,255,.35); color: #fff;
-}
-.siteHeader.is-transparent .siteHeader__call:hover {
-  background: rgba(255,255,255,.1); border-color: #fff;
-}
+.siteHeader__call:hover { color: var(--gold-deep); }
+.siteHeader.is-transparent .siteHeader__call { color: #fff; }
+.siteHeader.is-transparent .siteHeader__call:hover { color: var(--gold-soft); }
 
 .siteHeader__burger {
   display: none; width: 40px; height: 40px; background: none; border: 0;
   cursor: pointer; position: relative; border-radius: var(--r-sm);
+  margin-right: -8px;
 }
 .siteHeader__burger span,
 .siteHeader__burger span::before,
 .siteHeader__burger span::after {
-  position: absolute; left: 10px; width: 20px; height: 1.8px;
+  position: absolute; left: 11px; width: 18px; height: 1.6px;
   background: var(--navy); border-radius: 2px; transition: .22s var(--ease);
 }
 .siteHeader.is-transparent .siteHeader__burger span,
 .siteHeader.is-transparent .siteHeader__burger span::before,
 .siteHeader.is-transparent .siteHeader__burger span::after { background: #fff; }
 .siteHeader__burger span { top: 19px; }
-.siteHeader__burger span::before { content: ''; top: -6px; }
-.siteHeader__burger span::after { content: ''; top: 6px; }
+.siteHeader__burger span::before { content: ''; top: -5.5px; }
+.siteHeader__burger span::after { content: ''; top: 5.5px; }
 .siteHeader__burger span.is-open { background: transparent; }
 .siteHeader__burger span.is-open::before { top: 0; transform: rotate(45deg); }
 .siteHeader__burger span.is-open::after { top: 0; transform: rotate(-45deg); }
 
-.siteHeader__mobile {
-  position: fixed; inset: 74px 0 0; background: var(--paper);
-  overflow-y: auto; padding: 24px 18px 60px; z-index: 79;
+/* ─── Mobile drawer ──────────────────────────────────────── */
+/* Sits above the header and covers the viewport outright. Rendered
+   as a sibling of <header> (see SiteHeader.tsx) so the header's
+   backdrop-filter cannot become its containing block. */
+.mobileNav { position: fixed; inset: 0; z-index: 120; }
+/* The floating WhatsApp action sits at a very high z-index so it clears
+   page content; while the drawer is open it would punch through the
+   scrim and collide with the drawer's own call button.
+   !important is required: the button sets display:flex inline. */
+body.nav-open .waFloat { display: none !important; }
+.mobileNav__scrim {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  background: rgba(10,42,32,.5); border: 0; padding: 0; cursor: pointer;
   animation: fadeIn .18s ease;
 }
-.siteHeader__mobileGroup { border-bottom: 1px solid var(--line-2); padding: 4px 0; }
-.siteHeader__mobileLink {
-  display: block; padding: 14px 4px; font-family: var(--serif);
-  font-size: 1.16rem; font-weight: 500; color: var(--navy);
+.mobileNav__panel {
+  position: absolute; inset: 0 0 0 auto; width: min(370px, 88vw);
+  background: var(--cream); overflow-y: auto;
+  padding: 22px 22px calc(28px + env(safe-area-inset-bottom, 0px));
+  box-shadow: -20px 0 60px -24px rgba(10,42,32,.5);
+  animation: drawerIn .22s var(--ease);
+  display: flex; flex-direction: column;
 }
-.siteHeader__mobileLink small {
-  display: block; font-family: var(--sans); font-size: .78rem;
-  color: var(--muted); font-weight: 400; margin-top: 2px;
+@keyframes drawerIn { from { transform: translateX(100%); } to { transform: none; } }
+.mobileNav__group { border-bottom: 1px solid var(--line-2); }
+.mobileNav__group:first-child { padding-top: 34px; }
+.mobileNav__link {
+  display: block; padding: 13px 2px 10px; font-family: var(--serif);
+  font-size: 1.05rem; font-weight: 600; color: var(--navy);
 }
-.siteHeader__mobileChildren { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 4px 14px; }
-.siteHeader__mobileChildren a {
-  font-size: .8rem; padding: 6px 12px; border-radius: 100px;
-  background: var(--navy-tint); color: var(--navy-700); font-weight: 500;
+.mobileNav__children { display: flex; flex-direction: column; padding: 0 2px 10px; }
+.mobileNav__children a {
+  font-size: .85rem; color: var(--ink-2); padding: 7px 0; font-weight: 500;
 }
-.siteHeader__mobileUtility { display: flex; flex-wrap: wrap; gap: 16px; padding: 20px 4px; }
-.siteHeader__mobileUtility a { font-size: .86rem; font-weight: 600; color: var(--gold-deep); }
-.siteHeader__mobileActions { display: flex; flex-direction: column; gap: 10px; padding: 8px 0; }
+.mobileNav__children a:hover { color: var(--navy); }
+.mobileNav__call { margin-top: 22px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mobileNav__panel, .mobileNav__scrim { animation: none; }
+}
 
 @media (max-width: 1080px) {
-  .siteHeader__nav, .siteHeader__utility { display: none; }
+  .siteHeader__nav { display: none; }
   .siteHeader__burger { display: block; }
 }
-@media (max-width: 640px) {
+@media (max-width: 560px) {
   .siteHeader__call { display: none; }
 }
 
@@ -151,12 +174,12 @@
 .pageHero.on-navy .pageHero__lede { color: rgba(255,255,255,.76); }
 .pageHero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 .pageHero__stats {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 22px; margin-top: 48px; padding-top: 30px;
+  display: flex; flex-wrap: wrap;
+  gap: 22px 34px; margin-top: 44px; padding-top: 28px;
   border-top: 1px solid rgba(255,255,255,.14);
 }
 .pageHero.is-cream .pageHero__stats { border-top-color: var(--line); }
-.pageHero__stats > div { display: flex; flex-direction: column; gap: 5px; }
+.pageHero__stats > div { display: flex; flex-direction: column; gap: 5px; flex: 0 1 auto; min-width: 0; }
 .pageHero__stats .numeral { font-size: clamp(1.6rem, 3vw, 2.15rem); color: var(--gold-soft); line-height: 1; }
 .pageHero.is-cream .pageHero__stats .numeral { color: var(--navy); }
 .pageHero__stats small { font-size: .78rem; color: rgba(255,255,255,.6); line-height: 1.4; }
@@ -291,29 +314,23 @@
 .pillarCard--featured .link-arrow { margin-top: 4px; }
 
 /* Partner-delivered services — quieter, grouped under one label */
-.partnerStrip {
-  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
-  padding: 22px 26px; border: 1px dashed var(--line); border-radius: var(--r-lg);
-  background: var(--paper);
+/* Two supporting services under the three featured ones. Same visual
+   language as the featured cards, just quieter — no "delivered by"
+   framing, because everything on this site is delivered by Bhumi. */
+.alsoStrip { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 14px; }
+.alsoStrip__item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px; border-radius: var(--r-lg); background: #fff;
+  border: 1px solid var(--line); transition: .18s var(--ease);
 }
-.partnerStrip__label { display: flex; align-items: flex-start; gap: 14px; max-width: 340px; }
-.partnerStrip__label svg { color: var(--gold-deep); flex-shrink: 0; margin-top: 2px; }
-.partnerStrip__label strong { display: block; font-size: .92rem; color: var(--navy); font-family: var(--serif); font-weight: 600; }
-.partnerStrip__label span { display: block; font-size: .8rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
-.partnerStrip__items { display: flex; gap: 10px; flex-wrap: wrap; }
-.partnerStrip__item {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 10px 16px; border-radius: 100px; background: #fff;
-  border: 1px solid var(--line); font-size: .85rem; font-weight: 600; color: var(--ink-2);
-  transition: .16s var(--ease);
-}
-.partnerStrip__item svg:first-child { color: var(--navy-500); }
-.partnerStrip__item svg:last-child { color: var(--muted); transition: transform .16s var(--ease); }
-.partnerStrip__item:hover { border-color: var(--navy-500); color: var(--navy); }
-.partnerStrip__item:hover svg:last-child { transform: translateX(2px); }
+.alsoStrip__item > svg:first-child { color: var(--navy-500); flex-shrink: 0; }
+.alsoStrip__item > svg:last-child { color: var(--muted); flex-shrink: 0; margin-left: auto; transition: transform .18s var(--ease); }
+.alsoStrip__item strong { display: block; font-family: var(--serif); font-size: .98rem; font-weight: 600; color: var(--navy); }
+.alsoStrip__item span { display: block; font-size: .82rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+.alsoStrip__item:hover { border-color: rgba(194,151,74,.45); box-shadow: var(--shadow-md); }
+.alsoStrip__item:hover > svg:last-child { transform: translateX(3px); }
 @media (max-width: 720px) {
-  .partnerStrip { flex-direction: column; align-items: flex-start; }
-  .partnerStrip__label { max-width: none; }
+  .alsoStrip { grid-template-columns: 1fr; }
 }
 
 /* ─── Property type cards ────────────────────────────────── */
@@ -633,10 +650,24 @@
 }
 .checkList svg { color: var(--verified); margin-top: 3px; }
 
-.factGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
-.factGrid > div { background: #fff; padding: 20px 22px; display: flex; flex-direction: column; gap: 5px; }
+/* Flex for the same reason as .resultsRow — no orphaned empty cell. */
+.factGrid { display: flex; flex-wrap: wrap; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
+.factGrid > div { background: #fff; padding: 20px 22px; display: flex; flex-direction: column; gap: 5px; flex: 1 1 180px; min-width: 0; }
 .factGrid dt, .factGrid__label { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
 .factGrid dd, .factGrid__value { font-family: var(--serif); font-size: 1.14rem; font-weight: 600; color: var(--navy); }
+
+/* Contact details as plain rows rather than a bordered fact grid —
+   three short values do not need cells drawn around them. */
+.contactLines { display: flex; flex-direction: column; margin-top: 28px; }
+.contactLines__row {
+  display: flex; align-items: center; gap: 13px;
+  padding: 13px 0; border-bottom: 1px solid var(--line);
+  font-size: .92rem; color: var(--ink-2);
+}
+.contactLines__row:first-child { border-top: 1px solid var(--line); }
+.contactLines__row svg { color: var(--gold-deep); flex-shrink: 0; }
+a.contactLines__row { font-weight: 600; color: var(--navy); transition: color .16s var(--ease); }
+a.contactLines__row:hover { color: var(--gold-deep); }
 
 .calloutBox {
   background: var(--gold-tint); border: 1px solid rgba(194,151,74,.35);
@@ -722,10 +753,24 @@
   .siteFooter__cols { grid-template-columns: repeat(3, 1fr); }
   .siteFooter__brandCol { grid-column: span 3; }
 }
+/* Mobile footer: two link columns, not four. Property types and
+   corridors are one tap away in the nav; repeating all eighteen links
+   here just makes the page end in a wall of text. */
 @media (max-width: 620px) {
-  .siteFooter__cols { grid-template-columns: repeat(2, 1fr); gap: 28px; }
+  .siteFooter { padding-bottom: 28px; }
+  .siteFooter__cols { grid-template-columns: repeat(2, 1fr); gap: 26px; padding: 32px 0 28px; }
   .siteFooter__brandCol { grid-column: span 2; }
+  .siteFooter__col--secondary { display: none; }
   .siteFooter__ctaActions { min-width: 100%; }
+  .siteFooter__cta { padding: 34px 0; }
+  .siteFooter__cta p { font-size: .88rem; }
+  .siteFooter__tagline { margin: 14px 0 12px; font-size: .95rem; }
+  .siteFooter__address { display: none; }
+  .siteFooter__social { margin-top: 14px; }
+  .siteFooter__bottom { padding: 20px 0 12px; font-size: .76rem; }
+  /* Kept on mobile deliberately: this is the "indicative, not a
+     valuation" notice, so it has to stay on every screen size. */
+  .siteFooter__disclaimer { font-size: .68rem; line-height: 1.6; }
 }
 
 /* ─── Tools ──────────────────────────────────────────────── */
@@ -791,11 +836,17 @@
 .listCard p { font-size: .88rem; color: var(--ink-2); line-height: 1.66; }
 .listCard__foot { margin-top: auto; padding-top: 12px; }
 
+/* Flex, not auto-fit grid: an auto-fit track count that does not divide
+   the item count leaves a visibly empty cell (3 items in 2 columns).
+   Flex items simply share whatever row they land on. */
 .resultsRow {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px;
+  display: flex; flex-wrap: wrap; gap: 1px;
   background: var(--line); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
 }
-.resultsRow > div { background: #fff; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+.resultsRow > div {
+  background: #fff; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px;
+  flex: 1 1 140px; min-width: 0;
+}
 .resultsRow .numeral { font-size: 1.35rem; color: var(--navy); }
 .resultsRow small { font-size: .74rem; color: var(--muted); line-height: 1.45; }
 .resultsRow em { font-style: normal; font-size: .72rem; color: var(--gold-deep); }

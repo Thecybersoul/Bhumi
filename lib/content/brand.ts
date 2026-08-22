@@ -10,8 +10,7 @@ export const brand = {
   city: 'Bengaluru',
   phone: '+91 81238 45749',
   phoneRaw: '918123845749',
-  email: 'contact@bhumiestates.in',
-  advisorEmail: 'advisory@bhumiestates.in',
+  email: 'estatesbhumi@gmail.com',
   address: {
     line1: '7th Main, 4th Block, Jayanagar',
     line2: 'Bengaluru 560011, Karnataka, India',

@@ -19,6 +19,9 @@ export default function WhatsAppFloat() {
       href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`}
       target="_blank"
       rel="noopener noreferrer"
+      /* .waFloat is the hook that hides this while the mobile nav
+         drawer is open (see body.nav-open in components.css). */
+      className="waFloat"
       /* Deep brand green with a gold hairline rather than WhatsApp's
          neon #25D366, which fights the palette on every page. */
       style={{

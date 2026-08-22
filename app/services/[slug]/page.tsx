@@ -50,11 +50,7 @@ export default async function PillarPage({ params }: { params: Promise<{ slug: s
           crumbs={[{ label: 'Services', href: '/services' }, { label: pillar.name }]}
           stats={pillar.proofPoints.map((p) => ({ value: p.value, label: p.label }))}
           actions={[{ label: pillar.cta.label, href: pillar.cta.href, variant: 'gold', icon: 'arrow' }]}
-        >
-          <span className={`badge ${pillar.featured ? 'badge-gold' : 'badge-navy'}`} style={{ marginTop: 24 }}>
-            {pillar.featured ? 'Delivered directly by Bhumi' : 'Delivered through our managed partner network'}
-          </span>
-        </PageHero>
+        />
 
         <section className="section-tight">
           <div className="wrap">

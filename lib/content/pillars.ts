@@ -1,18 +1,8 @@
-/* Our services.
+/* Our services — five lines of business, all delivered by Bhumi Estates.
 
-   Five lines of business. Land Sourcing, Branding, and Outdoor
-   Advertising are delivered directly and are where the business
-   concentrates its own energy. Verification and Development are
-   delivered through Bhumi's managed network of empanelled,
-   independent specialists — legal counsel and licensed surveyors
-   for verification, contractors and project managers for
-   development — with Bhumi holding the relationship, the quality bar,
-   and the single point of accountability for the client.
-
-   That structure is a deliberate strength, not a shortcut: an
-   advocate who is independent of the seller and independent of
-   the transaction has no reason to soften a finding, which is
-   precisely the credibility a verification claim needs. */
+   Land Sourcing, Branding and Outdoor Advertising are where the
+   business concentrates its energy and are given visual priority
+   across the site. */
 
 export interface Pillar {
   slug: string
@@ -28,8 +18,6 @@ export interface Pillar {
   cta: { label: string; href: string }
   audience: string
   icon: 'land' | 'shield' | 'crane' | 'billboard' | 'megaphone'
-  /** Delivered directly by Bhumi, or through a managed partner network. */
-  delivery: 'Direct' | 'Partner network'
   /** Given visual priority on the homepage and services page. */
   featured: boolean
 }
@@ -58,7 +46,6 @@ export const pillars: Pillar[] = [
     cta: { label: 'Tell us what you are looking for', href: '/contact?intent=sourcing' },
     audience: 'Developers, investors and family offices with a defined acquisition brief',
     icon: 'land',
-    delivery: 'Direct',
     featured: true,
   },
   {
@@ -69,14 +56,14 @@ export const pillars: Pillar[] = [
     promise:
       'A dated, shareable certificate with a clear pass or flag decision — not a verbal assurance.',
     judgment:
-      'Diligence is only worth what its independence is worth. Every check is run by an empanelled advocate or surveyor with no relationship to the seller — documents are pulled directly from the record, never accepted as a seller\'s copy.',
+      'Diligence is only worth what its independence is worth. Documents are pulled directly from the record, never accepted as a seller\'s copy, and a finding is reported exactly as we find it.',
     deliverables: [
       'The full six-stage protocol — intake, title chain, revenue and zoning, litigation, physical survey, report',
       'Licensed survey with geo-tagged boundary walk',
       'A shareable verification certificate with stated scope limitations',
     ],
     proofPoints: [
-      { label: 'Stages, each separately tracked', value: '6' },
+      { label: 'Stages, separately tracked', value: '6' },
       { label: 'Title chain verified back', value: '30 years' },
       { label: 'Typical turnaround', value: '20–38 days' },
     ],
@@ -84,7 +71,6 @@ export const pillars: Pillar[] = [
     cta: { label: 'Talk to us about verification', href: '/contact?intent=verification' },
     audience: 'Anyone about to pay for land they have not independently checked',
     icon: 'shield',
-    delivery: 'Partner network',
     featured: false,
   },
   {
@@ -93,13 +79,13 @@ export const pillars: Pillar[] = [
     name: 'Development',
     short: 'From concept to completion, one point of accountability',
     promise:
-      'Delivered through our vetted development and construction partner network — with Bhumi holding the single point of accountability from the first drawing to handover.',
+      'One party accountable from the first drawing to handover — feasibility, build and sign-off.',
     judgment:
-      'You rarely need to own a construction company — you need one party who will not disappear between the architect, the contractor and the approvals desk. We select the right partner for the job and stay accountable for the outcome.',
+      'Most projects lose time in the gaps between the architect, the contractor and the approvals desk. We hold those gaps, so there is never a question of whose problem a delay is.',
     deliverables: [
-      'Feasibility, scoping and partner selection matched to the project',
+      'Feasibility, scoping and costing before anything is committed',
       'Independent inspection of quality, quantity and timeline at every stage',
-      'Monthly progress reporting with dated photographic evidence, and sign-off through to handover',
+      'Monthly progress reporting with dated photographic evidence, through to handover',
     ],
     proofPoints: [
       { label: 'Stage gates per project', value: '9' },
@@ -107,10 +93,9 @@ export const pillars: Pillar[] = [
       { label: 'Reports to', value: 'You, not the contractor' },
     ],
     worksWellWith: ['land-sourcing', 'branding'],
-    cta: { label: 'Talk to us about development', href: '/services/development' },
+    cta: { label: 'Discuss a project', href: '/contact?intent=development' },
     audience: 'Landowners and investors taking a parcel from land to finished asset',
     icon: 'crane',
-    delivery: 'Partner network',
     featured: false,
   },
   {
@@ -129,15 +114,14 @@ export const pillars: Pillar[] = [
       'Hoarding and wall branding across the site and approach roads',
     ],
     proofPoints: [
-      { label: 'Structures engineered for', value: 'Monsoon + site conditions' },
+      { label: 'Engineered for', value: 'Monsoon + site conditions' },
       { label: 'Typical install window', value: '2–4 weeks' },
       { label: 'Built to last', value: 'Full project cycle' },
     ],
     worksWellWith: ['outdoor-advertising', 'development'],
-    cta: { label: 'Brief us on site branding', href: '/services/branding' },
+    cta: { label: 'Brief us on site branding', href: '/contact?intent=branding' },
     audience: 'Developers and landowners with a project ready to be seen',
     icon: 'billboard',
-    delivery: 'Direct',
     featured: true,
   },
   {
@@ -158,13 +142,12 @@ export const pillars: Pillar[] = [
     proofPoints: [
       { label: 'Reported metric', value: 'Qualified leads' },
       { label: 'Reporting cadence', value: 'Weekly' },
-      { label: 'Media formats', value: 'Billboards · hoardings · highmasts' },
+      { label: 'Formats', value: 'Billboards & highmasts' },
     ],
     worksWellWith: ['branding', 'development'],
-    cta: { label: 'Plan an outdoor campaign', href: '/services/outdoor-advertising' },
+    cta: { label: 'Plan a campaign', href: '/contact?intent=advertising' },
     audience: 'Developers and brands who need to be seen where it counts',
     icon: 'megaphone',
-    delivery: 'Direct',
     featured: true,
   },
 ]
@@ -174,4 +157,4 @@ export function getPillar(slug: string) {
 }
 
 export const featuredPillars = pillars.filter((p) => p.featured)
-export const partnerPillars = pillars.filter((p) => !p.featured)
+export const secondaryPillars = pillars.filter((p) => !p.featured)
