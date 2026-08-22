@@ -14,15 +14,21 @@ interface LogoProps {
   theme?: 'dark' | 'light'
 }
 
+// Bump this whenever the underlying artwork in public/img/logos changes.
+// /img/:path* is served with a one-year immutable Cache-Control, so a
+// content change under the same filename is invisible to every browser
+// and CDN that already cached it — the query string forces a new URL.
+const LOGO_ARTWORK_VERSION = 2
+
 export default function Logo({ variant = 'horizontal', className = '', style, theme = 'light' }: LogoProps) {
   const isDark = theme === 'dark'
-  
+
   let variantName = variant
   if (variant === 'stacked') {
     variantName = 'primary' as any
   }
 
-  const logoSrc = `/img/logos/bhumi-estates-${variantName}-${theme}.svg`
+  const logoSrc = `/img/logos/bhumi-estates-${variantName}-${theme}.svg?v=${LOGO_ARTWORK_VERSION}`
 
   return (
     <div className={`logo-wrapper logo-${variant} ${className}`} style={{ display: 'inline-flex', alignItems: 'center', height: '100%', ...style }}>

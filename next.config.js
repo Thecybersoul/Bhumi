@@ -36,6 +36,14 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
+        // Brand assets get revised (a logo update, an icon tweak) without
+        // their filename changing, unlike photography — `immutable` above
+        // would make a content change invisible to every cache for a year.
+        // Must come after the /img/:path* rule so it wins on overlap.
+        source: '/img/logos/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=300, must-revalidate' }],
+      },
+      {
         source: '/images/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
