@@ -24,6 +24,16 @@
   margin-top: calc(var(--header-h) * -1);
   padding-top: calc(clamp(32px, 5vw, 64px) + var(--header-h));
 }
+/* On phones the hero text was dense enough to hide most of the
+   background video — a taller, airier navbar plus more room around
+   smaller hero text lets it show through. */
+@media (max-width: 640px) {
+  .siteHeader { --header-h: 68px; }
+  .siteHeader.is-transparent + main .homeHero,
+  .siteHeader.is-transparent ~ main .homeHero {
+    padding-top: calc(56px + var(--header-h));
+  }
+}
 .siteHeader__inner {
   display: flex; align-items: center; justify-content: space-between;
   gap: 20px; height: var(--header-h);
@@ -206,6 +216,11 @@ body.nav-open .waFloat { display: none !important; }
 .pageHero.is-cream .pageHero__stats .numeral { color: var(--navy); }
 .pageHero__stats small { font-size: .78rem; color: rgba(255,255,255,.6); line-height: 1.4; }
 .pageHero.is-cream .pageHero__stats small { color: var(--muted); }
+@media (max-width: 640px) {
+  .pageHero { padding: 104px 0 56px; }
+  .pageHero__title { font-size: clamp(1.85rem, 8.5vw, 2.3rem); }
+  .pageHero__lede { font-size: .96rem; margin-top: 18px; }
+}
 
 /* ─── Homepage hero ──────────────────────────────────────── */
 .homeHero {
@@ -277,6 +292,12 @@ body.nav-open .waFloat { display: none !important; }
 @media (max-width: 940px) {
   .homeHero__grid { grid-template-columns: 1fr; }
   .homeHero__aside { order: 2; }
+}
+@media (max-width: 640px) {
+  .homeHero { padding-bottom: 84px; }
+  .homeHero__title { font-size: clamp(1.9rem, 9vw, 2.5rem); margin: 20px 0 18px; }
+  .homeHero__sub { font-size: .95rem; line-height: 1.65; }
+  .homeHero__actions { margin-top: 28px; }
 }
 
 /* ─── Credibility bar (Plan §3B) ─────────────────────────── */
