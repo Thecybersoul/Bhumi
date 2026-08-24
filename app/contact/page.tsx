@@ -187,12 +187,6 @@ export default async function ContactPage({
                         ))
                       )}
                     </div>
-                    <p style={{ fontSize: '.8rem', color: 'var(--muted)', marginTop: 16, lineHeight: 1.65 }}>
-                      K-RERA agent registration {brand.reraNumber}. Verify at{' '}
-                      <a href="https://rera.karnataka.gov.in" target="_blank" rel="noopener noreferrer" className="link-arrow">
-                        rera.karnataka.gov.in
-                      </a>
-                    </p>
                   </div>
                 </div>
               </Reveal>

@@ -4,29 +4,31 @@ import SiteFooter from '@/components/site/SiteFooter'
 import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import HeroVideo from '@/components/site/HeroVideo'
+import Carousel from '@/components/site/Carousel'
 import { practices } from '@/lib/content/services'
-import { industryContext, contextNote, verificationStages } from '@/lib/content/verification'
-import {
-  hero,
-  practicesIntro,
-  standard,
-  verificationTeaser,
-  brandingTeaser,
-  faq,
-  closingCta,
-} from '@/lib/content/home'
+import { billboards } from '@/lib/content/billboards'
+import { getProperties } from '@/lib/db'
+import { hero, practicesIntro, standard, closingCta } from '@/lib/content/home'
 
 export const revalidate = 300
 
-export default function Home() {
+const inr = (cr: number) => `₹${cr} Cr`
+
+export default async function Home() {
+  const { data: properties } = await getProperties()
+  const featured = properties.slice(0, 6)
+
+  const [property, branding] = practices
+
   return (
     <>
       <SiteHeader variant="transparent" />
 
       <main id="main">
         {/* ── Hero ──
-            Mobile deliberately carries the eyebrow, the headline and
-            one short line — the footage behind it is the point. */}
+            Sized to the viewport on every device, so the fold lands
+            at the bottom of the footage rather than part-way into
+            the next section. */}
         <section className="homeHero">
           <div className="homeHero__bg" aria-hidden="true">
             <HeroVideo className="homeHero__video" />
@@ -55,23 +57,10 @@ export default function Home() {
               </div>
             </Reveal>
           </div>
-        </section>
 
-        {/* ── Industry context ──
-            Generic ground rules, not a track record. */}
-        <section className="contextBar">
-          <div className="wrap">
-            <div className="contextBar__grid">
-              {industryContext.map((s) => (
-                <div key={s.label} className="contextBar__item">
-                  <span className="contextBar__value">{s.value}</span>
-                  <span className="contextBar__label">{s.label}</span>
-                  <span className="contextBar__note">{s.note}</span>
-                </div>
-              ))}
-            </div>
-            <p className="contextBar__disclaimer">{contextNote}</p>
-          </div>
+          <a href="#practices" className="homeHero__scroll" aria-label="Scroll to what we do">
+            <span />
+          </a>
         </section>
 
         {/* ── The two practices ── */}
@@ -117,55 +106,109 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Verification teaser ── */}
-        <section className="section-tight verifTeaser">
-          <div className="wrap">
-            <div className="verifTeaser__grid">
+        {/* ── Property Consultancy: listings carousel ── */}
+        {featured.length > 0 && (
+          <section className="section-tight railSection">
+            <div className="wrap">
               <Reveal>
-                <div>
-                  <span className="secTag">{verificationTeaser.eyebrow}</span>
-                  <h2 className="h1">
-                    {verificationTeaser.title.before} <em>{verificationTeaser.title.italic}</em>
-                  </h2>
-                  <p className="lede">{verificationTeaser.body}</p>
-                  <Link href={verificationTeaser.cta.href} className="btn btn-outline btn-lg">
-                    {verificationTeaser.cta.label} <Icon name="arrow" size={15} />
+                <div className="secHead secHead--row">
+                  <div>
+                    <span className="secTag">{property.name}</span>
+                    <h2 className="h1">
+                      Land and property, <em>currently on the desk.</em>
+                    </h2>
+                  </div>
+                  <Link href="/marketplace" className="btn btn-outline">
+                    Open the marketplace <Icon name="arrow" size={14} />
                   </Link>
                 </div>
               </Reveal>
 
-              <Reveal delay={100}>
-                <ol className="stageMini">
-                  {verificationStages.map((s) => (
-                    <li key={s.key}>
-                      <span className="stageMini__num">{s.number}</span>
-                      <span className="stageMini__body">
-                        <strong>{s.title}</strong>
-                        <small>{s.question}</small>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </Reveal>
+              <Carousel label="Property listings">
+                {featured.map((p) => (
+                  <Link key={p.code} href="/marketplace" className="railCard">
+                    <div className="railCard__photo">
+                      <img src={p.img_url} alt={p.title} loading="lazy" width={800} height={520} />
+                      <span className="railCard__type">{p.location}</span>
+                    </div>
+                    <div className="railCard__body">
+                      <h3>{p.title}</h3>
+                      <dl className="railCard__facts">
+                        {p.extent_acres > 0 && (
+                          <div>
+                            <dt>Extent</dt>
+                            <dd>{p.extent_acres} acres</dd>
+                          </div>
+                        )}
+                        {p.price_per_acre_cr > 0 && (
+                          <div>
+                            <dt>Guide</dt>
+                            <dd>{inr(p.price_per_acre_cr)}/acre</dd>
+                          </div>
+                        )}
+                        <div>
+                          <dt>Use</dt>
+                          <dd>{p.land_use}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </Link>
+                ))}
+              </Carousel>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* ── Branding teaser ── */}
-        <section className="section brandTeaser">
+        {/* ── Branding: billboard carousel ── */}
+        <section className="section railSection is-dark">
           <div className="wrap">
             <Reveal>
-              <div className="brandTeaser__inner">
-                <span className="secTag">{brandingTeaser.eyebrow}</span>
-                <h2 className="display brandTeaser__title">
-                  {brandingTeaser.title.before} <em>{brandingTeaser.title.italic}</em>
-                </h2>
-                <p className="lede">{brandingTeaser.body}</p>
-                <Link href={brandingTeaser.cta.href} className="btn btn-gold btn-lg">
-                  {brandingTeaser.cta.label} <Icon name="arrow" size={15} />
+              <div className="secHead secHead--row">
+                <div>
+                  <span className="secTag">{branding.name}</span>
+                  <h2 className="h1">
+                    Screens on the corridors <em>that carry the city.</em>
+                  </h2>
+                </div>
+                <Link href="/branding-advertising#inventory" className="btn btn-outline-light">
+                  All sites <Icon name="arrow" size={14} />
                 </Link>
               </div>
             </Reveal>
+
+            <Carousel label="Outdoor advertising sites">
+              {billboards.map((b) => (
+                <Link
+                  key={b.id}
+                  href="/branding-advertising#inventory"
+                  className="railCard is-board"
+                >
+                  <div className="railCard__photo">
+                    <img
+                      src={b.image}
+                      alt={b.imageIsMap ? `Location map for ${b.name}` : `Panel at ${b.name}`}
+                      loading="lazy"
+                      width={800}
+                      height={520}
+                    />
+                    <span className="railCard__type">{b.zone} Bengaluru</span>
+                  </div>
+                  <div className="railCard__body">
+                    <h3>{b.name}</h3>
+                    <dl className="railCard__facts">
+                      <div>
+                        <dt>Size</dt>
+                        <dd>{b.size}</dd>
+                      </div>
+                      <div>
+                        <dt>Area</dt>
+                        <dd>{b.area}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </Link>
+              ))}
+            </Carousel>
           </div>
         </section>
 
@@ -191,33 +234,6 @@ export default function Home() {
                     <p>{r.detail}</p>
                   </div>
                 </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── FAQ ── */}
-        <section className="section-tight faqSection">
-          <div className="wrap-narrow">
-            <Reveal>
-              <div className="secHead">
-                <span className="secTag">{faq.eyebrow}</span>
-                <h2 className="h1">
-                  {faq.title.before} <em>{faq.title.italic}</em>
-                </h2>
-              </div>
-            </Reveal>
-            <div className="faqList">
-              {faq.items.map((item) => (
-                <details key={item.q} className="faqItem">
-                  <summary>
-                    {item.q}
-                    <span className="plus" aria-hidden="true">
-                      +
-                    </span>
-                  </summary>
-                  <p>{item.a}</p>
-                </details>
               ))}
             </div>
           </div>

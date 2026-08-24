@@ -1745,14 +1745,6 @@ a.contactLines__row:hover { color: var(--gold-deep); }
   .eyebrow.is-desktop { display: none; }
   .eyebrow.is-mobile { display: inline-flex; }
 
-  .homeHero {
-    min-height: 86svh;
-    display: flex;
-    align-items: flex-end;
-    padding-bottom: 52px;
-  }
-  .homeHero > .wrap { width: 100%; }
-
   /* Lighter overall, weighted to the bottom where the text sits,
      so the upper two-thirds of the frame reads as footage. */
   /* Two layers: a short band under the header so the wordmark keeps
@@ -1886,3 +1878,181 @@ a.contactLines__row:hover { color: var(--gold-deep); }
   .boardCard__head { flex-wrap: wrap; }
   .boardCard__size { text-align: left; flex-direction: row; gap: 8px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Full-viewport hero, rails, board photography.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Hero owns the first screen, on every device ─────────── */
+/* svh (not vh) so the mobile browser's collapsing toolbar cannot
+   push the next section into view on first paint. The header
+   overlays the hero, so its height is already inside the 100svh. */
+.homeHero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: clamp(72px, 9vw, 112px);
+}
+.homeHero > .wrap { width: 100%; }
+
+@supports not (height: 100svh) {
+  .homeHero { min-height: 100vh; }
+}
+
+/* The scroll cue sits at the bottom of the frame and doubles as
+   the affordance that there is in fact more below. */
+.homeHero__scroll {
+  position: absolute; left: 50%; bottom: 26px; z-index: 3;
+  width: 26px; height: 42px; border-radius: 100px;
+  border: 1.5px solid rgba(255,255,255,.4);
+  transform: translateX(-50%);
+  display: grid; place-items: start center; padding-top: 8px;
+}
+.homeHero__scroll span {
+  width: 3px; height: 8px; border-radius: 100px; background: var(--gold-soft);
+  animation: heroScroll 1.9s var(--ease) infinite;
+}
+@keyframes heroScroll {
+  0% { opacity: 0; transform: translateY(0); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(13px); }
+}
+.homeHero__scroll:hover { border-color: var(--gold-soft); }
+@media (prefers-reduced-motion: reduce) {
+  .homeHero__scroll span { animation: none; }
+}
+@media (max-width: 640px) {
+  /* Anchored low on a phone so the footage keeps the upper frame. */
+  .homeHero { justify-content: flex-end; padding-bottom: 72px; }
+  .homeHero__scroll { bottom: 18px; }
+}
+
+/* ─── Header: give the wordmark more presence ────────────── */
+.siteHeader__brand { padding: 2px 0; }
+.siteHeader .logo-wrapper img { height: 100%; }
+
+/* ─── Horizontal rails ───────────────────────────────────── */
+.railSection { overflow: hidden; }
+.railSection.is-dark {
+  background: linear-gradient(140deg, var(--navy) 0%, var(--navy-900) 100%);
+  color: #fff;
+}
+.railSection.is-dark .h1 { color: #fff; }
+.railSection.is-dark .secTag { color: var(--gold-soft); }
+
+.carousel { position: relative; }
+.carousel__track {
+  display: flex; gap: 18px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding-left: 0;
+  padding-bottom: 6px;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.carousel__track::-webkit-scrollbar { display: none; }
+.carousel__track:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: var(--r); }
+.carousel__track > * { scroll-snap-align: start; flex: 0 0 auto; }
+
+.carousel__nav { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.carousel__nav button {
+  width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center;
+  background: #fff; border: 1px solid var(--line); color: var(--navy);
+  transition: background .18s var(--ease), border-color .18s var(--ease), opacity .18s var(--ease);
+}
+.carousel__nav button:first-child svg { transform: rotate(180deg); }
+.carousel__nav button:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-deep); }
+.carousel__nav button:disabled { opacity: .32; cursor: default; }
+.railSection.is-dark .carousel__nav button {
+  background: transparent; border-color: rgba(255,255,255,.28); color: #fff;
+}
+.railSection.is-dark .carousel__nav button:hover:not(:disabled) {
+  border-color: var(--gold-soft); color: var(--gold-soft);
+}
+
+/* ─── Rail card ──────────────────────────────────────────── */
+.railCard {
+  width: clamp(258px, 30vw, 340px);
+  display: flex; flex-direction: column;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: transform .24s var(--ease), box-shadow .24s var(--ease), border-color .24s var(--ease);
+}
+.railCard:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--gold); }
+.railCard__photo { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--line-2); }
+.railCard__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.railCard__type {
+  position: absolute; left: 12px; bottom: 12px;
+  font-family: var(--mono); font-size: .64rem; letter-spacing: .12em;
+  text-transform: uppercase; color: #fff;
+  background: rgba(11,34,25,.78); backdrop-filter: blur(6px);
+  border-radius: 100px; padding: 5px 11px;
+}
+.railCard__body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+.railCard__body h3 {
+  font-family: var(--serif); font-size: 1.02rem; font-weight: 500;
+  color: var(--navy); line-height: 1.36; letter-spacing: -.01em;
+  margin-bottom: 14px;
+}
+.railCard__facts {
+  margin-top: auto; display: flex; flex-wrap: wrap; gap: 10px 18px;
+  padding-top: 14px; border-top: 1px solid var(--line-2);
+}
+.railCard__facts div { display: flex; flex-direction: column; gap: 2px; }
+.railCard__facts dt {
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+}
+.railCard__facts dd { font-size: .85rem; color: var(--navy); font-weight: 500; }
+.railSection.is-dark .railCard { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.14); }
+.railSection.is-dark .railCard__body h3 { color: #fff; }
+.railSection.is-dark .railCard__facts { border-top-color: rgba(255,255,255,.14); }
+.railSection.is-dark .railCard__facts dd { color: var(--gold-soft); }
+.railSection.is-dark .railCard:hover { border-color: var(--gold-soft); }
+@media (max-width: 560px) { .railCard { width: 80vw; } }
+
+/* ─── Board photography on the branding page ─────────────── */
+.boardCard { padding: 0; }
+.boardCard__photo {
+  position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--line-2);
+}
+.boardCard__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.boardCard__mapTag {
+  position: absolute; right: 12px; top: 12px;
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--navy);
+  background: rgba(255,255,255,.9); border-radius: 100px; padding: 5px 11px;
+}
+.boardCard__head,
+.boardCard__flow,
+.boardCard__foot { margin-left: 26px; margin-right: 26px; }
+.boardCard__head { margin-top: 22px; }
+.boardCard__foot { margin-bottom: 22px; }
+
+/* ─── Marketplace lead block (property page) ─────────────── */
+.marketLead { scroll-margin-top: 90px; }
+.marketLead .secHead--row { align-items: flex-start; }
+.marketLead .secHead--row .lede { margin-top: 16px; }
+
+/* ─── Verification lead block ────────────────────────────── */
+.verifLead {
+  background: var(--paper);
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  scroll-margin-top: 90px;
+}
+.verifLead__grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
+  gap: clamp(32px, 5vw, 64px); align-items: center;
+}
+.verifLead__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+@media (max-width: 900px) { .verifLead__grid { grid-template-columns: 1fr; } }
+
+/* ─── Deliverable list (verification sub-page) ───────────── */
+.deliverList { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+.deliverList li {
+  display: flex; gap: 13px; align-items: flex-start;
+  font-size: 1rem; color: var(--ink-2); line-height: 1.7;
+  padding-bottom: 15px; border-bottom: 1px solid var(--line-2);
+}
+.deliverList li:last-child { border-bottom: 0; }
+.deliverList svg { color: var(--verified); flex-shrink: 0; margin-top: 5px; }

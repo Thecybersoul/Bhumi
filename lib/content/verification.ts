@@ -214,11 +214,6 @@ export const industryContext: ContextStat[] = [
     label: 'State records a parcel is checked against',
     note: 'Kaveri, Bhoomi and eCourts',
   },
-  {
-    value: 'K-RERA',
-    label: 'Registration shown on compliant advertising',
-    note: 'Required before a project is marketed',
-  },
 ]
 
 export const contextNote =

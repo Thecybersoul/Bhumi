@@ -29,7 +29,7 @@ export default function SiteFooter() {
 
         <div className="siteFooter__cols">
           <div className="siteFooter__brandCol">
-            <Logo variant="wordmark" theme="dark" style={{ height: 38 }} />
+            <Logo variant="wordmark" theme="dark" style={{ height: 52 }} />
             <p className="siteFooter__tagline">{brand.tagline}</p>
             <p className="siteFooter__address">
               {brand.address.line1}
@@ -69,38 +69,6 @@ export default function SiteFooter() {
             </div>
           ))}
 
-          <div className="siteFooter__col">
-            <h3>More</h3>
-            <ul>
-              <li>
-                <Link href="/marketplace">Marketplace</Link>
-              </li>
-              <li>
-                <Link href="/insights">Insights</Link>
-              </li>
-              <li>
-                <Link href="/property-consultancy#verification">Verification protocol</Link>
-              </li>
-              <li>
-                <Link href="/property-consultancy#checklist">Buyer checklist</Link>
-              </li>
-              <li>
-                <Link href="/contact">Contact</Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* K-RERA requires the registration number to appear in
-            advertising so a buyer can verify before visiting. */}
-        <div className="siteFooter__rera">
-          <Icon name="shield" size={15} />
-          <span>
-            K-RERA agent registration <strong>{brand.reraNumber}</strong> · Verify at{' '}
-            <a href="https://rera.karnataka.gov.in" target="_blank" rel="noopener noreferrer">
-              rera.karnataka.gov.in
-            </a>
-          </span>
         </div>
 
         <div className="siteFooter__bottom">
@@ -114,13 +82,6 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <p className="siteFooter__disclaimer">
-          Information on this site is provided for evaluation and planning. Figures describing land
-          diligence are general industry context rather than a record of work completed, and are not
-          valuations or legal or tax advice. Any parcel-level position should be confirmed in writing before
-          a commitment is made. Verification findings relate only to the parcel and scope stated in the
-          relevant report.
-        </p>
       </div>
     </footer>
   )

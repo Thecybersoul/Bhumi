@@ -5,7 +5,7 @@ import type { Property } from '@/lib/types'
 
 /* One card, six presentations. The headline metrics change with
    the asset class (Plan §4) — a warehouse leads with clear height
-   and power, an apartment leads with carpet area and its RERA
+   and power, an apartment leads with carpet area and its
    number, a land parcel leads with extent and conversion status. */
 
 function money(cr: number) {
@@ -37,7 +37,6 @@ export function headlineMetrics(p: Property): { value: string; label: string }[]
         { value: `${(p.carpet_sqft ?? 0).toLocaleString('en-IN')}`, label: 'Sq ft carpet' },
         { value: `${(p.built_up_sqft ?? 0).toLocaleString('en-IN')}`, label: 'Sq ft super built-up' },
         { value: p.price_per_sqft ? `₹${p.price_per_sqft.toLocaleString('en-IN')}` : 'On request', label: 'Per sq ft' },
-        { value: p.rera_number ? 'Registered' : 'Check', label: 'K-RERA' },
       ]
     case 'villas':
       return [
@@ -79,23 +78,6 @@ export default function PropertyTypeCard({ property: p }: { property: Property }
       <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>
         {p.location} · {p.zone} Bengaluru · {type?.shortName}
       </span>
-
-      {/* K-RERA number inline, not buried (Plan §4) */}
-      {p.rera_number && (
-        <span
-          style={{
-            fontFamily: 'var(--mono)',
-            fontSize: '.7rem',
-            color: 'var(--gold-deep)',
-            background: 'var(--gold-tint)',
-            padding: '4px 9px',
-            borderRadius: 6,
-            alignSelf: 'flex-start',
-          }}
-        >
-          K-RERA {p.rera_number}
-        </span>
-      )}
 
       <div className="resultsRow" style={{ marginTop: 6 }}>
         {metrics.map((m) => (

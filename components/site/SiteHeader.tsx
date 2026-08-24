@@ -49,7 +49,7 @@ export default function SiteHeader({ variant = 'light' }: { variant?: 'light' | 
       <header className={`siteHeader ${solid ? 'is-solid' : 'is-transparent'}`}>
         <div className="wrap siteHeader__inner">
           <Link href="/" className="siteHeader__brand" aria-label={`${brand.name} home`}>
-            <Logo variant="wordmark" theme={solid ? 'light' : 'dark'} style={{ height: 28 }} />
+            <Logo variant="wordmark" theme={solid ? 'light' : 'dark'} style={{ height: 36 }} />
           </Link>
 
           <nav className="siteHeader__nav" aria-label="Primary">

@@ -6,7 +6,6 @@ import BigHero from '@/components/site/BigHero'
 import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import { brandingPractice } from '@/lib/content/services'
-import { insights } from '@/lib/content/insights'
 import { billboards, billboardIntro, billboardSummary } from '@/lib/content/billboards'
 import { wa, brand } from '@/lib/content/brand'
 
@@ -50,7 +49,6 @@ const outdoorPrinciples = [
 
 export default function BrandingPage() {
   const p = brandingPractice
-  const relevant = insights.filter((i) => i.category === 'Outdoor Advertising').slice(0, 3)
 
   return (
     <>
@@ -88,9 +86,6 @@ export default function BrandingPage() {
               </li>
               <li>
                 <a href="#principles">How outdoor is judged</a>
-              </li>
-              <li>
-                <a href="#insights">Insights</a>
               </li>
             </ul>
           </div>
@@ -176,6 +171,20 @@ export default function BrandingPage() {
               {billboards.map((b, i) => (
                 <Reveal key={b.id} delay={i * 55}>
                   <article className="boardCard">
+                    <div className="boardCard__photo">
+                      <img
+                        src={b.image}
+                        alt={
+                          b.imageIsMap
+                            ? `Location map for ${b.name}`
+                            : `Outdoor panel at ${b.name}`
+                        }
+                        loading="lazy"
+                        width={1200}
+                        height={675}
+                      />
+                      {b.imageIsMap && <span className="boardCard__mapTag">Location map</span>}
+                    </div>
                     <div className="boardCard__head">
                       <span className="boardCard__num">{b.number}</span>
                       <div className="boardCard__title">
@@ -267,70 +276,6 @@ export default function BrandingPage() {
             </div>
           </div>
         </section>
-
-        {/* ── Compliance note ── */}
-        <section className="section-tight">
-          <div className="wrap-narrow">
-            <Reveal>
-              <div className="complianceNote">
-                <Icon name="shield" size={20} />
-                <div>
-                  <h3>Advertising a project has rules attached</h3>
-                  <p>
-                    Any advertisement for a registered real estate project must carry its RERA registration
-                    number so a buyer can verify the project before visiting it. We build that into the
-                    artwork rather than treating it as a disclaimer to be added later, and our own agent
-                    registration is published in the footer of this site.
-                  </p>
-                  <a
-                    href="https://rera.karnataka.gov.in"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="complianceNote__link"
-                  >
-                    Verify any K-RERA registration <Icon name="arrow" size={13} />
-                  </a>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ── Insights ── */}
-        {relevant.length > 0 && (
-          <section className="section-tight" id="insights">
-            <div className="wrap">
-              <Reveal>
-                <div className="secHead secHead--row">
-                  <div>
-                    <span className="secTag">Insights</span>
-                    <h2 className="h1">
-                      Notes on <em>being seen.</em>
-                    </h2>
-                  </div>
-                  <Link href="/insights" className="btn btn-outline">
-                    All insights <Icon name="arrow" size={14} />
-                  </Link>
-                </div>
-              </Reveal>
-
-              <div className="insightGrid">
-                {relevant.map((a, i) => (
-                  <Reveal key={a.slug} delay={i * 70}>
-                    <Link href={`/insights/${a.slug}`} className="insightCard">
-                      <span className="insightCard__kicker">{a.category}</span>
-                      <h3>{a.title}</h3>
-                      <p>{a.excerpt}</p>
-                      <span className="insightCard__go">
-                        Read <Icon name="arrow" size={13} />
-                      </span>
-                    </Link>
-                  </Reveal>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* ── Closing ── */}
         <section className="closing">

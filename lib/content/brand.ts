@@ -19,9 +19,6 @@ export const brand = {
     linkedin: 'https://www.linkedin.com/company/bhumiestates',
     youtube: 'https://www.youtube.com/@bhumiestates',
   },
-  reraNote:
-    'K-RERA agent registration number is displayed on every listing and in the footer of every advertisement, per Karnataka RERA advertising rules.',
-  reraNumber: 'PRM/KA/RERA/1251/446/AG/—',
 }
 
 /** Build a click-to-chat link. WhatsApp-first is the primary

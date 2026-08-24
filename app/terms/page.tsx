@@ -41,10 +41,6 @@ const sections = [
     body: 'The first preliminary verification review is free. Full four-stage verification and every other engagement is quoted in writing before work starts. There are no facilitation charges, processing fees or undisclosed commissions.',
   },
   {
-    heading: 'Regulatory',
-    body: `${brand.legalName} holds K-RERA agent registration ${brand.reraNumber}, displayed in the footer of this site and in advertising as required. Registration is a compliance status, not a warranty of any project or parcel.`,
-  },
-  {
     heading: 'Limitation of liability',
     body: 'We are liable for our own professional work to the extent set out in the engagement letter for that work. We are not liable for a transaction between a buyer and a seller introduced through this platform, for a third party\'s conduct, or for a decision taken on the basis of the indicative information described above.',
   },

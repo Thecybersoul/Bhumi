@@ -72,7 +72,10 @@
   --r-xl: 26px;
   --section: clamp(64px, 8vw, 112px);
   --ease: cubic-bezier(.22, 1, .36, 1);
-  --header-h: 74px;
+  /* Must match the height .siteHeader actually renders at — the
+     hero pulls itself up by this value, so a mismatch leaves a
+     sliver of the next section showing above the fold. */
+  --header-h: 62px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

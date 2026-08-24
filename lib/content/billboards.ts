@@ -28,6 +28,10 @@ export interface Billboard {
   /** And is heading towards here — the catchment the panel serves. */
   goingTowards: string[]
   coordinates: string
+  /** Site photograph from the operator's inventory. */
+  image: string
+  /** True where the image is a location map rather than a site photo. */
+  imageIsMap?: boolean
   /** Panels not yet live carry an availability note instead. */
   availableFrom?: string
 }
@@ -43,6 +47,7 @@ export const billboards: Billboard[] = [
     trafficFrom: ['HSR Layout', 'Silk Board', 'Electronic City (Ragigudda Flyover)'],
     goingTowards: ['Jayanagar', 'JP Nagar', 'Banashankari'],
     coordinates: '12°54\'58.0"N 77°36\'56.1"E',
+    image: '/img/boards/btm-jayanagar.jpg',
   },
   {
     id: 'kr-market-townhall',
@@ -54,6 +59,7 @@ export const billboards: Billboard[] = [
     trafficFrom: ['Mysore Road Flyover', 'Krishna Rajendra Road'],
     goingTowards: ['City Town Hall', 'CBD area', 'Kalasipalyam bus station'],
     coordinates: '12°57\'49.8"N 77°34\'39.0"E',
+    image: '/img/boards/kr-market-townhall.jpg',
   },
   {
     id: 'townhall-mysore-road',
@@ -65,6 +71,7 @@ export const billboards: Billboard[] = [
     trafficFrom: ['CBD area', 'City Town Hall', 'Corporation Circle'],
     goingTowards: ['Mysore Road', 'Gopalan Sirsi Mall'],
     coordinates: '12°57\'49.7"N 77°34\'39.2"E',
+    image: '/img/boards/townhall-mysore-road.jpg',
   },
   {
     id: 'sjp-road-townhall',
@@ -76,6 +83,7 @@ export const billboards: Billboard[] = [
     trafficFrom: ['KR Market bus stop', 'NR Road', 'Metro station'],
     goingTowards: ['SJP Road', 'Avenue Road', 'Chickpet', 'CBD area'],
     coordinates: '12°57\'51.6"N 77°34\'40.2"E',
+    image: '/img/boards/sjp-road-townhall.jpg',
   },
   {
     id: 'bellandur-marathahalli',
@@ -87,6 +95,7 @@ export const billboards: Billboard[] = [
     trafficFrom: ['Iblur', 'Sarjapur Road', 'HSR Layout'],
     goingTowards: ['Ecospace and Ecoworld tech parks', 'Marathahalli Outer Ring Road'],
     coordinates: '12°54\'58.0"N 77°36\'56.1"E',
+    image: '/img/boards/bellandur-marathahalli.jpg',
   },
   {
     id: 'ejipura-koramangala',
@@ -99,6 +108,8 @@ export const billboards: Billboard[] = [
     trafficFrom: ['Indiranagar', 'Domlur', 'Old Airport Road'],
     goingTowards: ['Koramangala', 'HSR Layout', "St John's"],
     coordinates: '12°57\'20.0"N 77°37\'40.0"E',
+    image: '/img/boards/ejipura-koramangala.jpg',
+    imageIsMap: true,
     availableFrom: 'Panel secured — site photography to follow',
   },
 ]

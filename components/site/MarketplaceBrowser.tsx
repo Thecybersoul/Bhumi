@@ -228,7 +228,6 @@ export default function MarketplaceBrowser({
                   ['Water', selected.water],
                   selected.ceiling_height_m ? ['Clear height', `${selected.ceiling_height_m} m`] : null,
                   selected.power_load_kva ? ['Sanctioned power', `${selected.power_load_kva} KVA`] : null,
-                  selected.rera_number ? ['K-RERA', selected.rera_number] : null,
                   ['Price', selected.price_type === 'On Request' ? 'On request' : `₹${selected.price_per_acre_cr} Cr / acre`],
                 ]
                   .filter(Boolean)
