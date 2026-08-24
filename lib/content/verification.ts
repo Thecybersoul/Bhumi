@@ -1,14 +1,17 @@
 import type { VerificationStageKey } from '@/lib/types'
 
 /* ═══════════════════════════════════════════════════════════
-   The verification protocol — Plan §5.
-   Six discrete, visible stages. Deliberately not one black box:
-   a stalled or flagged stage is immediately obvious.
+   The verification protocol — four stages.
 
-   Every procedural detail below reflects how Karnataka land
-   diligence actually works in 2026 — Kaveri 2.0 for the EC,
-   Bhoomi i-RTC for the revenue record, eCourts for litigation,
-   e-Khata for the municipal record.
+   Deliberately not one "under review" status: a stage that
+   stalls or gets flagged should be obvious from the outside.
+   Equally deliberately not a ten-step diagram nobody reads.
+
+   Each stage is written for a landowner, not a lawyer, and
+   reflects how Karnataka land diligence actually works —
+   Kaveri for the encumbrance certificate, Bhoomi for the
+   revenue record, eCourts for litigation, e-Khata for the
+   municipal record.
    ═══════════════════════════════════════════════════════════ */
 
 export interface VerificationStageDef {
@@ -16,191 +19,207 @@ export interface VerificationStageDef {
   number: number
   title: string
   short: string
-  summary: string
-  /** Written for a landowner, not a lawyer (Plan §3C). */
+  /** The question, in the client's words, that this stage answers. */
+  question: string
+  /** Two or three sentences. No jargon that is not immediately explained. */
   plain: string
-  inputs: string[]
+  /** What gets checked. Kept to four lines — this is a summary, not a manual. */
   checks: string[]
   output: string
   typicalDays: [number, number]
+  /** The findings that end a deal rather than merely complicate it. */
   killers: string[]
 }
 
 export const verificationStages: VerificationStageDef[] = [
   {
-    key: 'intake',
+    key: 'documents',
     number: 1,
-    title: 'Intake & Documents',
-    short: 'Intake',
-    summary:
-      'Mother deed, prior title chain and seller KYC collected and logged against a dated file reference.',
+    title: 'Documents & Ownership',
+    short: 'Documents',
+    question: 'Does the person selling this actually own it?',
     plain:
-      'We start by taking custody of the paperwork — the original mother deed, every sale deed since, and identity proof for whoever claims to own the land. Nothing is verified yet at this stage. What we are establishing is a dated, complete record of exactly what we were handed, so that if a document appears later that was not in the original set, we know it appeared later.',
-    inputs: [
-      'Mother deed and all subsequent conveyance deeds',
-      'Seller KYC — Aadhaar, PAN, or company records and board resolution',
-      'Latest tax paid receipt and khata / e-Khata extract',
-      'Any existing survey sketch, tippani or akarband',
-    ],
+      'We take custody of the paperwork and establish a dated record of exactly what we were handed — the mother deed, every sale deed since, and identity proof for whoever claims to own the land. Nothing is verified yet. The point is that if a document appears later that was not in the original set, we know it appeared later.',
     checks: [
-      'Every document in the chain is present, or the gap is recorded explicitly',
-      'Names on deed, KYC and revenue record are reconciled including spelling variants',
-      'Power of attorney, if any, is examined for scope and validity',
+      'Every document in the ownership chain is present, or the gap is recorded explicitly',
+      'Names on the deed, the ID and the revenue record are reconciled, spelling variants included',
+      'Any power of attorney is examined for scope and validity, not taken at face value',
+      'Latest tax receipt and khata extract on file',
     ],
-    output: 'A dated document register — the file baseline everything later is measured against.',
+    output: 'A dated document register — the baseline everything later is measured against.',
     typicalDays: [2, 4],
     killers: [
-      'Seller can produce only photocopies of the mother deed',
+      'Only photocopies of the mother deed exist',
       'A general power of attorney is being used in place of ownership',
     ],
   },
   {
-    key: 'title-chain',
+    key: 'title',
     number: 2,
-    title: 'Title Chain & Encumbrance',
-    short: 'Title & EC',
-    summary:
-      'A 30-year chain verified at the Sub-Registrar directly. The EC is pulled independently — never taken from the seller\'s copy.',
+    title: 'Title, Encumbrance & Zoning',
+    short: 'Title & zoning',
+    question: 'Is the title clean, and can I use the land for what I intend?',
     plain:
-      'We trace ownership backwards for thirty years, which is the period a buyer is expected to establish under Indian conveyancing practice. Crucially, we pull the encumbrance certificate ourselves from Kaveri 2.0 rather than accepting the copy the seller hands over. A printed EC can be altered in minutes; a certificate we pull ourselves cannot.',
-    inputs: [
-      'Certified copies from the jurisdictional Sub-Registrar office',
-      'Encumbrance certificate pulled independently via Kaveri 2.0',
-      'Pre-2004 period searched manually at the SRO where the online record does not reach',
-    ],
+      'We trace ownership back thirty years, which is the period a buyer is expected to establish under Indian conveyancing practice, and pull the encumbrance certificate ourselves rather than accepting the seller\'s printed copy. A printed certificate can be altered in minutes; one pulled at source cannot. We then check what the land is actually zoned for, because land that cannot legally be used for your purpose is worth far less than the price being asked.',
     checks: [
       'Thirty-year chain reconstructed with no unexplained break in ownership',
-      'Every mortgage, lien and charge on the EC traced to a release deed',
-      'Extent and boundaries consistent across every deed in the chain',
-      'Minor, inheritance and partition interests identified and accounted for',
+      'Every mortgage, lien and charge traced through to a recorded release',
+      'Revenue record and deed reconciled on both owner and extent',
+      'Conversion status and zoning confirmed for your intended use, plus buffer zones — drain, lake, high-tension line, highway setback',
     ],
-    output: 'A title chain map with each link sourced to a registered document number.',
-    typicalDays: [4, 8],
-    killers: [
-      'A subsisting mortgage with no recorded release',
-      'A break in the chain bridged only by an unregistered agreement',
-    ],
-  },
-  {
-    key: 'revenue-zoning',
-    number: 3,
-    title: 'Revenue Record & Zoning Match',
-    short: 'Revenue & zoning',
-    summary:
-      'RTC / Pahani matched to title, the governing authority identified, and zoning confirmed against the applicable master plan.',
-    plain:
-      'The deed says one thing; the revenue record says another surprisingly often. We pull the digitally signed RTC from Bhoomi ourselves and line it up against the title, then confirm which authority actually governs the land and what the master plan permits there. Land that cannot legally be used for what a buyer intends is worth far less than the price being asked for it.',
-    inputs: [
-      'Digitally signed i-RTC from the Bhoomi portal',
-      'Mutation register extract (MR) and mutation history',
-      'e-Khata / e-Aasthi extract where the parcel falls in a municipal limit',
-      'Applicable master plan or zoning regulation for the governing authority',
-    ],
-    checks: [
-      'RTC owner column reconciles with the registered title holder',
-      'Extent in the revenue record matches the deed extent',
-      'Conversion status established — converted, deemed converted, or agricultural',
-      'Zoning confirmed for the buyer\'s intended use, not just the current use',
-      'Buffer zones checked: rajakaluve, lake, high-tension line, railway and highway setbacks',
-    ],
-    output: 'A zoning and conversion position note, with the governing authority named.',
-    typicalDays: [3, 6],
-    killers: [
-      'Revenue record still shows a predecessor who never executed a release',
-      'Parcel sits inside a rajakaluve or lake buffer that no setback can cure',
-    ],
-  },
-  {
-    key: 'litigation',
-    number: 4,
-    title: 'Litigation & Insider-Risk Search',
-    short: 'Litigation',
-    summary:
-      'Court and eCourts records checked. Any unusually recent mutation is flagged for independent cross-verification.',
-    plain:
-      'Property disputes make up roughly two-thirds of civil litigation in India, and a case can sit in a court for a decade without ever surfacing in the paperwork a seller shows you. We search the courts by party name and by survey number. We also treat a mutation that happened suspiciously recently as a red flag in its own right — a record changed weeks before a sale is a pattern, not a coincidence.',
-    inputs: [
-      'eCourts district and High Court search by party name and survey number',
-      'Revenue court and Tahsildar proceedings',
-      'Land acquisition and government notification search',
-      'Mutation timeline from the Bhoomi record',
-    ],
-    checks: [
-      'No subsisting suit, injunction, attachment or caveat over the parcel',
-      'No acquisition notification, alignment reservation or road-widening claim',
-      'Any mutation inside the last 12 months independently cross-verified at source',
-      'Family settlement or partition history examined for excluded heirs',
-    ],
-    output: 'A litigation and insider-risk memo with search coverage stated explicitly.',
-    typicalDays: [4, 7],
-    killers: [
-      'A pending partition suit naming the parcel',
-      'An acquisition notification the seller had not disclosed',
-    ],
-  },
-  {
-    key: 'physical',
-    number: 5,
-    title: 'Physical & Infrastructure Verification',
-    short: 'Physical',
-    summary:
-      'Licensed survey, boundary and encroachment check, road access and water / BWSSB connection status confirmed on the ground.',
-    plain:
-      'Paper diligence tells you what the land is supposed to be. Only a walk of the boundary tells you what it is. We commission a licensed surveyor, physically walk the perimeter against the tippani, and establish whether there is a legal road to the parcel — not a path that exists by neighbourly tolerance and disappears the day the neighbour sells.',
-    inputs: [
-      'Licensed surveyor measurement against tippani and akarband',
-      'Site walk with geo-tagged boundary photographs',
-      'Access route traced back to a recorded public road',
-      'Water source and utility connection enquiry',
-    ],
-    checks: [
-      'Measured extent matches the recorded extent within survey tolerance',
-      'No encroachment inward, and no encroachment by the parcel outward',
-      'Legal, recorded access to a public road — width confirmed, not assumed',
-      'Water availability: BWSSB / gram panchayat connection or borewell yield',
-      'Power availability and sanctioned load where a built use is intended',
-      'Topography, soil bearing and flood exposure recorded',
-    ],
-    output: 'A survey and site report with geo-tagged photographs and an access finding.',
+    output: 'A title and zoning position note, with the governing authority named.',
     typicalDays: [5, 10],
     killers: [
-      'No recorded access — the parcel is landlocked in law even if reachable in practice',
+      'A subsisting mortgage with no recorded release',
+      'The parcel sits inside a buffer zone that no setback can cure',
+    ],
+  },
+  {
+    key: 'site',
+    number: 3,
+    title: 'Disputes & Site Check',
+    short: 'Disputes & site',
+    question: 'Is there a case pending, and is the land physically what the paper says?',
+    plain:
+      'A dispute can sit in a court for years without ever surfacing in the paperwork a seller shows you, so we search by party name and by survey number, and treat a suspiciously recent change to the revenue record as a flag in its own right. Then we walk the boundary. Paper tells you what the land is supposed to be; only a site visit tells you what it is — including whether there is a legal road to it, or merely a path the neighbour currently tolerates.',
+    checks: [
+      'Court, revenue-court and acquisition-notification searches, coverage stated explicitly',
+      'Any change to the record inside the last twelve months cross-verified at source',
+      'Licensed survey against the sketch, with encroachment checked in both directions',
+      'Recorded access to a public road, plus water and power availability',
+    ],
+    output: 'A dispute search memo and a site report with geo-tagged photographs.',
+    typicalDays: [6, 12],
+    killers: [
+      'A pending partition or title suit naming the parcel',
+      'No recorded access — landlocked in law even if reachable in practice',
       'Measured extent materially short of the deed extent',
     ],
   },
   {
     key: 'report',
-    number: 6,
-    title: 'Verification Report Delivered',
+    number: 4,
+    title: 'Written Report',
     short: 'Report',
-    summary:
-      'A clear pass or flag decision, issued as a shareable, dated certificate — never a verbal assurance.',
+    question: 'What is the answer, in writing, that I can show my bank?',
     plain:
-      'You get a document, not an opinion over the phone. It states a decision, the evidence behind it, the specific things we could not verify and why, and the date it was issued. It is written to be forwarded — to a bank, a partner, or a buyer — which is exactly why we will not soften a finding to make a deal easier.',
-    inputs: [
-      'Findings consolidated from stages 1 through 5',
-      'Reviewer sign-off by the advisor who owns the file',
-    ],
+      'You get a document, not an opinion over the phone. It states a position, the evidence behind it, the specific things we could not verify and why, and the date it was issued. It is written to be forwarded — to a lender, a partner or a buyer — which is exactly why a finding does not get softened to make a deal easier.',
     checks: [
       'Every finding traced to a source document or a dated site observation',
-      'Scope limitations stated plainly rather than buried',
-      'A single unambiguous decision: Verified, or Flagged with the reason',
+      'Scope limitations stated plainly rather than buried in a footnote',
+      'One unambiguous position: clear, or flagged with the reason',
+      'Signed off by the advisor who owns the file',
     ],
-    output:
-      'A dated, shareable verification certificate with a reference number and a defined validity period.',
+    output: 'A dated report with a reference number and a defined validity period.',
     typicalDays: [2, 3],
     killers: [],
   },
 ]
 
-/** Why six visible stages instead of one "under review" status (Plan §5). */
+/** Why four visible stages instead of one "under review" status. */
 export const whyDiscrete = {
-  heading: 'Why it is six stages, not one black box',
+  heading: 'Why four stages, not one status',
   body:
-    'Six distinct, visible stages mean a landowner or developer always knows exactly where their parcel stands. A stage that stalls or gets flagged is immediately obvious, rather than buried inside a single "under review" status that tells you nothing about whether the delay is a slow Sub-Registrar office or a problem with your title.',
+    'A single "under review" status tells you nothing about whether a delay is a slow Sub-Registrar office or a problem with your title. Four named stages mean you always know which question is currently being answered, and a stage that stalls is visible rather than buried.',
 }
 
 export const totalTurnaround = {
   low: verificationStages.reduce((s, v) => s + v.typicalDays[0], 0),
   high: verificationStages.reduce((s, v) => s + v.typicalDays[1], 0),
 }
+
+/* ─── The pre-diligence checklist ─────────────────────────── */
+/* Deliberately short. This is what a buyer can sanity-check
+   themselves in an afternoon, before paying anybody for
+   diligence — not a replacement for it. */
+
+export interface ChecklistItem {
+  id: string
+  ask: string
+  why: string
+  /** What a straight answer looks like. */
+  good: string
+  /** What should stop the conversation. */
+  bad: string
+}
+
+export const checklist: ChecklistItem[] = [
+  {
+    id: 'mother-deed',
+    ask: 'Ask to see the original mother deed, not a photocopy.',
+    why: 'The mother deed is the root of the ownership chain. Everything after it depends on it being genuine.',
+    good: 'The original is produced, and the seller is relaxed about it being examined.',
+    bad: 'Only photocopies exist, or the original is permanently "with the bank" or "with a relative".',
+  },
+  {
+    id: 'ec',
+    ask: 'Pull the encumbrance certificate yourself, from the portal.',
+    why: 'It lists mortgages and charges registered against the property. A copy handed to you can be edited; one you pull cannot.',
+    good: 'Your own copy matches what you were told, and every charge shown has a release.',
+    bad: 'You are discouraged from pulling it, or a charge appears that was never mentioned.',
+  },
+  {
+    id: 'revenue-record',
+    ask: 'Check the revenue record against the deed — owner name and extent.',
+    why: 'The deed and the government record disagree more often than people expect, and the mismatch is the seller\'s problem to fix before sale, not yours after.',
+    good: 'Owner and extent match, and any recent change has a clear explanation.',
+    bad: 'The record still names a predecessor, or the extent is short of the deed.',
+  },
+  {
+    id: 'zoning',
+    ask: 'Confirm the zoning for what you intend to do, not what is being done now.',
+    why: 'Land that cannot legally carry your intended use is worth a different price from the one being quoted.',
+    good: 'The governing authority is named and the permitted use is confirmed in writing.',
+    bad: '"Conversion is a formality" — said verbally, with no application on record.',
+  },
+  {
+    id: 'access',
+    ask: 'Establish that the access road is recorded, not merely used.',
+    why: 'A parcel reachable only across a neighbour\'s land is landlocked in law, and becomes unusable the day that neighbour sells.',
+    good: 'The access traces back to a recorded public road, with width confirmed.',
+    bad: 'Access is "through the field" or depends on a verbal understanding.',
+  },
+  {
+    id: 'boundary',
+    ask: 'Walk the boundary before you pay anything.',
+    why: 'Encroachment runs in both directions, and neither shows up on paper.',
+    good: 'The boundary on the ground matches the sketch within survey tolerance.',
+    bad: 'Nobody will meet you at the site, or the corners cannot be pointed out.',
+  },
+]
+
+/* ─── Industry context ────────────────────────────────────── */
+/* Generic, checkable ground rules — not a record of work done.
+   Used where a credibility bar would otherwise sit. */
+
+export interface ContextStat {
+  value: string
+  label: string
+  note: string
+}
+
+export const industryContext: ContextStat[] = [
+  {
+    value: '30 yrs',
+    label: 'Title chain a buyer is expected to establish',
+    note: 'Standard Indian conveyancing practice',
+  },
+  {
+    value: '4',
+    label: 'Records that must agree with each other',
+    note: 'Deed, encumbrance certificate, revenue record, survey',
+  },
+  {
+    value: '3',
+    label: 'Independent portals the record actually lives on',
+    note: 'Kaveri, Bhoomi and eCourts, in Karnataka',
+  },
+  {
+    value: 'K-RERA',
+    label: 'Registration shown on compliant advertising',
+    note: 'Required before a project is marketed',
+  },
+]
+
+export const contextNote =
+  'These are the ground rules of land diligence in Karnataka, not a record of our own work. Where we publish figures about work we have done, they will be dated and sourced.'

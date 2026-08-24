@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         // Campaign pages should not compete with the canonical
         // pages in organic search, and the admin is not public.
-        disallow: ['/admin', '/api/', '/lp/'],
+        disallow: ['/admin', '/api/'],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

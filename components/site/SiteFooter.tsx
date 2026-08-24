@@ -2,9 +2,7 @@ import Link from 'next/link'
 import Logo from '@/components/Logo'
 import Icon from './Icon'
 import { brand, wa } from '@/lib/content/brand'
-import { pillars } from '@/lib/content/pillars'
-import { propertyTypes } from '@/lib/content/propertyTypes'
-import { corridors } from '@/lib/content/corridors'
+import { practices } from '@/lib/content/services'
 
 export default function SiteFooter() {
   const year = new Date().getFullYear()
@@ -12,13 +10,12 @@ export default function SiteFooter() {
   return (
     <footer className="siteFooter">
       <div className="wrap">
-        {/* No dead ends (Plan §2, Zell on liquidity) — the footer
-            itself carries a next step, not just links. */}
+        {/* No dead ends — the footer itself carries a next step. */}
         <div className="siteFooter__cta">
           <div>
             <span className="eyebrow eyebrow-light">One next step</span>
             <h2 className="h2">Tell us what you are trying to do.</h2>
-            <p>A sourcing brief, a site that needs branding, or a campaign that needs to be seen.</p>
+            <p>A parcel to find, a title to check, or a launch that needs to be seen.</p>
           </div>
           <div className="siteFooter__ctaActions">
             <Link href="/contact" className="btn btn-gold btn-lg">
@@ -57,46 +54,39 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          <div className="siteFooter__col">
-            <h3>Services</h3>
-            <ul>
-              {pillars.map((p) => (
-                <li key={p.slug}>
-                  <Link href={`/services/${p.slug}`}>{p.name}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="siteFooter__col siteFooter__col--secondary">
-            <h3>Property types</h3>
-            <ul>
-              {propertyTypes.map((t) => (
-                <li key={t.slug}>
-                  <Link href={t.href}>{t.name}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="siteFooter__col siteFooter__col--secondary">
-            <h3>Corridors</h3>
-            <ul>
-              {corridors.map((c) => (
-                <li key={c.slug}>
-                  <Link href={`/corridors/${c.slug}`}>{c.name.split('&')[0].trim()}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {practices.map((p) => (
+            <div key={p.slug} className="siteFooter__col">
+              <h3>
+                <Link href={p.href}>{p.name}</Link>
+              </h3>
+              <ul>
+                {p.services.map((s) => (
+                  <li key={s.slug}>
+                    <Link href={`${p.href}#${s.slug}`}>{s.name}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
           <div className="siteFooter__col">
-            <h3>Resources</h3>
+            <h3>More</h3>
             <ul>
-              <li><Link href="/resources">Work &amp; insights</Link></li>
-              <li><Link href="/marketplace">Marketplace</Link></li>
-              <li><Link href="/verification">Verification protocol</Link></li>
-              <li><Link href="/contact">Contact</Link></li>
+              <li>
+                <Link href="/marketplace">Marketplace</Link>
+              </li>
+              <li>
+                <Link href="/insights">Insights</Link>
+              </li>
+              <li>
+                <Link href="/property-consultancy#verification">Verification protocol</Link>
+              </li>
+              <li>
+                <Link href="/property-consultancy#checklist">Buyer checklist</Link>
+              </li>
+              <li>
+                <Link href="/contact">Contact</Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -125,9 +115,10 @@ export default function SiteFooter() {
         </div>
 
         <p className="siteFooter__disclaimer">
-          Information on this site is provided for evaluation and planning. Price bands, tool outputs and
-          corridor data are indicative, are not valuations or tax advice, and should be confirmed at parcel
-          level before any commitment. Verification findings relate only to the parcel and scope stated in the
+          Information on this site is provided for evaluation and planning. Figures describing land
+          diligence are general industry context rather than a record of work completed, and are not
+          valuations or legal or tax advice. Any parcel-level position should be confirmed in writing before
+          a commitment is made. Verification findings relate only to the parcel and scope stated in the
           relevant report.
         </p>
       </div>

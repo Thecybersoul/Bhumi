@@ -6,7 +6,6 @@ import SiteFooter from '@/components/site/SiteFooter'
 import Icon from '@/components/site/Icon'
 import LeadForm from '@/components/site/LeadForm'
 import { insights, getInsight } from '@/lib/content/insights'
-import { getCorridor } from '@/lib/content/corridors'
 
 export function generateStaticParams() {
   return insights.map((i) => ({ slug: i.slug }))
@@ -32,8 +31,6 @@ export default async function InsightPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
   const insight = getInsight(slug)
   if (!insight) notFound()
-
-  const corridor = insight.corridor ? getCorridor(insight.corridor) : null
   const more = insights.filter((i) => i.slug !== slug).slice(0, 3)
 
   const jsonLd = {
@@ -78,11 +75,6 @@ export default async function InsightPage({ params }: { params: Promise<{ slug: 
                   })}
                 </span>
                 <span>{insight.read_minutes} min read</span>
-                {corridor && (
-                  <Link href={`/corridors/${corridor.slug}`} className="link-arrow">
-                    {corridor.name.split(/[&,]/)[0].trim()} corridor →
-                  </Link>
-                )}
               </div>
             </div>
           </header>

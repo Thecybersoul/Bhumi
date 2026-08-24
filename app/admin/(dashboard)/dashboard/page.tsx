@@ -57,7 +57,7 @@ export default async function AdminOverview() {
           <span className={`sourcePill ${usingFallback ? 'is-fallback' : 'is-live'}`}>
             {usingFallback ? 'Seeded data' : 'Live database'}
           </span>
-          <Link href="/verification#transparency" target="_blank" className="btn btn-sm btn-ghost">
+          <Link href="/property-consultancy#verification" target="_blank" className="btn btn-sm btn-ghost">
             View public dashboard
           </Link>
         </div>
@@ -98,7 +98,7 @@ export default async function AdminOverview() {
           <span className="statTile__value">{live.length}</span>
           <span className="statTile__label">Live listings</span>
           <span className="statTile__note">
-            {live.filter((p) => p.verified_stage === 'report').length} have cleared all six stages
+            {live.filter((p) => p.verified_stage === 'report').length} have cleared all four stages
           </span>
         </div>
       </div>
@@ -236,7 +236,9 @@ export default async function AdminOverview() {
                 ['Parcels reviewed', transparency.data.parcels_reviewed.toLocaleString('en-IN')],
                 [
                   'Flag rate published',
-                  `${Math.round((transparency.data.parcels_flagged / transparency.data.parcels_reviewed) * 100)}%`,
+                  transparency.data.parcels_reviewed
+                    ? `${Math.round((transparency.data.parcels_flagged / transparency.data.parcels_reviewed) * 100)}%`
+                    : '—',
                 ],
                 ['Median turnaround', `${transparency.data.median_turnaround_days} days`],
                 ['Period', transparency.data.period],

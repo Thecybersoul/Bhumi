@@ -16,7 +16,7 @@ const nav: { group: string; items: { href: string; label: string; icon: IconName
     group: 'Operate',
     items: [
       { href: '/admin/dashboard', label: 'Overview', icon: 'gauge' },
-      { href: '/admin/verifications', label: 'Verification pipeline', icon: 'shield', hint: 'The six-stage board' },
+      { href: '/admin/verifications', label: 'Verification pipeline', icon: 'shield', hint: 'The four-stage board' },
       { href: '/admin/leads', label: 'Lead inbox', icon: 'handshake', hint: 'Every conversion path' },
       { href: '/admin/data-room', label: 'Data room requests', icon: 'lock', hint: 'NDA-gated' },
     ],

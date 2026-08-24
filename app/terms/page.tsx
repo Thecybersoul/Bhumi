@@ -38,7 +38,7 @@ const sections = [
   },
   {
     heading: 'Fees',
-    body: 'The first preliminary verification review is free. Full six-stage verification and every other engagement is quoted in writing before work starts. There are no facilitation charges, processing fees or undisclosed commissions.',
+    body: 'The first preliminary verification review is free. Full four-stage verification and every other engagement is quoted in writing before work starts. There are no facilitation charges, processing fees or undisclosed commissions.',
   },
   {
     heading: 'Regulatory',

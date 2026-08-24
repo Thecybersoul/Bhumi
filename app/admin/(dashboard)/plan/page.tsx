@@ -1,276 +1,339 @@
 import Link from 'next/link'
+import Icon from '@/components/site/Icon'
+import { practices } from '@/lib/content/services'
 import { verificationStages } from '@/lib/content/verification'
-import { pillars } from '@/lib/content/pillars'
-import { propertyTypes } from '@/lib/content/propertyTypes'
-import { tools } from '@/lib/content/tools'
-import { corridors } from '@/lib/content/corridors'
-import { landingPages } from '@/lib/content/landingPages'
 
-export const metadata = { title: 'Website business plan · Admin' }
+export const metadata = { title: 'Business plan · Admin' }
 
-/* The internal record: what the business plan asked for, and
-   where each requirement now lives in the built site. Kept in the
-   admin rather than a document so it stays next to the thing it
-   describes. */
+/* ═══════════════════════════════════════════════════════════
+   The operating plan.
 
-const implementation: {
-  section: string
-  requirement: string
-  built: string
-  href?: string
-  state: 'Built' | 'Partial' | 'Needs a service'
-  note?: string
-}[] = [
+   Written as the internal record of a firm that is starting,
+   not one describing itself as finished. Anything not yet true
+   is marked as not yet true — the point of keeping this in the
+   admin rather than a slide deck is that it stays honest enough
+   to actually run the business against.
+   ═══════════════════════════════════════════════════════════ */
+
+type Status = 'Done' | 'In progress' | 'Not started' | 'Blocked'
+
+const positioning = {
+  what: 'Two consultancies under one roof: Property Consultancy (sourcing, verification and legal, construction and development) and Branding Consultancy (project branding, outdoor advertising).',
+  who: 'Developers and investors acquiring land in and around Bengaluru; landowners who need their own title examined before selling; projects whose site presence does not match the price being asked.',
+  edge: 'Continuity across the two practices — the constraint found at diligence reaches the person designing the hoarding. Very few firms in this market run both, and the ones that do rarely connect them.',
+  honest:
+    'We have no completed-engagement record to publish yet. The site is built to say so rather than to imply otherwise, which is a positioning decision as much as an ethical one: the firms we compete with all claim numbers, and none of them show their working.',
+}
+
+/* Revenue model — ranges are the shape of the market, not quotes. */
+const revenue: { line: string; model: string; cycle: string; note: string }[] = [
   {
-    section: '§3A',
-    requirement: 'Verification Transparency Dashboard — anonymised diligence statistics, updated regularly',
-    built: 'Live on the flagship page, computed from the verification case record',
-    href: '/verification#transparency',
-    state: 'Built',
+    line: 'Land Sourcing',
+    model: 'Success fee on completed transaction, percentage of consideration',
+    cycle: '3–9 months from brief to close',
+    note: 'Longest cycle and least predictable. Cannot be the first revenue line.',
   },
   {
-    section: '§3B',
-    requirement: 'Data-driven credibility bar on the homepage',
-    built: 'Served from the same transparency record, so it cannot drift from the dashboard',
-    href: '/',
-    state: 'Built',
+    line: 'Verification & Legal',
+    model: 'Fixed fee per parcel, quoted before work starts',
+    cycle: '2–4 weeks per file',
+    note: 'The wedge. Short cycle, clear deliverable, and it generates the trust the other lines need.',
   },
   {
-    section: '§3C',
-    requirement: 'Land & Verification page as the flagship, in plain language',
-    built: 'Full six-stage protocol with per-stage inputs, checks, outputs and deal-stoppers',
-    href: '/verification',
-    state: 'Built',
+    line: 'Construction & Development',
+    model: 'Percentage of project cost, or a retained monthly management fee',
+    cycle: '9 months to multiple years',
+    note: 'Highest value per client, slowest to originate. Follows sourcing or verification work.',
   },
   {
-    section: '§3D',
-    requirement: 'Video-forward proof — drone footage, time-lapses, a "how we verify" explainer',
-    built: 'Layout and placements ready; no footage exists yet to publish',
-    state: 'Needs a service',
-    note: 'Blocked on production, not on the site. Publishing stock video here would contradict §11.',
+    line: 'Project Branding',
+    model: 'Project fee by scope, plus supervised fabrication at cost',
+    cycle: '6–12 weeks',
+    note: 'Fastest to a visible, referenceable outcome. Strong portfolio generator.',
   },
   {
-    section: '§3E',
-    requirement: 'Interactive corridor visualisation replacing the static PDF brochure',
-    built: 'Schematic interactive map, six corridors, no external tile service or third-party request',
-    href: '/corridors',
-    state: 'Built',
-  },
-  {
-    section: '§3F',
-    requirement: 'WhatsApp-first, not form-first',
-    built: 'Click-to-chat is the primary action in the header, every lead block, the footer and the float',
-    state: 'Built',
-  },
-  {
-    section: '§4',
-    requirement: 'Six asset classes, each with its own presentation and diligence detail',
-    built: `${propertyTypes.length} classes, each with its own page, icon treatment, checklist and critical field`,
-    href: '/property-types',
-    state: 'Built',
-  },
-  {
-    section: '§5',
-    requirement: 'Six-stage verification process as a tracked, stepper-style timeline with status badges',
-    built: `${verificationStages.length}-stage stepper on the public site; the same stages as an operable board in this admin`,
-    href: '/admin/verifications',
-    state: 'Built',
-  },
-  {
-    section: '§6',
-    requirement: 'Site structure: homepage, verification, property types, large parcels, portfolio, services, tools, corridors, insights, contact',
-    built: 'All ten present, plus the marketplace and the checklist lead magnet',
-    state: 'Built',
-  },
-  {
-    section: '§7',
-    requirement: 'Dedicated campaign landing pages, a gated lead magnet, specific CTAs',
-    built: `${landingPages.length} landing pages, the verification checklist`,
-    href: '/lp/free-land-verification',
-    state: 'Built',
-  },
-  {
-    section: '§8',
-    requirement: 'Decision-support tools, each doubling as a lead-qualification step',
-    built: `${tools.length} working tools; every one posts its inputs into the lead inbox`,
-    href: '/tools',
-    state: 'Built',
-  },
-  {
-    section: '§9',
-    requirement: 'Large Land Parcels as a dedicated pillar with an NDA-gated data room and a named advisor',
-    built: 'Dedicated page, undertaking shown in full, requests queued for manual release by a named advisor',
-    href: '/large-land-parcels',
-    state: 'Built',
-  },
-  {
-    section: '§10',
-    requirement: 'Edge deployment, autoscaling, caching, monitoring, alerts, staging, security and backup',
-    built: 'Next.js on an edge platform with ISR, security headers, a health endpoint and graceful degradation when the database is unreachable',
-    href: '/api/health',
-    state: 'Partial',
-    note: 'Load testing, alerting, automatic rollback and the backup schedule are hosting-platform configuration, not application code.',
-  },
-  {
-    section: '§11',
-    requirement: 'Navy-and-gold identity throughout, cinematic imagery, custom iconography per type, purposeful motion',
-    built: 'One token set, per-class custom SVG iconography, one reveal animation respecting reduced-motion',
-    state: 'Partial',
-    note: 'Cinematic imagery awaits real footage. The site currently uses drawn topographic and diagrammatic treatments rather than stock photography, which is the correct interim choice.',
-  },
-  {
-    section: '§13',
-    requirement: 'Measurement across conversion, engagement, lead quality and reliability',
-    built: 'Metrics page tying each measure to where it is observable today',
-    href: '/admin/metrics',
-    state: 'Partial',
-    note: 'Page-level engagement and organic ranking need an analytics provider and Search Console.',
+    line: 'Outdoor Advertising',
+    model: 'Commission on media, or a planning and management retainer',
+    cycle: 'Monthly, recurring once a campaign runs',
+    note: 'The only line with genuinely recurring revenue. Working-capital heavy if media is bought on our balance sheet — it should not be, at this stage.',
   },
 ]
 
+const phases: {
+  phase: string
+  window: string
+  goal: string
+  items: { task: string; status: Status }[]
+}[] = [
+  {
+    phase: 'Phase 1 — Foundation',
+    window: 'Months 0–3',
+    goal: 'Be findable, be credible without a portfolio, and be able to take an engagement properly.',
+    items: [
+      { task: 'Public site live: homepage plus the two practice pages', status: 'Done' },
+      { task: 'Verification protocol documented and published in plain language', status: 'Done' },
+      { task: 'Buyer checklist published as a free, ungated resource', status: 'Done' },
+      { task: 'Lead capture, WhatsApp routing and the admin inbox working end to end', status: 'Done' },
+      { task: 'K-RERA agent registration confirmed and displayed', status: 'In progress' },
+      { task: 'Standard engagement letter and fee schedule per service line', status: 'Not started' },
+      { task: 'Panel appointed: advocate for title opinions, licensed surveyor', status: 'Not started' },
+      { task: 'Professional indemnity cover appropriate to advisory work', status: 'Not started' },
+      { task: 'Google Business Profile and basic local SEO', status: 'Not started' },
+    ],
+  },
+  {
+    phase: 'Phase 2 — First engagements',
+    window: 'Months 3–9',
+    goal: 'Convert the verification wedge into paid files, and turn the first completed work into evidence.',
+    items: [
+      { task: 'First ten paid verification files completed', status: 'Not started' },
+      { task: 'Turnaround measured per file, so the published range is real', status: 'Not started' },
+      { task: 'Written client consent process for naming work publicly', status: 'Not started' },
+      { task: 'First two branding projects delivered and photographed', status: 'Not started' },
+      { task: 'Replace generic industry context on the homepage with our own dated figures', status: 'Blocked' },
+      { task: 'Publish the first three case studies, including one deal we walked away from', status: 'Blocked' },
+      { task: 'Marketplace: first verified parcels listed', status: 'Blocked' },
+    ],
+  },
+  {
+    phase: 'Phase 3 — Compounding',
+    window: 'Months 9–24',
+    goal: 'Move from project work to retained relationships, and from paid attention to earned.',
+    items: [
+      { task: 'Media owner relationships direct, so outdoor is bought at rate rather than resold', status: 'Not started' },
+      { task: 'One retained outdoor client, giving predictable monthly revenue', status: 'Not started' },
+      { task: 'Insight publishing at a steady cadence, targeting real search intent', status: 'In progress' },
+      { task: 'Referral loop from verification clients into sourcing and development', status: 'Not started' },
+      { task: 'Second advisor hired; founder stops being the delivery bottleneck', status: 'Not started' },
+      { task: 'Transparency dashboard published from real completed files', status: 'Blocked' },
+    ],
+  },
+]
+
+const risks: { risk: string; likelihood: string; response: string }[] = [
+  {
+    risk: 'No track record, so early clients have nothing to judge us on',
+    likelihood: 'Certain — it is the defining constraint right now',
+    response:
+      'Compete on published method rather than claimed outcomes. The protocol, the checklist and the insight pieces are all doing this job. Price the first files to win them, and treat the resulting record as the real return.',
+  },
+  {
+    risk: 'A verification misses something and a client relies on it',
+    likelihood: 'Low per file, severe if it happens',
+    response:
+      'Scope limitations stated in every report. Advocate-signed title opinion for anything material. Professional indemnity cover in place before volume grows — this is the single most important unstarted item on the Phase 1 list.',
+  },
+  {
+    risk: 'Founder is the bottleneck across five service lines',
+    likelihood: 'High by month six if origination works',
+    response:
+      'Verification is the line to systematise first: it has the most repeatable file structure. Panel out survey and legal opinion early rather than at breaking point.',
+  },
+  {
+    risk: 'Outdoor media bought on our own balance sheet',
+    likelihood: 'Moderate — clients will ask for it',
+    response:
+      'Act as buyer and manager, not principal, until there is working capital to absorb a client defaulting. Say no to the first request that requires fronting media cost.',
+  },
+  {
+    risk: 'Sourcing revenue is lumpy and can be zero for a quarter',
+    likelihood: 'High',
+    response:
+      'Do not model sourcing as base revenue. Verification and branding fees cover fixed cost; sourcing success fees are upside.',
+  },
+  {
+    risk: 'Regulatory change in conversion, e-Khata or RERA advertising rules',
+    likelihood: 'Moderate and continuous',
+    response:
+      'Insight publishing doubles as the monitoring mechanism — writing the explainer forces the reading. Review the protocol against current rules quarterly.',
+  },
+]
+
+const metrics: { metric: string; why: string; target: string }[] = [
+  {
+    metric: 'Qualified enquiries per month',
+    why: 'The top of everything. Distinguishes real demand from site traffic.',
+    target: 'Track from month 1; no target until there is a baseline',
+  },
+  {
+    metric: 'Enquiry → paid file conversion',
+    why: 'Tells us whether the pricing or the pitch is wrong when volume does not convert.',
+    target: 'Establish baseline over the first 20 enquiries',
+  },
+  {
+    metric: 'Verification turnaround, per file',
+    why: 'The published range must be measured, not asserted. This is what makes it publishable.',
+    target: `Within the ${verificationStages.reduce((s, v) => s + v.typicalDays[0], 0)}–${verificationStages.reduce((s, v) => s + v.typicalDays[1], 0)} working-day band`,
+  },
+  {
+    metric: 'Flag rate',
+    why: 'A verification practice that never flags anything is not doing verification.',
+    target: 'Report it whatever it turns out to be',
+  },
+  {
+    metric: 'Revenue concentration',
+    why: 'One client above half of revenue is a structural risk, not a success.',
+    target: 'No client above 40% after month 12',
+  },
+  {
+    metric: 'Cash runway in months',
+    why: 'Given lumpy sourcing revenue, this governs how much risk the other lines can take.',
+    target: 'Never below 6 months',
+  },
+]
+
+const statusClass: Record<Status, string> = {
+  Done: 'is-done',
+  'In progress': 'is-progress',
+  'Not started': 'is-todo',
+  Blocked: 'is-blocked',
+}
+
 export default function PlanPage() {
-  const built = implementation.filter((i) => i.state === 'Built').length
+  const all = phases.flatMap((p) => p.items)
+  const done = all.filter((i) => i.status === 'Done').length
+  const blocked = all.filter((i) => i.status === 'Blocked').length
 
   return (
     <>
       <div className="adminHead">
         <div>
-          <h1>Website business plan</h1>
+          <h1>Business plan</h1>
           <p>
-            What the plan asked for, and where each requirement now lives. Kept here rather than in a document
-            so it stays next to the thing it describes — and so the gaps stay visible.
+            The operating record: what the business is, how it makes money, what is genuinely done, and what
+            is still only a sentence. Items marked <strong>Blocked</strong> are waiting on real completed
+            work rather than on effort — they cannot be unblocked by building anything.
           </p>
         </div>
-        <span className="badge badge-verified">
-          {built} of {implementation.length} fully built
-        </span>
+        <div className="row-wrap">
+          <span className="sourcePill is-live">
+            {done} of {all.length} done
+          </span>
+          {blocked > 0 && <span className="sourcePill is-fallback">{blocked} blocked on real work</span>}
+        </div>
       </div>
 
-      <div className="adminCard" style={{ padding: 0, overflow: 'hidden', marginBottom: 24 }}>
-        <div className="table-scroll">
-          <table className="data-table">
+      {/* ── Positioning ── */}
+      <section className="adminSection">
+        <h2>Positioning</h2>
+        <div className="adminGrid two">
+          <div className="panel">
+            <h3>What the business is</h3>
+            <p>{positioning.what}</p>
+            <h3>Who it is for</h3>
+            <p>{positioning.who}</p>
+          </div>
+          <div className="panel">
+            <h3>Where the edge is</h3>
+            <p>{positioning.edge}</p>
+            <h3>What we do not have yet</h3>
+            <p>{positioning.honest}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Service lines ── */}
+      <section className="adminSection">
+        <h2>Service lines</h2>
+        <div className="row-wrap" style={{ marginBottom: 16 }}>
+          {practices.map((p) => (
+            <Link key={p.slug} href={p.href} target="_blank" className="btn btn-sm btn-ghost">
+              {p.name} <Icon name="arrow" size={12} />
+            </Link>
+          ))}
+        </div>
+        <div className="tableWrap">
+          <table className="adminTable">
             <thead>
               <tr>
-                <th>Section</th>
-                <th>What the plan asked for</th>
-                <th>What was built</th>
-                <th>State</th>
+                <th>Line</th>
+                <th>How it earns</th>
+                <th>Cycle</th>
+                <th>Reality check</th>
               </tr>
             </thead>
             <tbody>
-              {implementation.map((i) => (
-                <tr key={i.section + i.requirement}>
-                  <td style={{ fontFamily: 'var(--mono)', fontSize: '.78rem', color: 'var(--gold-deep)' }}>
-                    {i.section}
-                  </td>
-                  <td style={{ fontSize: '.85rem', maxWidth: 300 }}>{i.requirement}</td>
-                  <td style={{ fontSize: '.85rem', maxWidth: 340, color: 'var(--ink-2)' }}>
-                    {i.href ? (
-                      <Link href={i.href} className="link-arrow">
-                        {i.built}
-                      </Link>
-                    ) : (
-                      i.built
-                    )}
-                    {i.note && (
-                      <div style={{ fontSize: '.78rem', color: 'var(--muted)', marginTop: 5, lineHeight: 1.55 }}>
-                        {i.note}
-                      </div>
-                    )}
-                  </td>
+              {revenue.map((r) => (
+                <tr key={r.line}>
                   <td>
-                    <span
-                      className={`badge badge-${
-                        i.state === 'Built' ? 'verified' : i.state === 'Partial' ? 'progress' : 'pending'
-                      }`}
-                    >
-                      {i.state}
-                    </span>
+                    <strong>{r.line}</strong>
                   </td>
+                  <td>{r.model}</td>
+                  <td className="mono">{r.cycle}</td>
+                  <td className="muted">{r.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
-      <div className="docSection">
-        <h2>The principles this site is built on</h2>
-        <p>
-          The plan translates statements from established real estate operators into rules for the site. Three
-          of those rules constrain almost every decision in the build, and they are worth restating because
-          they are easy to erode one page at a time.
-        </p>
+      {/* ── Roadmap ── */}
+      <section className="adminSection">
+        <h2>Roadmap</h2>
+        {phases.map((ph) => (
+          <div key={ph.phase} className="panel planPhase">
+            <header className="planPhase__head">
+              <div>
+                <h3>{ph.phase}</h3>
+                <p className="muted">{ph.goal}</p>
+              </div>
+              <span className="planPhase__window mono">{ph.window}</span>
+            </header>
+            <ul className="planPhase__items">
+              {ph.items.map((it) => (
+                <li key={it.task}>
+                  <span className={`planStatus ${statusClass[it.status]}`}>{it.status}</span>
+                  <span>{it.task}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
 
-        <h3>Every claim must be provable</h3>
-        <p>
-          Case studies carry project numbers, including the deals that were dropped. The diligence protocol is
-          published in full rather than described as thorough. The transparency dashboard publishes the flag
-          rate — the number a firm has the strongest incentive to hide. If a claim on this site cannot be
-          traced to a record, it should be removed rather than softened.
-        </p>
-
-        <h3>Land is the flagship</h3>
-        <p>
-          The Land &amp; Verification page gets the best content and placement on the site. Land is not a
-          sub-page under services. The homepage hero is a topographic field rather than a building, a logo
-          wall or lifestyle photography.
-        </p>
-
-        <h3>No dead ends</h3>
-        <p>
-          Every page ends in a specific next step that names the value — &ldquo;get a free land verification
-          review&rdquo;, not &ldquo;contact us&rdquo;. Insight articles, case studies, tool results, corridor
-          notes and even the footer carry one. An unconvertible page is illiquid trust.
-        </p>
-
-        <h2>The five services</h2>
-        <p>
-          Land Sourcing, Branding and Outdoor Advertising carry the most weight across the site — they are
-          where the business concentrates its energy and where the revenue is. Verification and Development
-          complete the chain. The site presents all five as Bhumi services, without distinguishing how any
-          of them is resourced internally.
-        </p>
-        <ul>
-          {pillars.map((p) => (
-            <li key={p.slug}>
-              <strong>{p.name}</strong>
-              {p.featured ? ' · featured' : ''} — {p.short}.{' '}
-              <Link href={`/services/${p.slug}`} className="link-arrow">
-                /services/{p.slug}
-              </Link>
-            </li>
+      {/* ── Risks ── */}
+      <section className="adminSection">
+        <h2>Risks, and what we do about them</h2>
+        <div className="adminGrid two">
+          {risks.map((r) => (
+            <div key={r.risk} className="panel riskCard">
+              <h3>{r.risk}</h3>
+              <p className="riskCard__likelihood">
+                <Icon name="flag" size={13} /> {r.likelihood}
+              </p>
+              <p>{r.response}</p>
+            </div>
           ))}
-        </ul>
+        </div>
+      </section>
 
-        <h2>Where we operate</h2>
-        <p>
-          Six corridors rather than the whole city, because a corridor note is only credible from someone who
-          has walked parcels there: {corridors.map((c) => c.name.split(/[&,]/)[0].trim()).join(', ')}.
-        </p>
-
-        <h2>What is deliberately not built</h2>
-        <ul>
-          <li>
-            <strong>Stock photography.</strong> §11 asks for cinematic imagery over stock. Until real drone
-            footage exists, drawn topographic and diagrammatic treatments are the honest interim answer —
-            stock property photography would actively contradict the positioning.
-          </li>
-          <li>
-            <strong>An automated data room release.</strong> §9 asks for verified-buyer-only access. A gate
-            that grants itself is not a gate, so requests queue for a named advisor.
-          </li>
-          <li>
-            <strong>Impressions as a headline campaign metric.</strong> Reported in the portfolio only to
-            demonstrate how little it tells you, and labelled as such.
-          </li>
-          <li>
-            <strong>A newsletter wall on the insights.</strong> Content ends in a specific next step, not an
-            email capture. The one gated asset is the checklist, and even that is printed in full on the same
-            page.
-          </li>
-        </ul>
-      </div>
+      {/* ── Metrics ── */}
+      <section className="adminSection">
+        <h2>What we measure</h2>
+        <div className="tableWrap">
+          <table className="adminTable">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Why it matters</th>
+                <th>Target</th>
+              </tr>
+            </thead>
+            <tbody>
+              {metrics.map((m) => (
+                <tr key={m.metric}>
+                  <td>
+                    <strong>{m.metric}</strong>
+                  </td>
+                  <td className="muted">{m.why}</td>
+                  <td>{m.target}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </>
   )
 }

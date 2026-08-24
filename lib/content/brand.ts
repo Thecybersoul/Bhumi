@@ -35,9 +35,6 @@ export const wa = {
   verification: whatsapp(
     "Hi Bhumi Estates — I'd like a free land verification review. My parcel is in:"
   ),
-  largeParcel: whatsapp(
-    'Hi Bhumi Estates — I am enquiring about a large land parcel and would like to speak to an advisor.'
-  ),
   sourcing: whatsapp('Hi Bhumi Estates — I am looking for land and would like to talk it through.'),
   development: whatsapp('Hi Bhumi Estates — I need a development partner for a project.'),
   branding: whatsapp('Hi Bhumi Estates — I need site branding: boundary wall, entrance or signage.'),
@@ -46,40 +43,35 @@ export const wa = {
 
 export type NavItem = { label: string; href: string; description?: string; children?: NavItem[] }
 
-/* Five top-level destinations, not nine. Sourcing, Branding and
-   Outdoor Advertising lead the Services menu; the two partner-network
-   services sit below a divider rather than competing for the eye. */
+/* Three destinations. The site is the homepage plus one page per
+   practice; the marketplace and insights sit inside Property
+   Consultancy rather than competing with it at the top level. */
 export const primaryNav: NavItem[] = [
   {
-    label: 'Services',
-    href: '/services',
-    description: 'Sourcing, branding and outdoor advertising',
+    label: 'Property Consultancy',
+    href: '/property-consultancy',
+    description: 'Land sourcing, verification and legal, construction and development',
     children: [
-      { label: 'Land Sourcing', href: '/services/land-sourcing' },
-      { label: 'Branding', href: '/services/branding' },
-      { label: 'Outdoor Advertising', href: '/services/outdoor-advertising' },
-      { label: 'Development', href: '/services/development' },
-      { label: 'Verification', href: '/services/verification' },
+      { label: 'Land Sourcing', href: '/property-consultancy#land-sourcing' },
+      { label: 'Verification & Legal', href: '/property-consultancy#verification-legal' },
+      { label: 'Construction & Development', href: '/property-consultancy#construction-development' },
+      { label: 'Marketplace', href: '/marketplace' },
+      { label: 'Insights', href: '/insights' },
     ],
   },
   {
-    label: 'Property Types',
-    href: '/property-types',
-    description: 'Commercial, residential, villas, land, warehouses, large parcels',
+    label: 'Branding & Advertising',
+    href: '/branding-advertising',
+    description: 'Project branding and outdoor advertising',
     children: [
-      { label: 'Commercial buildings', href: '/property-types/commercial' },
-      { label: 'Residential / apartments', href: '/property-types/residential' },
-      { label: 'Villas', href: '/property-types/villas' },
-      { label: 'Land parcels', href: '/property-types/land-parcels' },
-      { label: 'Warehouses / industrial', href: '/property-types/warehouses' },
-      { label: 'Large land parcels', href: '/large-land-parcels' },
+      { label: 'Project Branding', href: '/branding-advertising#project-branding' },
+      { label: 'Outdoor Advertising', href: '/branding-advertising#outdoor-advertising' },
     ],
   },
-  { label: 'Marketplace', href: '/marketplace', description: 'Parcels currently on the platform' },
-  { label: 'Resources', href: '/resources', description: 'Work, corridors, tools and insights' },
   { label: 'Contact', href: '/contact', description: 'Talk to an advisor' },
 ]
 
 export const utilityNav: NavItem[] = [
-  { label: 'Verification checklist', href: '/checklist' },
+  { label: 'Marketplace', href: '/marketplace' },
+  { label: 'Insights', href: '/insights' },
 ]

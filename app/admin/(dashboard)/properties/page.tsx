@@ -55,7 +55,7 @@ export default async function AdminProperties() {
         </div>
         <div className="statTile is-verified">
           <span className="statTile__value">{data.filter((p) => p.verified_stage === 'report').length}</span>
-          <span className="statTile__label">Cleared all six stages</span>
+          <span className="statTile__label">Cleared all four stages</span>
           <span className="statTile__note">Certificate issued</span>
         </div>
         <div className="statTile is-flagged">

@@ -34,7 +34,7 @@ export default function NotFound() {
           </div>
 
           <div className="row-wrap" style={{ marginTop: 34 }}>
-            <Link href="/verification" className="btn btn-primary">
+            <Link href="/property-consultancy" className="btn btn-primary">
               Start with the verification protocol
             </Link>
             <Link href="/" className="btn btn-ghost">

@@ -5,18 +5,11 @@ import type { StageStatus, VerificationStageKey } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-/* The verification pipeline (Plan §5) — the record that feeds
-   both the internal board and the public transparency dashboard.
-   Case-level detail is admin-only; only the aggregate is public. */
+/* The verification pipeline — the record behind the internal
+   board. Case-level detail is admin-only; only the aggregate is
+   ever exposed publicly, and only once there is one to show. */
 
-const STAGES: VerificationStageKey[] = [
-  'intake',
-  'title-chain',
-  'revenue-zoning',
-  'litigation',
-  'physical',
-  'report',
-]
+const STAGES: VerificationStageKey[] = ['documents', 'title', 'site', 'report']
 const STATUSES: StageStatus[] = ['Not started', 'In progress', 'Flagged', 'Verified']
 
 export async function GET(req: NextRequest) {

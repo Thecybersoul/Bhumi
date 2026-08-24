@@ -16,19 +16,18 @@ export default async function MetricsPage() {
     getDataRoomRequests(),
   ])
 
-  const landingLeads = leads.filter((l) => l.source.startsWith('/lp/'))
   const whatsappLeads = leads.filter((l) => l.channel === 'WhatsApp')
-  const checklistLeads = leads.filter((l) => l.kind === 'Checklist download')
-  const toolLeads = leads.filter((l) => l.kind === 'Tool result')
+  const propertyLeads = leads.filter((l) => l.source.startsWith('/property-consultancy'))
+  const brandingLeads = leads.filter((l) => l.source.startsWith('/branding-advertising'))
 
   const metrics = [
     {
-      metric: 'Landing page conversion rate',
-      tells: 'Whether campaign- and property-type-specific pages are converting, not just the homepage.',
-      observable: `${landingLeads.length} leads currently attributed to /lp/ pages`,
+      metric: 'Split between the two practices',
+      tells: 'Which practice the site is actually generating demand for. If one is near zero, either its page is not working or the market is telling us something.',
+      observable: `${propertyLeads.length} property · ${brandingLeads.length} branding`,
       where: 'Lead inbox, filtered by source',
       href: '/admin/leads',
-      status: landingLeads.length > 0 ? 'Tracking' : 'No campaign traffic yet',
+      status: leads.length > 0 ? 'Tracking' : 'No leads yet',
     },
     {
       metric: 'WhatsApp click-through rate',
@@ -41,35 +40,27 @@ export default async function MetricsPage() {
       status: 'Tracking',
     },
     {
-      metric: 'Time on the Land & Verification page',
-      tells: 'Whether the flagship page and its stepper are doing their trust-building job.',
+      metric: 'Time on the Property Consultancy page',
+      tells: 'Whether the protocol and checklist sections are doing their trust-building job in the absence of a portfolio.',
       observable: 'Requires an analytics provider — not yet wired',
       where: 'Analytics, once connected',
-      href: '/verification',
+      href: '/property-consultancy',
       status: 'Needs analytics',
     },
     {
-      metric: 'Checklist / lead-magnet download rate',
-      tells: 'Quality and volume of self-qualified landowner leads.',
-      observable: `${checklistLeads.length} checklist downloads recorded`,
-      where: 'Lead inbox, path = Checklist download',
-      href: '/admin/leads',
-      status: 'Tracking',
-    },
-    {
-      metric: 'Large Land Parcels data-room requests',
-      tells: 'Whether the institutional pillar is reaching the right buyer profile.',
+      metric: 'Data-room / document requests',
+      tells: 'Whether larger enquiries are reaching the point of asking for detail.',
       observable: `${dataRoom.length} requests · ${dataRoom.filter((d) => d.status === 'Approved').length} approved`,
       where: 'Data room queue',
       href: '/admin/data-room',
-      status: 'Tracking',
+      status: dataRoom.length > 0 ? 'Tracking' : 'No requests yet',
     },
     {
-      metric: 'Organic ranking for corridor search terms',
-      tells: 'Whether the SEO and content strategy is building real discovery, not just traffic.',
-      observable: 'Six corridor pages and six insight pieces published with canonical URLs and structured data',
+      metric: 'Organic ranking for land and diligence search terms',
+      tells: 'Whether the insight content is building real discovery rather than just traffic.',
+      observable: 'Insight pieces published with canonical URLs and structured data',
       where: 'Search Console, once verified',
-      href: '/corridors',
+      href: '/insights',
       status: 'Needs Search Console',
     },
     {
@@ -102,12 +93,12 @@ export default async function MetricsPage() {
       status: 'Tracking',
     },
     {
-      metric: 'Tool completion to qualified lead',
-      tells: 'Whether the decision-support tools are doing their second job — qualifying a lead, not just informing one.',
-      observable: `${toolLeads.length} leads carrying tool inputs`,
-      where: 'Lead inbox, path = Tool result',
+      metric: 'Enquiry to paid engagement',
+      tells: 'The one that decides whether any of the rest matters. If enquiries are healthy and this is not, the problem is pricing or the pitch, not traffic.',
+      observable: `${leads.filter((l) => l.stage === 'Closed').length} of ${leads.length} leads converted`,
+      where: 'Lead inbox, stage column',
       href: '/admin/leads',
-      status: 'Tracking',
+      status: leads.length > 0 ? 'Tracking' : 'No leads yet',
     },
   ]
 

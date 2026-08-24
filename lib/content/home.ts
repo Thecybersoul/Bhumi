@@ -1,80 +1,68 @@
-/* Homepage copy — Plan §6: "The one-line pitch, the credibility
-   bar (§3B), the five-service value chain, one clear next step."
-   Every claim here has to be provable (Plan §2, Zell). */
+/* Homepage copy.
+
+   The homepage does one job: make the two practices legible in
+   five seconds, then send the visitor into whichever one is
+   theirs. Nothing here claims a track record — where a
+   credibility bar would sit, generic industry context sits
+   instead (see industryContext in ./verification). */
 
 export const hero = {
-  eyebrow: 'Land Sourcing · Branding · Outdoor Advertising',
+  eyebrow: 'Property Consultancy · Branding & Advertising',
+  /* The full eyebrow wraps to two lines on a phone, which eats
+     the footage. Short form below 640px. */
+  mobileEyebrow: 'Property · Branding',
   title: { before: 'We find the land, and make it', italic: 'impossible', after: ' to miss.' },
   subhead:
-    'Bhumi Estates sources the parcel worth buying, builds the identity a project is judged by, and puts it in front of the people who matter — across Bengaluru and its growth corridors.',
+    'Two practices under one roof. Property Consultancy sources the parcel, proves the title and builds the project. Branding Consultancy gives it an identity and puts it in front of the people who matter.',
+  /* Mobile gets one short line so the background footage stays
+     the thing you actually see. */
+  mobileSubhead: 'Property consultancy and branding, under one roof.',
   primary: { label: 'Tell us what you need', href: '/contact' },
-  secondary: { label: 'See what we do', href: '/services' },
-  tertiary: { label: 'Call an advisor', href: 'tel:+918123845749' },
+  secondary: { label: 'Property Consultancy', href: '/property-consultancy' },
+  tertiary: { label: 'Branding & Advertising', href: '/branding-advertising' },
 }
 
-/* Plan §3B — the data-driven credibility bar. Lead with metrics,
-   not a tagline. Every figure here is served from the live
-   verification record, with these as the published baseline. */
-export const credibilityBar = [
-  { value: '412', label: 'Parcels put through diligence', note: 'Since inception' },
-  { value: '31%', label: 'Carried a disqualifying red flag', note: 'We publish this' },
-  { value: '26', label: 'Median days to a decision', note: 'Intake to certificate' },
-  { value: '6', label: 'Stages, each separately tracked', note: 'Never one black box' },
-]
+export const practicesIntro = {
+  eyebrow: 'What we do',
+  title: { before: 'Two practices,', italic: 'one continuous thread.' },
+  body: 'Most firms do one of these and outsource the other, which is where the thread breaks — the constraint found at diligence never reaches the person designing the hoarding. Running both means the story a project tells outside matches what is actually true on the title.',
+}
 
-export const positioning = {
-  eyebrow: 'The standard we hold ourselves to',
-  title: { before: 'Every claim on this site should be', italic: 'provable.' },
-  body: 'Real estate reputations are built on a permanent record. Every claim on this site is provable, land is the hero rather than logos or lifestyle photography, and every page ends in a specific next step.',
+export const standard = {
+  eyebrow: 'How we work',
+  title: { before: 'Say the thing that is', italic: 'actually true.' },
+  body: 'A young firm has a choice: invent a track record, or be unusually straight about what it does and does not yet have. We have taken the second option, and built the site accordingly.',
   rules: [
     {
-      rule: 'Every claim is provable',
-      detail: 'Case studies carry real project numbers, including the deals we walked away from.',
+      rule: 'No invented numbers',
+      detail:
+        'You will not find a parcel count or a success rate on this site, because we are not going to manufacture one. The figures we publish are industry ground rules, marked as such.',
     },
     {
-      rule: 'Land is the flagship, not a sub-page',
+      rule: 'Findings are reported as found',
       detail:
-        'The Land & Verification page gets the best content and placement on this site — everything else we do is built on top of it.',
+        'Diligence is only worth what its independence is worth. A record is pulled at source rather than accepted from a seller, and a finding is not softened to make a deal easier.',
     },
     {
-      rule: 'No dead ends',
+      rule: 'Every page ends somewhere specific',
       detail:
-        'Every page — insight, case study, service page, tool — ends in a specific next step that names the value rather than asking you to "contact us".',
+        'No page finishes by asking you to "get in touch". Each one names the next step and what you get from taking it.',
     },
   ],
 }
 
 export const verificationTeaser = {
-  eyebrow: 'The flagship',
-  title: { before: 'Six stages. Each one', italic: 'visible.' },
-  body: 'A single "under review" status tells a landowner nothing. Six tracked stages tell them exactly where their parcel stands, and make a stalled or flagged stage impossible to hide. This is the process competitors are least likely to publish, because most do not have one to show.',
-  cta: { label: 'Walk through the protocol', href: '/verification' },
-  secondary: { label: 'See our diligence numbers', href: '/verification#transparency' },
+  eyebrow: 'Inside Property Consultancy',
+  title: { before: 'Four stages. Each one', italic: 'answers a question.' },
+  body: 'Not a ten-step diagram nobody reads, and not a single "under review" status that tells you nothing. Four named stages, each one resolving a question a buyer would ask out loud — who owns it, is the title clean, is anything pending, and what is the answer in writing.',
+  cta: { label: 'See how verification works', href: '/property-consultancy#verification' },
 }
 
-export const typesTeaser = {
-  eyebrow: 'What we cover',
-  title: { before: 'A warehouse buyer and a villa buyer are making', italic: 'different decisions.' },
-  body: 'So they get different pages. Each asset class carries its own presentation, its own diligence detail, and the specific number that decides it — clear height for a warehouse, the RERA number for an apartment, conversion status for a land parcel.',
-}
-
-export const proofTeaser = {
-  eyebrow: 'Proof, organised by corridor',
-  title: { before: 'Real projects.', italic: 'Real numbers.' },
-  body: 'Including the 620mm clear-height shortfall that renegotiated a warehouse lease, and the 11 acres we dropped at stage four over a partition suit the seller had not mentioned.',
-}
-
-export const largeParcelTeaser = {
-  eyebrow: 'Institutional scale',
-  title: { before: 'Large land parcels get their own', italic: 'pillar.' },
-  body: 'Bulk buyers, developers land-banking ahead of a corridor, and family offices decide differently from an individual buyer. Aerial-first presentation, contiguous-assembly status, a named advisor rather than a shared inbox, and an information memorandum behind an NDA gate.',
-  points: [
-    'Full-parcel aerial presentation, not ground-level photography',
-    'Headline details public; the memorandum released to verified buyers',
-    'Enquiries route to a named advisor, never a shared inbox',
-    'Land through verification, development, branding and advertising — one narrative',
-  ],
-  cta: { label: 'Enter the large-parcel pillar', href: '/large-land-parcels' },
+export const brandingTeaser = {
+  eyebrow: 'Inside Branding Consultancy',
+  title: { before: 'A project is judged', italic: 'before the brochure opens.' },
+  body: 'At the boundary wall, at the entrance, on the drive past at fifty kilometres an hour. Real estate branding lives outdoors, at scale, in weather — so it is designed for those conditions, then carried by media bought on sightline and traffic direction rather than on rate card alone.',
+  cta: { label: 'See the branding practice', href: '/branding-advertising' },
 }
 
 export const faq = {
@@ -82,28 +70,28 @@ export const faq = {
   title: { before: 'The questions worth asking', italic: 'before you engage.' },
   items: [
     {
-      q: 'Is the first verification review really free?',
-      a: 'Yes. The first review is a preliminary read — we look at what you have, tell you what is missing, and tell you whether the parcel is worth full diligence. It takes us a couple of days and costs you nothing. Full six-stage verification is a paid engagement, and we will quote it before starting.',
+      q: 'Why are there no project numbers or case studies on this site?',
+      a: 'Because we would have to invent them. Bhumi Estates is a young firm and does not yet have a published track record to show. We would rather say that plainly than fill the page with figures nobody can check. As real engagements complete and clients agree to be named, they will appear here with dates attached.',
     },
     {
-      q: 'What happens if you flag my parcel?',
-      a: 'You get the finding in writing, with the source document behind it. Roughly a third of the parcels that reach us carry a disqualifying red flag, and we publish that figure because a verification service that never flags anything is not a verification service.',
+      q: 'What does the first conversation cost?',
+      a: 'Nothing. The first review is a preliminary read — we look at what you have, tell you what is missing, and tell you whether the parcel or the project is worth taking further. Full verification and any consultancy engagement are quoted before work starts.',
+    },
+    {
+      q: 'Can I use you for branding without using the property side?',
+      a: 'Yes, and the reverse is equally true. The two practices are deliberately separable. They are run together because the continuity is useful when you need both, not because either one is a condition of the other.',
+    },
+    {
+      q: 'Can I share your verification report with my bank?',
+      a: 'That is what it is written for. The report is issued dated, with a reference number and its scope limitations stated plainly, precisely so it can be forwarded to a lender, a partner or a buyer.',
     },
     {
       q: 'Do you buy land yourself?',
-      a: 'We act for clients. Where we hold or represent inventory, it is marked as such on the listing, because you should always know which side of a table we are on.',
+      a: 'We act for clients. Where we hold or represent inventory, it is marked as such on the listing, because you should always know which side of the table we are on.',
     },
     {
-      q: 'Can I share your verification report with my bank or my partner?',
-      a: 'That is the point of it. The report is issued as a dated, shareable certificate with a reference number and stated scope limitations, precisely so it can be forwarded to a lender or a buyer.',
-    },
-    {
-      q: 'Why is WhatsApp the primary way to contact you?',
-      a: 'Because it is how landowners and developers in this market actually make first contact. A form is available on every page as a backup, and large-parcel enquiries route to a named advisor directly.',
-    },
-    {
-      q: 'Are your tools valuations?',
-      a: 'No. Every tool produces illustrative planning ranges and says so on the page. They are built to help you reach a decision early, not to replace parcel-level diligence or professional tax advice.',
+      q: 'Why is WhatsApp the main way to reach you?',
+      a: 'Because it is how landowners and developers in this market actually make first contact. A form is on every page as a backup, and a phone number is in the header of every one.',
     },
   ],
 }
@@ -111,7 +99,7 @@ export const faq = {
 export const closingCta = {
   eyebrow: 'One next step',
   title: { before: 'Tell us what you are trying', italic: 'to do.' },
-  body: 'A sourcing brief, a site that needs branding, or a campaign that needs to be seen. We will tell you what is realistic before we quote it.',
+  body: 'A parcel to find, a title to check, a project to build, or a launch that needs to be seen. We will tell you what is realistic before we quote it.',
   primary: { label: 'Tell us what you need', href: '/contact' },
-  secondary: { label: 'See what we do', href: '/services' },
+  secondary: { label: 'Call an advisor', href: 'tel:+918123845749' },
 }

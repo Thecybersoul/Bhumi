@@ -7,12 +7,12 @@ import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import LeadForm from '@/components/site/LeadForm'
 import { brand, wa } from '@/lib/content/brand'
-import { pillars } from '@/lib/content/pillars'
+import { practices } from '@/lib/content/services'
 
 export const metadata: Metadata = {
   title: 'Contact — WhatsApp first, form second',
   description:
-    'Reach the Bhumi Estates advisory desk on WhatsApp or by phone. Large-parcel enquiries route to a named advisor. A short form is available as a backup, never as the only option.',
+    'Reach the Bhumi Estates advisory desk on WhatsApp or by phone. Tell us which practice you need — property consultancy or branding — and a short form is available as a backup, never as the only option.',
   alternates: { canonical: '/contact' },
 }
 
@@ -31,20 +31,14 @@ const routes = [
     icon: 'land' as const,
   },
   {
-    label: 'Large land parcels',
-    detail: 'Institutional and bulk enquiries route to a named advisor, not a shared inbox.',
-    href: wa.largeParcel,
-    icon: 'large-land-parcels' as const,
-  },
-  {
-    label: 'Development',
+    label: 'Construction & development',
     detail: 'Taking a parcel from land to a finished asset.',
     href: wa.development,
     icon: 'crane' as const,
   },
   {
-    label: 'Branding',
-    detail: 'Boundary walls, entrance pylons, highmasts and site signage.',
+    label: 'Project branding',
+    detail: 'Naming and identity, boundary walls, entrance pylons and site signage.',
     href: wa.branding,
     icon: 'billboard' as const,
   },
@@ -64,9 +58,13 @@ const INTENT_TO_OPTION: Record<string, string> = {
   commercial: 'Land sourcing',
   residential: 'Land verification',
   villa: 'Land verification',
-  'large-parcel': 'Large land parcel',
-  development: 'Development',
-  branding: 'Branding',
+  'verification-legal': 'Land verification',
+  'land-sourcing': 'Land sourcing',
+  'construction-development': 'Construction & development',
+  development: 'Construction & development',
+  'project-branding': 'Project branding',
+  branding: 'Project branding',
+  'outdoor-advertising': 'Outdoor advertising',
   advertising: 'Outdoor advertising',
 }
 
@@ -181,11 +179,13 @@ export default async function ContactPage({
                       What we do
                     </span>
                     <div className="chips">
-                      {pillars.map((p) => (
-                        <Link key={p.slug} href={`/services/${p.slug}`} className="chip">
-                          {p.name}
-                        </Link>
-                      ))}
+                      {practices.flatMap((pr) =>
+                        pr.services.map((sv) => (
+                          <Link key={sv.slug} href={`${pr.href}#${sv.slug}`} className="chip">
+                            {sv.name}
+                          </Link>
+                        ))
+                      )}
                     </div>
                     <p style={{ fontSize: '.8rem', color: 'var(--muted)', marginTop: 16, lineHeight: 1.65 }}>
                       K-RERA agent registration {brand.reraNumber}. Verify at{' '}

@@ -6,7 +6,7 @@ import Icon from '@/components/site/Icon'
 import { verificationStages } from '@/lib/content/verification'
 import type { VerificationCase, StageStatus, VerificationStageKey } from '@/lib/types'
 
-/* The internal side of the six-stage protocol.
+/* The internal side of the four-stage protocol.
 
    Clicking a stage cycles its status. That single interaction is
    what keeps the public transparency dashboard honest: the
@@ -95,7 +95,7 @@ export default function VerificationBoard({
         <div>
           <h1>Verification pipeline</h1>
           <p>
-            Six stages per case, each separately tracked. Click a stage to cycle it: not started → in progress
+            Four stages per case, each separately tracked. Click a stage to cycle it: not started → in progress
             → verified → flagged. A flag anywhere closes the case; all six verified issues the certificate.
             These records are what the public transparency dashboard is computed from.
           </p>

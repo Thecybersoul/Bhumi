@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     email: record.email,
     property_code: record.parcel_code,
     property_type: 'large-land-parcels',
-    source: '/large-land-parcels',
+    source: '/property-consultancy',
     channel: 'Form',
     stage: 'New',
     payload: { buyer_type: record.buyer_type, ticket_size: record.ticket_size, role: record.role },

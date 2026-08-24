@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    Domain types — Bhumi Estates
    Structured around the Website Business Plan: five-service value
-   chain, six-stage verification protocol, six asset classes.
+   chain, four-stage verification protocol, asset classes.
    ═══════════════════════════════════════════════════════════ */
 
 /* ─── Asset classes (Plan §4) ────────────────────────────── */
@@ -17,13 +17,14 @@ export type PropertyStatus = 'Live' | 'Reserved' | 'Sold'
 export type PriceType = 'Fixed' | 'Negotiable' | 'On Request'
 export type Zone = 'North' | 'East' | 'South' | 'West'
 
-/* ─── Verification protocol (Plan §5) ────────────────────── */
+/* ─── Verification protocol ──────────────────────────────── */
+/* Four stages, not six. Each one answers a question a buyer
+   would actually ask out loud, which is what makes the status
+   readable to somebody who is not a conveyancing lawyer. */
 export type VerificationStageKey =
-  | 'intake'
-  | 'title-chain'
-  | 'revenue-zoning'
-  | 'litigation'
-  | 'physical'
+  | 'documents'
+  | 'title'
+  | 'site'
   | 'report'
 
 export type StageStatus = 'Not started' | 'In progress' | 'Flagged' | 'Verified'

@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import Icon from '@/components/site/Icon'
-import TransparencyDashboard from '@/components/site/TransparencyDashboard'
 import { getTransparency } from '@/lib/db'
 import { verificationStages } from '@/lib/content/verification'
 
@@ -10,7 +9,9 @@ export const metadata = { title: 'Transparency figures · Admin' }
 export default async function AdminTransparency() {
   const { data: published, recent, source } = await getTransparency()
 
-  const publishedFlagPct = Math.round((published.parcels_flagged / published.parcels_reviewed) * 100)
+  const publishedFlagPct = published.parcels_reviewed
+    ? Math.round((published.parcels_flagged / published.parcels_reviewed) * 100)
+    : 0
   const liveFlagPct = recent.reviewed ? Math.round((recent.flagged / recent.reviewed) * 100) : 0
 
   /* The reconciliation view. Publishing a figure that the case
@@ -32,18 +33,18 @@ export default async function AdminTransparency() {
         <div>
           <h1>Transparency figures</h1>
           <p>
-            What the public dashboard publishes, and what the live case record currently supports. The two
-            will differ — the published figures are lifetime and the case record here is the recent slice —
-            but every published number has to be defensible against a record somewhere. Update monthly, and
-            never restate a figure downward.
+            Nothing is published publicly yet, and nothing should be until there are completed files behind
+            it. This page is where the published figures get reconciled against the live case record once
+            there is one. Every published number has to be defensible against a record somewhere. Update
+            monthly, and never restate a figure downward.
           </p>
         </div>
         <div className="row-wrap">
           <span className={`sourcePill ${source === 'live' ? 'is-live' : 'is-fallback'}`}>
             {source === 'live' ? 'Live database' : 'Seeded data'}
           </span>
-          <Link href="/verification#transparency" target="_blank" className="btn btn-sm btn-ghost">
-            View as the public sees it
+          <Link href="/property-consultancy#verification" target="_blank" className="btn btn-sm btn-ghost">
+            View the public protocol
           </Link>
         </div>
       </div>
@@ -223,10 +224,13 @@ export default async function AdminTransparency() {
       </div>
 
       <div style={{ marginTop: 30, paddingTop: 24, borderTop: '1px solid var(--line)' }}>
-        <span className="eyebrow">Preview — exactly what a visitor sees</span>
-        <div style={{ marginTop: 18 }}>
-          <TransparencyDashboard stats={published} recent={recent} />
-        </div>
+        <span className="eyebrow">Not yet public</span>
+        <p style={{ fontSize: '.88rem', color: 'var(--ink-2)', lineHeight: 1.78, maxWidth: '80ch', marginTop: 12 }}>
+          There is no public statistics dashboard on the site while these figures are zero — an empty chart
+          reads as a firm with nothing to show, which is worse than not having the section at all. Once the
+          numbers above are supported by completed files, publish them on the Property Consultancy page next
+          to the protocol they describe.
+        </p>
       </div>
     </>
   )
