@@ -22,7 +22,7 @@
 .siteHeader.is-transparent + main .homeHero,
 .siteHeader.is-transparent ~ main .homeHero {
   margin-top: calc(var(--header-h) * -1);
-  padding-top: calc(clamp(64px, 9vw, 118px) + var(--header-h));
+  padding-top: calc(clamp(32px, 5vw, 64px) + var(--header-h));
 }
 .siteHeader__inner {
   display: flex; align-items: center; justify-content: space-between;
