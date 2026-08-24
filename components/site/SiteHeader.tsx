@@ -48,8 +48,12 @@ export default function SiteHeader({ variant = 'light' }: { variant?: 'light' | 
     <>
       <header className={`siteHeader ${solid ? 'is-solid' : 'is-transparent'}`}>
         <div className="wrap siteHeader__inner">
+          {/* Always the true brand artwork — green and gold. Over the
+              video the wordmark sits on an ivory plate (see
+              .siteHeader__brand in components.css) rather than being
+              recoloured, so the mark is never a knockout of itself. */}
           <Link href="/" className="siteHeader__brand" aria-label={`${brand.name} home`}>
-            <Logo variant="wordmark" theme={solid ? 'light' : 'dark'} style={{ height: 36 }} />
+            <Logo variant="wordmark" theme="light" style={{ height: 36 }} />
           </Link>
 
           <nav className="siteHeader__nav" aria-label="Primary">
