@@ -206,13 +206,13 @@ export const industryContext: ContextStat[] = [
   },
   {
     value: '4',
-    label: 'Records that must agree with each other',
-    note: 'Deed, encumbrance certificate, revenue record, survey',
+    label: 'Authorities that can govern a Bengaluru parcel',
+    note: 'BBMP, BDA, BMRDA or a gram panchayat',
   },
   {
     value: '3',
-    label: 'Independent portals the record actually lives on',
-    note: 'Kaveri, Bhoomi and eCourts, in Karnataka',
+    label: 'State records a parcel is checked against',
+    note: 'Kaveri, Bhoomi and eCourts',
   },
   {
     value: 'K-RERA',
@@ -222,4 +222,4 @@ export const industryContext: ContextStat[] = [
 ]
 
 export const contextNote =
-  'These are the ground rules of land diligence in Karnataka, not a record of our own work. Where we publish figures about work we have done, they will be dated and sourced.'
+  'These are the ground rules of buying land in and around Bengaluru, not a record of our own work. Where we publish figures about work we have done, they will be dated and sourced.'

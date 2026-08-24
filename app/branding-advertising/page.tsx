@@ -7,6 +7,7 @@ import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import { brandingPractice } from '@/lib/content/services'
 import { insights } from '@/lib/content/insights'
+import { billboards, billboardIntro, billboardSummary } from '@/lib/content/billboards'
 import { wa, brand } from '@/lib/content/brand'
 
 export const revalidate = 300
@@ -83,6 +84,9 @@ export default function BrandingPage() {
                 </li>
               ))}
               <li>
+                <a href="#inventory">Bookable sites</a>
+              </li>
+              <li>
                 <a href="#principles">How outdoor is judged</a>
               </li>
               <li>
@@ -145,6 +149,94 @@ export default function BrandingPage() {
             </div>
           </section>
         ))}
+
+        {/* ── Bookable outdoor inventory ──
+            Partner-operated panels, stated as such. */}
+        <section className="section boardSection" id="inventory">
+          <div className="wrap">
+            <Reveal>
+              <div className="secHead">
+                <span className="secTag">{billboardIntro.eyebrow}</span>
+                <h2 className="h1">
+                  {billboardIntro.title.before} <em>{billboardIntro.title.italic}</em>
+                </h2>
+                <p className="lede">{billboardIntro.body}</p>
+              </div>
+
+              <div className="boardSummary">
+                <span>{billboardSummary.total} sites</span>
+                {billboardSummary.zones.map((z) => (
+                  <span key={z}>{z} Bengaluru</span>
+                ))}
+                <span>Up to {billboardSummary.largest.area}</span>
+              </div>
+            </Reveal>
+
+            <div className="boardGrid">
+              {billboards.map((b, i) => (
+                <Reveal key={b.id} delay={i * 55}>
+                  <article className="boardCard">
+                    <div className="boardCard__head">
+                      <span className="boardCard__num">{b.number}</span>
+                      <div className="boardCard__title">
+                        <h3>{b.name}</h3>
+                        <span className="boardCard__zone">
+                          {b.zone} Bengaluru
+                          {b.location ? ` · ${b.location}` : ''}
+                        </span>
+                      </div>
+                      <div className="boardCard__size">
+                        <strong>{b.size}</strong>
+                        <small>{b.area}</small>
+                      </div>
+                    </div>
+
+                    <dl className="boardCard__flow">
+                      <div>
+                        <Icon name="arrow" size={13} />
+                        <div>
+                          <dt>Traffic from</dt>
+                          <dd>{b.trafficFrom.join(' · ')}</dd>
+                        </div>
+                      </div>
+                      <div>
+                        <Icon name="pin" size={13} />
+                        <div>
+                          <dt>Heading towards</dt>
+                          <dd>{b.goingTowards.join(' · ')}</dd>
+                        </div>
+                      </div>
+                    </dl>
+
+                    <div className="boardCard__foot">
+                      <span className="boardCard__coords">{b.coordinates}</span>
+                      {b.availableFrom && <span className="boardCard__soon">{b.availableFrom}</span>}
+                    </div>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+
+            <Reveal>
+              <p className="boardNote">
+                {billboardIntro.suited} {billboardIntro.note}
+              </p>
+              <div className="boardCta">
+                <a
+                  href={wa.outdoorAdvertising}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-gold btn-lg"
+                >
+                  <Icon name="whatsapp" size={16} /> Check availability and rates
+                </a>
+                <Link href="/contact?intent=outdoor-advertising" className="btn btn-outline btn-lg">
+                  Plan a campaign <Icon name="arrow" size={15} />
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+        </section>
 
         {/* ── Craft principles ── */}
         <section className="section principlesSection" id="principles">
