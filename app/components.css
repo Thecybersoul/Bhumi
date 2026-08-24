@@ -171,7 +171,7 @@ body.nav-open .waFloat { display: none !important; }
     linear-gradient(to top, rgba(11,34,25,.7) 0%, transparent 60%);
 }
 .pageHero.is-cream .pageHero__scrim { background: rgba(252,251,248,.94); }
-@media (max-width: 640px), (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) {
   .pageHero__video { display: none; }
 }
 .pageHero__grain {
@@ -226,7 +226,7 @@ body.nav-open .waFloat { display: none !important; }
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: center 38%;
 }
-@media (max-width: 640px), (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) {
   .homeHero__video { display: none; }
 }
 .homeHero__scrim {
