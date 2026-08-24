@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Icon, { type IconName } from './Icon'
 import Reveal from './Reveal'
+import HeroVideo from './HeroVideo'
 
 /* Shared inner-page hero. Generous whitespace and a confident
    type hierarchy rather than a decorated banner (Plan §11). */
@@ -37,6 +38,10 @@ export default function PageHero({
 
   return (
     <section className={`pageHero ${isNavy ? 'on-navy' : 'is-cream'}`}>
+      <div className="pageHero__media" aria-hidden="true">
+        <HeroVideo className="pageHero__video" />
+      </div>
+      <div className="pageHero__scrim" aria-hidden="true" />
       <div className="pageHero__grain" aria-hidden="true" />
       <div className="wrap">
         {crumbs.length > 0 && (

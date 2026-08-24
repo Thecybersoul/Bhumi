@@ -2,6 +2,7 @@ import Link from 'next/link'
 import SiteHeader from '@/components/site/SiteHeader'
 import SiteFooter from '@/components/site/SiteFooter'
 import Reveal from '@/components/site/Reveal'
+import HeroVideo from '@/components/site/HeroVideo'
 import Icon from '@/components/site/Icon'
 import { getTransparency } from '@/lib/db'
 import { featuredPillars, secondaryPillars } from '@/lib/content/pillars'
@@ -28,7 +29,10 @@ export default async function Home() {
       <main id="main">
         {/* ── Hero ── */}
         <section className="homeHero">
-          <div className="homeHero__bg" aria-hidden="true" />
+          <div className="homeHero__bg" aria-hidden="true">
+            <HeroVideo className="homeHero__video" />
+          </div>
+          <div className="homeHero__scrim" aria-hidden="true" />
           <div className="wrap">
             <div className="homeHero__grid" style={{ gridTemplateColumns: '1fr' }}>
               <Reveal>
