@@ -5,15 +5,15 @@
 
 /* ─── Header ─────────────────────────────────────────────── */
 .siteHeader {
-  --header-h: 62px;
+  /* Height comes from :root so the hero — a sibling, not a child —
+     reads the identical value when it pulls itself up underneath. */
   position: sticky; top: 0; z-index: 80;
-  transition: background .28s var(--ease), box-shadow .28s var(--ease), border-color .28s var(--ease);
-  border-bottom: 1px solid transparent;
+  transition: background .28s var(--ease), box-shadow .28s var(--ease);
 }
 .siteHeader.is-solid {
   background: rgba(252, 251, 248, .94);
   backdrop-filter: blur(18px) saturate(1.4);
-  border-bottom-color: var(--line);
+  box-shadow: inset 0 -1px 0 var(--line);
 }
 /* The transparent variant overlays the section beneath it rather
    than sitting above it on the page background — otherwise the
@@ -24,15 +24,15 @@
   margin-top: calc(var(--header-h) * -1);
   padding-top: calc(clamp(18px, 2.4vw, 34px) + var(--header-h));
 }
-/* On phones the hero text was dense enough to hide most of the
-   background video — a taller, airier navbar plus more room around
-   smaller hero text lets it show through. */
+/* A taller, airier navbar on phones.
+
+   This must be set on :root, not on .siteHeader. The hero is a
+   sibling of the header, so a value scoped to .siteHeader is invisible
+   to it — the header would render 68px tall while the hero pulled
+   itself up by the root's 62px, leaving a 6px strip of page
+   background above the video. That was the white bar at the top. */
 @media (max-width: 640px) {
-  .siteHeader { --header-h: 68px; }
-  .siteHeader.is-transparent + main .homeHero,
-  .siteHeader.is-transparent ~ main .homeHero {
-    padding-top: calc(56px + var(--header-h));
-  }
+  :root { --header-h: 68px; }
 }
 .siteHeader__inner {
   display: flex; align-items: center; justify-content: space-between;
