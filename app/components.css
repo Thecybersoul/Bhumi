@@ -1951,7 +1951,15 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 }
 .carousel__track::-webkit-scrollbar { display: none; }
 .carousel__track:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: var(--r); }
-.carousel__track > * { scroll-snap-align: start; flex: 0 0 auto; }
+/* Cards sit inside a set so the whole set can be duplicated for a
+   seamless loop. The set is transparent to layout intent — it is
+   just a flex row of the same cards. */
+.carousel__set { display: flex; gap: 18px; flex: 0 0 auto; }
+.carousel__set > * { scroll-snap-align: start; flex: 0 0 auto; }
+/* Snap points fight a continuous drift — every frame would be pulled
+   back to the nearest card. While looping, the rail scrolls freely
+   and snap comes back the moment the loop is off. */
+.carousel__track.is-looping { scroll-snap-type: none; }
 
 .carousel__nav { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 .carousel__nav button {
@@ -2233,8 +2241,21 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 /* Each practice sits to one side of the spine, so the thread has
    something to lean toward. */
 .threadItem { display: flex; }
-.threadItem.is-left { justify-content: flex-start; padding-right: 52%; }
-.threadItem.is-right { justify-content: flex-end; padding-left: 52%; }
+
+/* Side by side from 900px, with headroom above the cards for the
+   stitch to run through. Two practices in a tall zigzag left the
+   section sparse and the eye travelling much further than the
+   content justified. */
+@media (min-width: 900px) {
+  .thread__rail { flex-direction: row; align-items: stretch; padding-top: 86px; gap: 24px; }
+  .threadItem { flex: 1 1 0; min-width: 0; }
+  .threadCard { display: flex; flex-direction: column; }
+  .threadCard__services { flex: 1; }
+}
+@media (max-width: 899px) {
+  .threadItem.is-left,
+  .threadItem.is-right { justify-content: flex-start; }
+}
 
 .threadCard {
   display: block; width: 100%;
@@ -2286,7 +2307,7 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 @media (max-width: 899px) {
   /* Stacked: the spine moves to the gutter and the cards clear it. */
   .threadItem.is-left,
-  .threadItem.is-right { padding: 0 0 0 58px; justify-content: flex-start; }
+  .threadItem.is-right { padding: 0 0 0 58px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .threadCard,
@@ -2376,3 +2397,52 @@ a.contactLines__row:hover { color: var(--gold-deep); }
   .homeHero__video { animation: none; }
   .btn:active { transform: none; }
 }
+
+/* ─── Construction lead (property page, short form) ──────── */
+.buildLead { background: var(--cream); scroll-margin-top: 90px; overflow: hidden; }
+.buildLead__grid {
+  display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: clamp(30px, 4vw, 60px); align-items: center;
+}
+.buildLead__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+@media (max-width: 940px) { .buildLead__grid { grid-template-columns: 1fr; } }
+
+/* ─── Construction sub-page ──────────────────────────────── */
+.buildStages__title { max-width: 20ch; margin: 12px 0 clamp(30px, 4vw, 48px); }
+.buildStages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.buildStage {
+  padding-top: 20px; border-top: 2px solid var(--line);
+  transition: border-color .4s var(--ease);
+}
+.buildStage:hover { border-top-color: var(--gold); }
+.buildStage__n {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .16em;
+  color: var(--gold-deep); display: block; margin-bottom: 12px;
+}
+.buildStage h3 {
+  font-family: var(--serif); font-size: 1.14rem; font-weight: 500;
+  color: var(--navy); margin-bottom: 10px; letter-spacing: -.01em;
+}
+.buildStage p { font-size: .89rem; color: var(--ink-2); line-height: 1.72; }
+@media (max-width: 1000px) { .buildStages { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .buildStages { grid-template-columns: 1fr; } }
+
+.buildDeliver {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: clamp(30px, 5vw, 60px); align-items: start;
+}
+.buildDeliver .h1 { margin: 12px 0 24px; }
+.serviceBlock__answers-list { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+.serviceBlock__answers-list li {
+  display: flex; gap: 12px; align-items: flex-start;
+  font-family: var(--serif); font-size: 1.06rem; color: var(--navy); line-height: 1.5;
+}
+.serviceBlock__answers-list svg { color: var(--gold); flex-shrink: 0; margin-top: 6px; }
+@media (max-width: 940px) { .buildDeliver { grid-template-columns: 1fr; } }
+
+/* Full gallery on the sub-page — a grid, not a rail, because here
+   you are browsing rather than glancing. */
+.designGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.designGrid .designCard { width: 100%; }
+@media (max-width: 1000px) { .designGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .designGrid { grid-template-columns: 1fr; } }

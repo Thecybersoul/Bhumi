@@ -9,7 +9,7 @@ import Carousel from '@/components/site/Carousel'
 import { propertyPractice } from '@/lib/content/services'
 import { verificationStages } from '@/lib/content/verification'
 import { insights } from '@/lib/content/insights'
-import { designs, designIntro, designCounts } from '@/lib/content/designs'
+import { designs } from '@/lib/content/designs'
 import { getProperties } from '@/lib/db'
 import { wa } from '@/lib/content/brand'
 
@@ -23,6 +23,10 @@ export const metadata: Metadata = {
 }
 
 const inr = (cr: number) => `₹${cr} Cr`
+
+/* Kept short on purpose — the detail is one click away. */
+const constructionShort =
+  'Approvals, drawings, tendering and site supervision, delivered by the design-and-build team we work with directly.'
 
 export default async function PropertyConsultancyPage() {
   const p = propertyPractice
@@ -202,111 +206,51 @@ export default async function PropertyConsultancyPage() {
           </div>
         </section>
 
-        {/* ══ Vertical three: building it ══ */}
-        <section className="serviceBlock is-alt" id="construction-development">
+        {/* ══ Vertical three: building it ══
+            Short on this page — the stages, the deliverables and the
+            full gallery live on the sub-page. */}
+        <section className="section buildLead" id="construction-development">
           <div className="wrap">
-            <div className="serviceBlock__grid">
+            <div className="buildLead__grid">
               <Reveal>
-                <div className="serviceBlock__lead">
-                  <span className="serviceBlock__num">{development.number}</span>
-                  <div className="serviceBlock__icon">
-                    <Icon name={development.icon} size={30} />
-                  </div>
-                  <h2 className="h1">{development.name}</h2>
-                  <p className="serviceBlock__short">{development.short}</p>
-                  <p className="lede">{development.summary}</p>
-
-                  <div className="serviceBlock__answers">
-                    <h3>Questions this answers</h3>
-                    <ul>
-                      {development.answers.map((a) => (
-                        <li key={a}>
-                          <Icon name="arrow" size={13} />
-                          <span>{a}</span>
-                        </li>
-                      ))}
-                    </ul>
+                <div>
+                  <span className="secTag">{development.number} · {development.name}</span>
+                  <h2 className="h1">
+                    And then we <em>build it.</em>
+                  </h2>
+                  <p className="lede">{development.short}. {constructionShort}</p>
+                  <div className="buildLead__actions">
+                    <Link
+                      href="/property-consultancy/construction-development"
+                      className="btn btn-gold btn-lg"
+                    >
+                      See the build practice <Icon name="arrow" size={15} />
+                    </Link>
+                    <a
+                      href={wa.development}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-lg"
+                    >
+                      <Icon name="whatsapp" size={15} /> Discuss a project
+                    </a>
                   </div>
                 </div>
               </Reveal>
 
               <Reveal delay={90}>
-                <div className="serviceBlock__deliver">
-                  <h3>What you get</h3>
-                  <ul>
-                    {development.deliverables.map((d) => (
-                      <li key={d}>
-                        <Icon name="check" size={15} />
-                        <span>{d}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <a
-                    href={wa.development}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline btn-block"
-                  >
-                    <Icon name="whatsapp" size={14} /> Discuss a project
-                  </a>
-                </div>
+                <Carousel label="Design and build renders">
+                  {designs.slice(0, 6).map((d) => (
+                    <figure key={d.id} className="buildCard">
+                      <div className="buildCard__photo">
+                        <img src={d.image} alt={d.title} loading="lazy" width={1400} height={875} />
+                      </div>
+                      <figcaption>{d.title}</figcaption>
+                    </figure>
+                  ))}
+                </Carousel>
               </Reveal>
             </div>
-          </div>
-        </section>
-
-        {/* ── Design and build gallery ──
-            The construction partner's own renders, attributed as such. */}
-        <section className="section designSection" id="design-gallery">
-          <div className="wrap">
-            <Reveal>
-              <div className="secHead secHead--row">
-                <div>
-                  <span className="secTag">{designIntro.eyebrow}</span>
-                  <h2 className="h1">
-                    {designIntro.title.before} <em>{designIntro.title.italic}</em>
-                  </h2>
-                  <p className="lede">{designIntro.body}</p>
-                </div>
-                <div className="designSection__counts">
-                  <span>{designCounts.exterior} exteriors</span>
-                  <span>{designCounts.interior} interiors</span>
-                </div>
-              </div>
-            </Reveal>
-
-            <Carousel label="Design and build renders">
-              {designs.map((d) => (
-                <figure key={d.id} className="designCard">
-                  <div className="designCard__photo">
-                    <img
-                      src={d.image}
-                      alt={`${d.title} — ${d.note}`}
-                      loading="lazy"
-                      width={1400}
-                      height={875}
-                    />
-                    <span className="designCard__kind">{d.kind}</span>
-                  </div>
-                  <figcaption>
-                    <strong>{d.title}</strong>
-                    <span>{d.note}</span>
-                  </figcaption>
-                </figure>
-              ))}
-            </Carousel>
-
-            <Reveal>
-              <p className="designSection__note">{designIntro.attribution}</p>
-              <a
-                href={wa.development}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-gold btn-lg designSection__cta"
-              >
-                <Icon name="whatsapp" size={16} /> Discuss a build
-              </a>
-            </Reveal>
           </div>
         </section>
 

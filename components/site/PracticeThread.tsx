@@ -28,6 +28,12 @@ interface Geometry {
   path: string
   length: number
   nodes: { x: number; y: number }[]
+  /* How far along the stroke each node sits, 0–1. A node wakes when
+     the draw passes it. Measured along the path rather than compared
+     on an axis, because the stitch runs horizontally on desktop and
+     vertically when stacked — an axis test would be right in one
+     layout and wrong in the other. */
+  nodeAt: number[]
 }
 
 export default function PracticeThread({ practices }: { practices: Practice[] }) {
@@ -47,34 +53,83 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
     if (!w || !h) return
 
     const stacked = w < 900
-    // Stacked: spine hugs the left gutter. Split: spine runs centre.
-    const spine = stacked ? 26 : w / 2
+    const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[]
+    let nodes: { x: number; y: number }[] = []
+    let d = ''
 
-    const nodes = cardRefs.current.filter(Boolean).map((el, i) => {
-      const b = (el as HTMLDivElement).getBoundingClientRect()
-      const y = b.top - wb.top + b.height / 2
-      // Split layout alternates the cards, so the thread leans toward
-      // whichever side the card is on before returning to the spine.
-      const lean = stacked ? 0 : (i % 2 === 0 ? -1 : 1) * Math.min(150, w * 0.12)
-      return { x: spine + lean, y }
-    })
+    if (stacked) {
+      /* Stacked: a spine down the left gutter, leaning to each card. */
+      const spine = 26
+      nodes = cards.map((el) => {
+        const b = el.getBoundingClientRect()
+        return { x: spine, y: b.top - wb.top + b.height / 2 }
+      })
+      d = `M ${spine} 0`
+      let prevY = 0
+      nodes.forEach((n) => {
+        const midY = (prevY + n.y) / 2
+        d += ` C ${spine} ${midY}, ${n.x} ${midY}, ${n.x} ${n.y}`
+        prevY = n.y
+      })
+      d += ` L ${spine} ${h}`
+    } else {
+      /* Side by side: two cards is too few to justify a tall zigzag —
+         it just leaves the section sparse. Instead the thread runs
+         across the top as a single stitch, dipping down to touch the
+         head of each card and rising between them. It draws left to
+         right, which is also the order you read the cards in. */
+      nodes = cards.map((el) => {
+        const b = el.getBoundingClientRect()
+        return { x: b.left - wb.left + b.width / 2, y: b.top - wb.top }
+      })
+      const crest = Math.max(10, (nodes[0]?.y ?? 80) - 62)
 
-    let d = `M ${spine} 0`
-    let prevY = 0
-    nodes.forEach((n) => {
-      const midY = (prevY + n.y) / 2
-      d += ` C ${spine} ${midY}, ${n.x} ${midY}, ${n.x} ${n.y}`
-      prevY = n.y
-    })
-    const midEnd = (prevY + h) / 2
-    d += ` C ${nodes.length ? nodes[nodes.length - 1].x : spine} ${midEnd}, ${spine} ${midEnd}, ${spine} ${h}`
+      // Waypoints: in at the left crest, dip to each node, crest
+      // between them, out at the right crest.
+      const pts: { x: number; y: number }[] = [{ x: 0, y: crest }]
+      nodes.forEach((n, i) => {
+        if (i > 0) {
+          const prev = nodes[i - 1]
+          pts.push({ x: (prev.x + n.x) / 2, y: crest })
+        }
+        pts.push(n)
+      })
+      pts.push({ x: w, y: crest })
+
+      // Horizontal tangents at every waypoint give a clean wave.
+      d = `M ${pts[0].x} ${pts[0].y}`
+      for (let i = 1; i < pts.length; i++) {
+        const p0 = pts[i - 1]
+        const p1 = pts[i]
+        const dx = (p1.x - p0.x) * 0.5
+        d += ` C ${p0.x + dx} ${p0.y}, ${p1.x - dx} ${p1.y}, ${p1.x} ${p1.y}`
+      }
+    }
 
     // Measure the drawn length so dashoffset maps 1:1 to progress.
     const probe = document.createElementNS('http://www.w3.org/2000/svg', 'path')
     probe.setAttribute('d', d)
     const length = probe.getTotalLength ? probe.getTotalLength() : h
 
-    setGeo({ w, h, path: d, length, nodes })
+    /* Walk the path once and record the closest point to each node. */
+    const nodeAt = nodes.map(() => 0)
+    if (probe.getPointAtLength && length > 0) {
+      const best = nodes.map(() => ({ dist: Infinity, t: 0 }))
+      const steps = 240
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps
+        const pt = probe.getPointAtLength(length * t)
+        nodes.forEach((n, k) => {
+          const dd = (pt.x - n.x) ** 2 + (pt.y - n.y) ** 2
+          if (dd < best[k].dist) best[k] = { dist: dd, t }
+        })
+      }
+      best.forEach((b, k) => {
+        nodeAt[k] = b.t
+      })
+    }
+
+    setGeo({ w, h, path: d, length, nodes, nodeAt })
   }, [])
 
   useLayoutEffect(() => {
@@ -122,8 +177,8 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
 
   /* A practice wakes once the stroke has reached its node. */
   const nodeReached = (i: number) => {
-    if (reduced || !geo || !geo.nodes[i]) return true
-    return progress * geo.h >= geo.nodes[i].y - 40
+    if (reduced || !geo || geo.nodeAt[i] === undefined) return true
+    return progress >= geo.nodeAt[i] - 0.02
   }
 
   return (
