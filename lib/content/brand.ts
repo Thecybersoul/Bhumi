@@ -11,9 +11,13 @@ export const brand = {
   phone: '+91 81238 45749',
   phoneRaw: '918123845749',
   email: 'estatesbhumi@gmail.com',
+  /* Split at the street so the footer can break it over two lines and
+     the PostalAddress in the root layout can use line1 as
+     streetAddress — locality, region and postcode are its own fields
+     there and must not be repeated inside the street. */
   address: {
-    line1: '7th Main, 4th Block, Jayanagar',
-    line2: 'Bengaluru 560011, Karnataka, India',
+    line1: '31/2, 8th E Main, 4th Block, Jayanagar',
+    line2: 'Bengaluru - 560011',
   },
   social: {
     linkedin: 'https://www.linkedin.com/company/bhumi-estates',
