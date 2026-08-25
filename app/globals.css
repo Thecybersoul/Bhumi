@@ -75,7 +75,7 @@
   /* Must match the height .siteHeader actually renders at — the
      hero pulls itself up by this value, so a mismatch leaves a
      sliver of the next section showing above the fold. */
-  --header-h: 62px;
+  --header-h: 56px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

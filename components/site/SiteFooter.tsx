@@ -29,7 +29,7 @@ export default function SiteFooter() {
 
         <div className="siteFooter__cols">
           <div className="siteFooter__brandCol">
-            <Logo variant="wordmark" theme="dark" style={{ height: 52 }} />
+            <Logo variant="wordmark" theme="dark" style={{ height: 46 }} />
             <p className="siteFooter__tagline">{brand.tagline}</p>
             <p className="siteFooter__address">
               {brand.address.line1}

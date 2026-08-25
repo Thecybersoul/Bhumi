@@ -28,11 +28,11 @@
 
    This must be set on :root, not on .siteHeader. The hero is a
    sibling of the header, so a value scoped to .siteHeader is invisible
-   to it — the header would render 68px tall while the hero pulled
-   itself up by the root's 62px, leaving a 6px strip of page
-   background above the video. That was the white bar at the top. */
+   to it — the header would render taller than the hero pulled itself
+   up by, leaving a strip of page background above the video. That
+   was the white bar at the top. */
 @media (max-width: 640px) {
-  :root { --header-h: 68px; }
+  :root { --header-h: 62px; }
 }
 .siteHeader__inner {
   display: flex; align-items: center; justify-content: space-between;
