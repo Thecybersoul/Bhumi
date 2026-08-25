@@ -41,6 +41,7 @@ export type IconName =
   | 'lock'
   | 'download'
   | 'play'
+  | 'instagram'
 
 const paths: Record<IconName, React.ReactNode> = {
   /* Commercial — floor plates in section, core shown */
@@ -250,6 +251,13 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   play: <path d="M8 5.5v13l11-6.5z" />,
+  instagram: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+    </>
+  ),
 }
 
 export default function Icon({

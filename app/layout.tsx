@@ -65,7 +65,7 @@ const organisationJsonLd = {
     postalCode: '560011',
     addressCountry: 'IN',
   },
-  sameAs: [brand.social.linkedin, brand.social.youtube],
+  sameAs: [brand.social.linkedin, brand.social.instagram],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

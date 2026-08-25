@@ -9,6 +9,7 @@ import Carousel from '@/components/site/Carousel'
 import { propertyPractice } from '@/lib/content/services'
 import { verificationStages } from '@/lib/content/verification'
 import { insights } from '@/lib/content/insights'
+import { designs, designIntro, designCounts } from '@/lib/content/designs'
 import { getProperties } from '@/lib/db'
 import { wa } from '@/lib/content/brand'
 
@@ -251,6 +252,61 @@ export default async function PropertyConsultancyPage() {
                 </div>
               </Reveal>
             </div>
+          </div>
+        </section>
+
+        {/* ── Design and build gallery ──
+            The construction partner's own renders, attributed as such. */}
+        <section className="section designSection" id="design-gallery">
+          <div className="wrap">
+            <Reveal>
+              <div className="secHead secHead--row">
+                <div>
+                  <span className="secTag">{designIntro.eyebrow}</span>
+                  <h2 className="h1">
+                    {designIntro.title.before} <em>{designIntro.title.italic}</em>
+                  </h2>
+                  <p className="lede">{designIntro.body}</p>
+                </div>
+                <div className="designSection__counts">
+                  <span>{designCounts.exterior} exteriors</span>
+                  <span>{designCounts.interior} interiors</span>
+                </div>
+              </div>
+            </Reveal>
+
+            <Carousel label="Design and build renders">
+              {designs.map((d) => (
+                <figure key={d.id} className="designCard">
+                  <div className="designCard__photo">
+                    <img
+                      src={d.image}
+                      alt={`${d.title} — ${d.note}`}
+                      loading="lazy"
+                      width={1400}
+                      height={875}
+                    />
+                    <span className="designCard__kind">{d.kind}</span>
+                  </div>
+                  <figcaption>
+                    <strong>{d.title}</strong>
+                    <span>{d.note}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </Carousel>
+
+            <Reveal>
+              <p className="designSection__note">{designIntro.attribution}</p>
+              <a
+                href={wa.development}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-gold btn-lg designSection__cta"
+              >
+                <Icon name="whatsapp" size={16} /> Discuss a build
+              </a>
+            </Reveal>
           </div>
         </section>
 

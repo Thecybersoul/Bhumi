@@ -16,8 +16,8 @@ export const brand = {
     line2: 'Bengaluru 560011, Karnataka, India',
   },
   social: {
-    linkedin: 'https://www.linkedin.com/company/bhumiestates',
-    youtube: 'https://www.youtube.com/@bhumiestates',
+    linkedin: 'https://www.linkedin.com/company/bhumi-estates',
+    instagram: 'https://www.instagram.com/bhumi.estates',
   },
 }
 

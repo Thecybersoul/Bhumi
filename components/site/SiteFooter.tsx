@@ -48,8 +48,8 @@ export default function SiteFooter() {
               <a href={brand.social.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
                 in
               </a>
-              <a href={brand.social.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                <Icon name="play" size={16} filled />
+              <a href={brand.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <Icon name="instagram" size={17} />
               </a>
             </div>
           </div>
