@@ -5,10 +5,12 @@ import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import HeroVideo from '@/components/site/HeroVideo'
 import Carousel from '@/components/site/Carousel'
+import PracticeThread from '@/components/site/PracticeThread'
 import { practices } from '@/lib/content/services'
 import { billboards } from '@/lib/content/billboards'
+import { designs } from '@/lib/content/designs'
 import { getProperties } from '@/lib/db'
-import { hero, practicesIntro, standard, closingCta } from '@/lib/content/home'
+import { hero, practicesIntro, constructionTeaser, closingCta } from '@/lib/content/home'
 
 export const revalidate = 300
 
@@ -63,46 +65,22 @@ export default async function Home() {
           </a>
         </section>
 
-        {/* ── The two practices ── */}
-        <section className="section" id="practices">
+        {/* ── What we do — the thread ── */}
+        <section className="section threadSection" id="practices">
           <div className="wrap">
-            <Reveal>
-              <div className="secHead">
-                <span className="secTag">{practicesIntro.eyebrow}</span>
-                <h2 className="h1">
-                  {practicesIntro.title.before} <em>{practicesIntro.title.italic}</em>
-                </h2>
-                <p className="lede">{practicesIntro.body}</p>
-              </div>
+            <Reveal variant="mask">
+              <span className="secTag">{practicesIntro.eyebrow}</span>
+            </Reveal>
+            <Reveal variant="mask" delay={80}>
+              <h2 className="display threadSection__title">
+                {practicesIntro.title.before} <em>{practicesIntro.title.italic}</em>
+              </h2>
+            </Reveal>
+            <Reveal delay={160}>
+              <p className="lede threadSection__lede">{practicesIntro.body}</p>
             </Reveal>
 
-            <div className="practiceGrid">
-              {practices.map((p, i) => (
-                <Reveal key={p.slug} delay={i * 90}>
-                  <Link href={p.href} className="practiceCard">
-                    <span className="practiceCard__eyebrow">{p.eyebrow}</span>
-                    <h3 className="practiceCard__name">{p.name}</h3>
-                    <p className="practiceCard__pitch">{p.pitch}</p>
-
-                    <ul className="practiceCard__services">
-                      {p.services.map((s) => (
-                        <li key={s.slug}>
-                          <Icon name={s.icon} size={19} />
-                          <span>
-                            <strong>{s.name}</strong>
-                            <small>{s.short}</small>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <span className="practiceCard__go">
-                      Explore {p.shortName} <Icon name="arrow" size={15} />
-                    </span>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
+            <PracticeThread practices={practices} />
           </div>
         </section>
 
@@ -212,30 +190,38 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ── How we work ── */}
-        <section className="section">
+        {/* ── Construction & development ── */}
+        <section className="section-tight buildSection" id="build">
           <div className="wrap">
-            <Reveal>
-              <div className="secHead">
-                <span className="secTag">{standard.eyebrow}</span>
+            <div className="buildSection__head">
+              <Reveal variant="mask">
+                <span className="secTag">{constructionTeaser.eyebrow}</span>
+              </Reveal>
+              <Reveal variant="mask" delay={70}>
                 <h2 className="h1">
-                  {standard.title.before} <em>{standard.title.italic}</em>
+                  {constructionTeaser.title.before} <em>{constructionTeaser.title.italic}</em>
                 </h2>
-                <p className="lede">{standard.body}</p>
-              </div>
-            </Reveal>
-
-            <div className="ruleGrid">
-              {standard.rules.map((r, i) => (
-                <Reveal key={r.rule} delay={i * 80}>
-                  <div className="ruleCard">
-                    <Icon name="check" size={18} />
-                    <h3>{r.rule}</h3>
-                    <p>{r.detail}</p>
-                  </div>
-                </Reveal>
-              ))}
+              </Reveal>
+              <Reveal delay={140}>
+                <p className="lede">{constructionTeaser.body}</p>
+              </Reveal>
+              <Reveal delay={200}>
+                <Link href={constructionTeaser.cta.href} className="btn btn-outline">
+                  {constructionTeaser.cta.label} <Icon name="arrow" size={14} />
+                </Link>
+              </Reveal>
             </div>
+
+            <Carousel label="Design and build renders">
+              {designs.slice(0, 8).map((d) => (
+                <figure key={d.id} className="buildCard">
+                  <div className="buildCard__photo">
+                    <img src={d.image} alt={d.title} loading="lazy" width={1400} height={875} />
+                  </div>
+                  <figcaption>{d.title}</figcaption>
+                </figure>
+              ))}
+            </Carousel>
           </div>
         </section>
 

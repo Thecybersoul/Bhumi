@@ -2135,3 +2135,244 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 .designSection__cta { margin-top: 22px; }
 
 @media (max-width: 560px) { .designCard { width: 82vw; } }
+
+/* ═══════════════════════════════════════════════════════════
+   Motion system + the thread.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Reveal variants ────────────────────────────────────── */
+/* `up` is the base (already defined in globals). These add the
+   others. Everything animates opacity/transform/clip only, so no
+   variant can trigger layout. */
+.reveal--fade { transform: none; }
+
+.reveal--scale { transform: translateY(14px) scale(.975); transform-origin: center bottom; }
+.reveal--scale.is-visible { transform: none; }
+
+/* A wipe reveals the element from its own bottom edge — used on
+   imagery, where a fade reads as a loading state rather than a
+   deliberate entrance. */
+.reveal--wipe {
+  opacity: 1; transform: none;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path .9s var(--ease);
+}
+.reveal--wipe.is-visible { clip-path: inset(0 0 0 0); }
+
+/* A mask slides the line up from behind its own overflow edge.
+   This is what makes a heading feel set rather than faded in. */
+.reveal--mask {
+  opacity: 1; transform: none;
+  overflow: hidden;
+  transition: none;
+}
+.reveal--mask > .reveal__inner {
+  display: block;
+  transform: translateY(105%);
+  transition: transform .95s cubic-bezier(.16, 1, .3, 1);
+  transition-delay: inherit;
+}
+.reveal--mask.is-visible > .reveal__inner { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal--wipe { clip-path: none; }
+  .reveal--mask > .reveal__inner { transform: none; }
+  .reveal--scale { transform: none; }
+}
+
+/* ─── Stagger ────────────────────────────────────────────── */
+.stagger > * {
+  opacity: 0; transform: translateY(16px);
+  transition: opacity .65s var(--ease), transform .65s var(--ease);
+}
+.stagger.is-visible > * { opacity: 1; transform: none; }
+.stagger.is-visible > *:nth-child(1) { transition-delay: calc(var(--stagger-step) * 0); }
+.stagger.is-visible > *:nth-child(2) { transition-delay: calc(var(--stagger-step) * 1); }
+.stagger.is-visible > *:nth-child(3) { transition-delay: calc(var(--stagger-step) * 2); }
+.stagger.is-visible > *:nth-child(4) { transition-delay: calc(var(--stagger-step) * 3); }
+.stagger.is-visible > *:nth-child(5) { transition-delay: calc(var(--stagger-step) * 4); }
+.stagger.is-visible > *:nth-child(6) { transition-delay: calc(var(--stagger-step) * 5); }
+.stagger.is-visible > *:nth-child(n + 7) { transition-delay: calc(var(--stagger-step) * 6); }
+@media (prefers-reduced-motion: reduce) {
+  .stagger > * { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   What we do — the thread
+   ═══════════════════════════════════════════════════════════ */
+.threadSection { position: relative; overflow: hidden; }
+.threadSection__title { max-width: 16ch; margin: 14px 0 18px; }
+.threadSection__lede { max-width: 58ch; margin-bottom: clamp(40px, 6vw, 72px); }
+
+.thread { position: relative; }
+.thread__svg {
+  position: absolute; inset: 0; pointer-events: none;
+  overflow: visible; z-index: 0;
+}
+.thread__ghost {
+  stroke: var(--line); stroke-width: 1.5; fill: none;
+}
+.thread__line {
+  stroke: var(--gold); stroke-width: 2; fill: none;
+  stroke-linecap: round;
+}
+.thread__node {
+  fill: var(--paper); stroke: var(--line); stroke-width: 2;
+  transition: fill .45s var(--ease), stroke .45s var(--ease), r .45s var(--ease);
+}
+.thread__node.is-lit {
+  fill: var(--gold); stroke: var(--gold-deep);
+}
+
+.thread__rail {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  gap: clamp(40px, 7vw, 96px);
+}
+
+/* Each practice sits to one side of the spine, so the thread has
+   something to lean toward. */
+.threadItem { display: flex; }
+.threadItem.is-left { justify-content: flex-start; padding-right: 52%; }
+.threadItem.is-right { justify-content: flex-end; padding-left: 52%; }
+
+.threadCard {
+  display: block; width: 100%;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-xl);
+  padding: clamp(24px, 3vw, 36px);
+  box-shadow: var(--shadow-xs);
+  /* The card arrives with the thread rather than on its own timer —
+     .is-awake is set when the stroke reaches its node. */
+  opacity: 0; transform: translateY(26px);
+  transition: opacity .8s var(--ease), transform .8s var(--ease),
+              border-color .3s var(--ease), box-shadow .3s var(--ease);
+}
+.threadItem.is-awake .threadCard { opacity: 1; transform: none; }
+.threadCard:hover { border-color: var(--gold); box-shadow: var(--shadow-md); }
+
+.threadCard__index {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .18em;
+  color: var(--gold-deep);
+}
+.threadCard__name {
+  font-family: var(--serif); font-weight: 500; letter-spacing: -.02em;
+  font-size: clamp(1.5rem, 2.5vw, 2.05rem); line-height: 1.14;
+  color: var(--navy); margin: 10px 0 8px;
+}
+.threadCard__pitch { color: var(--ink-2); font-size: 1rem; line-height: 1.68; }
+
+.threadCard__services {
+  list-style: none; display: flex; flex-direction: column; gap: 0;
+  margin: 22px 0 0;
+}
+.threadCard__services li {
+  display: flex; gap: 12px; align-items: center;
+  padding: 12px 0; border-top: 1px solid var(--line-2);
+  font-size: .93rem; font-weight: 500; color: var(--navy);
+  /* Services tick in after their card, in order. */
+  opacity: 0; transform: translateX(-10px);
+  transition: opacity .55s var(--ease), transform .55s var(--ease);
+}
+.threadItem.is-awake .threadCard__services li { opacity: 1; transform: none; }
+.threadCard__services svg { color: var(--gold-deep); flex-shrink: 0; }
+
+.threadCard__go {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 22px;
+  font-size: .88rem; font-weight: 600; color: var(--navy);
+  transition: gap .25s var(--ease), color .25s var(--ease);
+}
+.threadCard:hover .threadCard__go { color: var(--gold-deep); gap: 13px; }
+
+@media (max-width: 899px) {
+  /* Stacked: the spine moves to the gutter and the cards clear it. */
+  .threadItem.is-left,
+  .threadItem.is-right { padding: 0 0 0 58px; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .threadCard,
+  .threadCard__services li { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Construction & development rail (homepage)
+   ═══════════════════════════════════════════════════════════ */
+.buildSection { background: var(--paper); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow: hidden; }
+.buildSection__head { max-width: 60ch; margin-bottom: clamp(28px, 4vw, 44px); }
+.buildSection__head .h1 { margin: 12px 0 16px; }
+.buildSection__head .lede { margin-bottom: 24px; }
+
+.buildCard {
+  width: clamp(230px, 26vw, 320px); margin: 0;
+  display: flex; flex-direction: column;
+}
+.buildCard__photo {
+  aspect-ratio: 4 / 3; overflow: hidden;
+  border-radius: var(--r-lg); background: var(--line-2);
+  border: 1px solid var(--line);
+}
+.buildCard__photo img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform .7s var(--ease);
+}
+.buildCard:hover .buildCard__photo img { transform: scale(1.05); }
+.buildCard figcaption {
+  margin-top: 12px; font-size: .87rem; color: var(--ink-2); font-weight: 500;
+}
+@media (max-width: 560px) { .buildCard { width: 68vw; } }
+
+/* ═══════════════════════════════════════════════════════════
+   Sitewide polish
+   ═══════════════════════════════════════════════════════════ */
+
+/* Hero copy arrives in sequence on load rather than all at once. */
+.homeHero .eyebrow,
+.homeHero__title,
+.homeHero__sub,
+.homeHero__actions {
+  animation: heroIn .95s cubic-bezier(.16, 1, .3, 1) both;
+}
+.homeHero .eyebrow { animation-delay: .1s; }
+.homeHero__title { animation-delay: .22s; }
+.homeHero__sub { animation-delay: .36s; }
+.homeHero__actions { animation-delay: .48s; }
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A very slow push on the footage. Enough to feel alive on a long
+   scroll, not enough to notice as an effect. */
+.homeHero__video { animation: heroDrift 34s ease-in-out infinite alternate; }
+@keyframes heroDrift {
+  from { transform: scale(1); }
+  to { transform: scale(1.07); }
+}
+
+/* Cards lift on the same curve everywhere, so the whole site
+   responds to a cursor with one personality. */
+.railCard, .designCard, .insightCard, .boardCard, .ruleCard, .emptyState__card {
+  will-change: transform;
+}
+
+/* Arrow links lengthen their gap on hover — a small consistent tell
+   that a thing is a link rather than a label. */
+.insightCard__go, .railCard, .emptyState__go, .marketTeaser__go, .practiceCard__go {
+  transition: gap .25s var(--ease), color .25s var(--ease),
+              transform .24s var(--ease), box-shadow .24s var(--ease),
+              border-color .24s var(--ease);
+}
+.insightCard:hover .insightCard__go { gap: 12px; }
+.emptyState__card:hover .emptyState__go { gap: 12px; }
+
+/* Buttons get a subtle press, so a click feels registered. */
+.btn { transition: background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), transform .12s var(--ease), box-shadow .2s var(--ease); }
+.btn:active { transform: translateY(1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .homeHero .eyebrow,
+  .homeHero__title,
+  .homeHero__sub,
+  .homeHero__actions { animation: none; }
+  .homeHero__video { animation: none; }
+  .btn:active { transform: none; }
+}

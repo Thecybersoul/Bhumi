@@ -24,31 +24,15 @@ export const hero = {
 
 export const practicesIntro = {
   eyebrow: 'What we do',
-  title: { before: 'Two practices,', italic: 'one continuous thread.' },
-  body: 'Most firms do one of these and outsource the other, which is where the thread breaks — the constraint found at diligence never reaches the person designing the hoarding. Running both means the story a project tells outside matches what is actually true on the title.',
+  title: { before: 'Two halves of', italic: 'one job.' },
+  body: 'Most firms do one and outsource the other, which is where the thread breaks — the constraint found at diligence never reaches the person designing the hoarding.',
 }
 
-export const standard = {
-  eyebrow: 'How we work',
-  title: { before: 'Say the thing that is', italic: 'actually true.' },
-  body: 'A young firm has a choice: invent a track record, or be unusually straight about what it does and does not yet have. We have taken the second option, and built the site accordingly.',
-  rules: [
-    {
-      rule: 'No invented numbers',
-      detail:
-        'You will not find a parcel count or a success rate on this site, because we are not going to manufacture one. The figures we publish are industry ground rules, marked as such.',
-    },
-    {
-      rule: 'Findings are reported as found',
-      detail:
-        'Diligence is only worth what its independence is worth. A record is pulled at source rather than accepted from a seller, and a finding is not softened to make a deal easier.',
-    },
-    {
-      rule: 'Every page ends somewhere specific',
-      detail:
-        'No page finishes by asking you to "get in touch". Each one names the next step and what you get from taking it.',
-    },
-  ],
+export const constructionTeaser = {
+  eyebrow: 'Construction & development',
+  title: { before: 'And then we', italic: 'build it.' },
+  body: 'Approvals, drawings and site supervision, delivered by the design-and-build team we work with directly. These are their renders.',
+  cta: { label: 'See the build practice', href: '/property-consultancy#design-gallery' },
 }
 
 export const verificationTeaser = {
