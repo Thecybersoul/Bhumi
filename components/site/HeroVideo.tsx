@@ -8,7 +8,15 @@ import { useEffect, useRef } from 'react'
    drone-footage-raw. Hidden on small screens and reduced-motion to
    keep the poster frame (already painted behind it) as the fallback. */
 
-export default function HeroVideo({ className }: { className: string }) {
+export default function HeroVideo({
+  className,
+  src = '/video/hero.mp4',
+  poster = '/img/hero-poster.jpg',
+}: {
+  className: string
+  src?: string
+  poster?: string
+}) {
   const ref = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -24,10 +32,10 @@ export default function HeroVideo({ className }: { className: string }) {
       loop
       playsInline
       preload="auto"
-      poster="/img/hero-poster.jpg"
+      poster={poster}
       aria-hidden="true"
     >
-      <source src="/video/hero.mp4" type="video/mp4" />
+      <source src={src} type={src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
     </video>
   )
 }

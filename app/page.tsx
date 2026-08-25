@@ -10,15 +10,26 @@ import { practices } from '@/lib/content/services'
 import { billboards } from '@/lib/content/billboards'
 import { designs } from '@/lib/content/designs'
 import { getProperties } from '@/lib/db'
-import { hero, practicesIntro, constructionTeaser, closingCta } from '@/lib/content/home'
+import { getAllContent } from '@/lib/cms'
+import { hero as heroDefault } from '@/lib/content/home'
 
 export const revalidate = 300
 
 const inr = (cr: number) => `₹${cr} Cr`
 
+type Copy = Record<string, any>
+
 export default async function Home() {
-  const { data: properties } = await getProperties()
+  const [{ data: properties }, content] = await Promise.all([getProperties(), getAllContent()])
   const featured = properties.slice(0, 6)
+
+  /* Edited copy layered over the compiled defaults — see lib/cms.ts.
+     Every one of these resolves even with no database attached. */
+  const hero = content['home.hero'] as Copy
+  const media = content['home.heroMedia'] as Copy
+  const practicesIntro = content['home.whatWeDo'] as Copy
+  const constructionTeaser = content['home.construction'] as Copy
+  const closingCta = content['home.closing'] as Copy
 
   const [property, branding] = practices
 
@@ -33,7 +44,7 @@ export default async function Home() {
             the next section. */}
         <section className="homeHero">
           <div className="homeHero__bg" aria-hidden="true">
-            <HeroVideo className="homeHero__video" />
+            <HeroVideo className="homeHero__video" src={media.video} poster={media.poster} />
           </div>
           <div className="homeHero__scrim" aria-hidden="true" />
           <div className="wrap">
@@ -48,12 +59,12 @@ export default async function Home() {
               <p className="homeHero__sub is-mobile">{hero.mobileSubhead}</p>
 
               <div className="homeHero__actions">
-                <Link href={hero.secondary.href} className="btn btn-gold btn-lg">
-                  {hero.secondary.label}
+                <Link href={heroDefault.secondary.href} className="btn btn-gold btn-lg">
+                  {heroDefault.secondary.label}
                   <Icon name="arrow" size={15} />
                 </Link>
-                <Link href={hero.tertiary.href} className="btn btn-outline-light btn-lg">
-                  {hero.tertiary.label}
+                <Link href={heroDefault.tertiary.href} className="btn btn-outline-light btn-lg">
+                  {heroDefault.tertiary.label}
                   <Icon name="arrow" size={15} />
                 </Link>
               </div>
@@ -206,8 +217,8 @@ export default async function Home() {
                 <p className="lede">{constructionTeaser.body}</p>
               </Reveal>
               <Reveal delay={200}>
-                <Link href={constructionTeaser.cta.href} className="btn btn-outline">
-                  {constructionTeaser.cta.label} <Icon name="arrow" size={14} />
+                <Link href="/property-consultancy#design-gallery" className="btn btn-outline">
+                  See the build practice <Icon name="arrow" size={14} />
                 </Link>
               </Reveal>
             </div>
@@ -235,11 +246,11 @@ export default async function Home() {
               </h2>
               <p className="closing__body">{closingCta.body}</p>
               <div className="closing__actions">
-                <Link href={closingCta.primary.href} className="btn btn-gold btn-lg">
-                  {closingCta.primary.label} <Icon name="arrow" size={15} />
+                <Link href="/contact" className="btn btn-gold btn-lg">
+                  Tell us what you need <Icon name="arrow" size={15} />
                 </Link>
-                <a href={closingCta.secondary.href} className="btn btn-outline-light btn-lg">
-                  <Icon name="phone" size={15} /> {closingCta.secondary.label}
+                <a href={`tel:${(content['brand.identity'] as Copy).phoneRaw}`} className="btn btn-outline-light btn-lg">
+                  <Icon name="phone" size={15} /> Call an advisor
                 </a>
               </div>
             </Reveal>

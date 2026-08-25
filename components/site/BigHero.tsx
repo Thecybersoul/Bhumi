@@ -27,6 +27,7 @@ export default function BigHero({
   lede,
   mobileLede,
   actions = [],
+  media,
 }: {
   eyebrow: string
   title: string
@@ -35,11 +36,13 @@ export default function BigHero({
   lede: string
   mobileLede: string
   actions?: HeroAction[]
+  /** Editable in the dashboard; falls back to the bundled footage. */
+  media?: { video?: string; poster?: string }
 }) {
   return (
     <section className="homeHero">
       <div className="homeHero__bg" aria-hidden="true">
-        <HeroVideo className="homeHero__video" />
+        <HeroVideo className="homeHero__video" src={media?.video} poster={media?.poster} />
       </div>
       <div className="homeHero__scrim" aria-hidden="true" />
       <div className="wrap">

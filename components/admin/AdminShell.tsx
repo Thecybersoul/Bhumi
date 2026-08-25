@@ -6,33 +6,43 @@ import { usePathname, useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
 import Icon, { type IconName } from '@/components/site/Icon'
 
-/* The admin is organised around what the business plan actually
-   asks the team to operate: a verification pipeline, a published
-   transparency figure, a unified lead inbox across every
-   conversion path, a data-room queue, and the §13 metrics. */
+/* Organised around what someone actually comes here to do. Editing
+   the site is the common case and leads; operating the pipeline and
+   reading enquiries follow; reference material sits last rather than
+   competing with the work. */
 
 const nav: { group: string; items: { href: string; label: string; icon: IconName; hint?: string }[] }[] = [
   {
-    group: 'Operate',
+    group: 'Edit the site',
     items: [
       { href: '/admin/dashboard', label: 'Overview', icon: 'gauge' },
-      { href: '/admin/verifications', label: 'Verification pipeline', icon: 'shield', hint: 'The four-stage board' },
-      { href: '/admin/leads', label: 'Lead inbox', icon: 'handshake', hint: 'Every conversion path' },
-      { href: '/admin/data-room', label: 'Data room requests', icon: 'lock', hint: 'NDA-gated' },
+      { href: '/admin/content/home', label: 'Homepage', icon: 'structure' },
+      { href: '/admin/content/property', label: 'Property Consultancy', icon: 'land' },
+      { href: '/admin/content/branding', label: 'Branding & Advertising', icon: 'billboard' },
+      { href: '/admin/content/brand', label: 'Brand & contact', icon: 'shield', hint: 'Name, phone, socials' },
+      { href: '/admin/media', label: 'Media', icon: 'map', hint: 'Images, video, PDFs' },
     ],
   },
   {
-    group: 'Publish',
+    group: 'Inventory',
     items: [
       { href: '/admin/properties', label: 'Listings', icon: 'land' },
-      { href: '/admin/transparency', label: 'Transparency figures', icon: 'compare', hint: 'What the public sees' },
+      { href: '/admin/verifications', label: 'Verification pipeline', icon: 'shield', hint: 'The four-stage board' },
+    ],
+  },
+  {
+    group: 'Enquiries',
+    items: [
+      { href: '/admin/leads', label: 'Lead inbox', icon: 'handshake', hint: 'Every conversion path' },
+      { href: '/admin/data-room', label: 'Document requests', icon: 'lock' },
     ],
   },
   {
     group: 'Reference',
     items: [
       { href: '/admin/metrics', label: 'What to measure', icon: 'checklist' },
-      { href: '/admin/plan', label: 'Website business plan', icon: 'structure' },
+      { href: '/admin/plan', label: 'Business plan', icon: 'compare' },
+      { href: '/admin/setup', label: 'Setup', icon: 'gauge', hint: 'Database status' },
     ],
   },
 ]
