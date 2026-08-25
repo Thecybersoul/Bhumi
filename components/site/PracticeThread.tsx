@@ -12,7 +12,8 @@ import type { Practice } from '@/lib/content/services'
    as two disconnected cards, the section draws the thread: a single
    stroke that leaves the heading, passes through each practice in
    turn, and arrives at the closing step. It draws itself as you
-   scroll, and each practice wakes as the stroke reaches it.
+   scroll, and each practice wakes as the draw reaches it — see
+   cardAwake for what "reaches it" has to mean in each layout.
 
    The path is computed in JS from the measured positions of the
    cards rather than hard-coded, so it stays exact at any width and
@@ -34,6 +35,10 @@ interface Geometry {
      vertically when stacked — an axis test would be right in one
      layout and wrong in the other. */
   nodeAt: number[]
+  /* Which layout the path was solved for. The two layouts want
+     different reveal rules, and the difference is not cosmetic —
+     see cardAwake below. */
+  stacked: boolean
 }
 
 export default function PracticeThread({ practices }: { practices: Practice[] }) {
@@ -42,6 +47,9 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
   const [geo, setGeo] = useState<Geometry | null>(null)
   const [progress, setProgress] = useState(0)
   const [reduced, setReduced] = useState(false)
+  /* The scroll handler needs the layout without re-subscribing every
+     time the geometry re-solves. */
+  const stackedRef = useRef(false)
 
   /* Solve the path from where the cards actually sit. */
   const measure = useCallback(() => {
@@ -137,7 +145,8 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
       })
     }
 
-    setGeo({ w, h, path: d, length, nodes, nodeAt })
+    stackedRef.current = stacked
+    setGeo({ w, h, path: d, length, nodes, nodeAt, stacked })
   }, [])
 
   useLayoutEffect(() => {
@@ -182,11 +191,29 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
         if (!wrap) return
         const b = wrap.getBoundingClientRect()
         const vh = window.innerHeight
-        // Draw across the span where the section is crossing the
-        // viewport, finishing a little before it leaves so the last
-        // practice is fully awake while still on screen.
-        const start = vh * 0.85
-        const end = -b.height + vh * 0.45
+        /* Where the draw starts and finishes, in terms of the
+           section's own position in the viewport. */
+        let start: number
+        let end: number
+        if (stackedRef.current) {
+          /* Stacked, the section is taller than the viewport and the
+             cards arrive one at a time, so the draw can run the whole
+             time the section is crossing — finishing a little before
+             it leaves. */
+          start = vh * 0.85
+          end = -b.height + vh * 0.45
+        } else {
+          /* Side by side, it cannot. The section is shorter than the
+             viewport and both cards enter it at the same instant, so a
+             draw keyed to the section's exit finishes long after the
+             reader has passed the cards it is meant to be introducing.
+             Here the draw runs over roughly the section's own height
+             from the moment it enters, and is done while the section
+             is still centred. */
+          start = vh * 0.92
+          end = vh * 0.88 - b.height
+          if (start - end < vh * 0.35) end = start - vh * 0.35
+        }
         const p = (start - b.top) / (start - end)
         setProgress(Math.max(0, Math.min(1, p)))
       })
@@ -201,10 +228,30 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
     }
   }, [])
 
-  /* A practice wakes once the stroke has reached its node. */
-  const nodeReached = (i: number) => {
+  /* The stroke lights each node as it passes it. */
+  const nodeLit = (i: number) => {
     if (reduced || !geo || geo.nodeAt[i] === undefined) return true
     return progress >= geo.nodeAt[i] - 0.02
+  }
+
+  /* The cards do not wait for that.
+
+     Stacked, the stroke reaches a card at about the moment the card
+     reaches the reader, so card and node can share one test. Side by
+     side they are not the same moment at all: both cards are on
+     screen together from the start, but the stroke has to travel the
+     full width of the section to reach the second one. Holding that
+     card until then left it waking behind the reader — awake, but
+     several hundred pixels after they had scrolled past the empty
+     space where it should have been.
+
+     So side by side the cards wake early in the draw, a beat apart,
+     while the stroke carries on and lights the nodes in its own
+     time. The line still arrives last, which is what it is for. */
+  const cardAwake = (i: number) => {
+    if (reduced || !geo || geo.nodeAt[i] === undefined) return true
+    const at = geo.stacked ? geo.nodeAt[i] : geo.nodeAt[i] * 0.4
+    return progress >= at - 0.02
   }
 
   return (
@@ -234,7 +281,7 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
               cx={n.x}
               cy={n.y}
               r={7}
-              className={`thread__node ${nodeReached(i) ? 'is-lit' : ''}`}
+              className={`thread__node ${nodeLit(i) ? 'is-lit' : ''}`}
             />
           ))}
         </svg>
@@ -248,7 +295,7 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
               cardRefs.current[i] = el
             }}
             className={`threadItem ${i % 2 === 0 ? 'is-left' : 'is-right'} ${
-              nodeReached(i) ? 'is-awake' : ''
+              cardAwake(i) ? 'is-awake' : ''
             }`}
           >
             <Link href={p.href} className="threadCard">
