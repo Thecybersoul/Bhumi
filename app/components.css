@@ -2247,9 +2247,13 @@ a.contactLines__row:hover { color: var(--gold-deep); }
    section sparse and the eye travelling much further than the
    content justified. */
 @media (min-width: 900px) {
-  .thread__rail { flex-direction: row; align-items: stretch; padding-top: 86px; gap: 24px; }
+  /* Side by side, equal height, with the thread passing behind them
+     at their shared centre line. No extra vertical space is spent on
+     the thread, which is what kept making this section sprawl. */
+  /* The band below the cards is where the thread runs. */
+  .thread__rail { flex-direction: row; align-items: stretch; gap: clamp(30px, 4vw, 60px); padding-bottom: 96px; }
   .threadItem { flex: 1 1 0; min-width: 0; }
-  .threadCard { display: flex; flex-direction: column; }
+  .threadCard { display: flex; flex-direction: column; height: 100%; }
   .threadCard__services { flex: 1; }
 }
 @media (max-width: 899px) {
@@ -2259,6 +2263,7 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 
 .threadCard {
   display: block; width: 100%;
+  position: relative; z-index: 1;
   background: #fff; border: 1px solid var(--line); border-radius: var(--r-xl);
   padding: clamp(24px, 3vw, 36px);
   box-shadow: var(--shadow-xs);

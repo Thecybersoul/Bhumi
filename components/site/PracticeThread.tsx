@@ -53,6 +53,9 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
     if (!w || !h) return
 
     const stacked = w < 900
+    /* These are the wrappers, not the cards. The card itself carries
+       the entrance transform, so measuring it would solve the path
+       against a position it is in the middle of leaving. */
     const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[]
     let nodes: { x: number; y: number }[] = []
     let d = ''
@@ -73,30 +76,35 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
       })
       d += ` L ${spine} ${h}`
     } else {
-      /* Side by side: two cards is too few to justify a tall zigzag —
-         it just leaves the section sparse. Instead the thread runs
-         across the top as a single stitch, dipping down to touch the
-         head of each card and rising between them. It draws left to
-         right, which is also the order you read the cards in. */
-      nodes = cards.map((el) => {
-        const b = el.getBoundingClientRect()
-        return { x: b.left - wb.left + b.width / 2, y: b.top - wb.top }
-      })
-      const crest = Math.max(10, (nodes[0]?.y ?? 80) - 62)
+      /* Side by side, with the thread running the full width beneath
+         them and rising to meet the foot of each card. Both practices
+         are visibly rooted in the same line, which is the actual claim
+         the section makes.
 
-      // Waypoints: in at the left crest, dip to each node, crest
-      // between them, out at the right crest.
-      const pts: { x: number; y: number }[] = [{ x: 0, y: crest }]
+         Two earlier attempts failed for reasons worth recording: a
+         stitch floating in a band above the cards connected nothing,
+         and running the line behind the cards hid all but the 58px
+         of it that fell in the gap. This version is visible along its
+         whole length and costs one band of height. */
+      const rects = cards.map((el) => el.getBoundingClientRect())
+      const foot = rects.length
+        ? Math.max(...rects.map((b) => b.bottom - wb.top))
+        : h
+      const baseY = Math.min(h - 2, foot + 58)
+
+      nodes = rects.map((b) => ({
+        x: b.left - wb.left + b.width / 2,
+        y: b.bottom - wb.top,
+      }))
+
+      const pts: { x: number; y: number }[] = [{ x: 0, y: baseY }]
       nodes.forEach((n, i) => {
-        if (i > 0) {
-          const prev = nodes[i - 1]
-          pts.push({ x: (prev.x + n.x) / 2, y: crest })
-        }
+        if (i > 0) pts.push({ x: (nodes[i - 1].x + n.x) / 2, y: baseY })
         pts.push(n)
       })
-      pts.push({ x: w, y: crest })
+      pts.push({ x: w, y: baseY })
 
-      // Horizontal tangents at every waypoint give a clean wave.
+      // Horizontal tangents at every waypoint give a clean rise and fall.
       d = `M ${pts[0].x} ${pts[0].y}`
       for (let i = 1; i < pts.length; i++) {
         const p0 = pts[i - 1]
@@ -136,9 +144,27 @@ export default function PracticeThread({ practices }: { practices: Practice[] })
     measure()
     const wrap = wrapRef.current
     if (!wrap) return
+
+    /* Watch the cards as well as the container. Crossing the layout
+       breakpoint rearranges the cards without necessarily changing
+       the container's box, and a path solved for the other layout is
+       worse than no path at all — it draws in the wrong place. */
     const ro = new ResizeObserver(measure)
     ro.observe(wrap)
-    return () => ro.disconnect()
+    cardRefs.current.forEach((el) => el && ro.observe(el))
+
+    const mq = window.matchMedia('(min-width: 900px)')
+    mq.addEventListener?.('change', measure)
+    window.addEventListener('resize', measure)
+    /* Web fonts land after first paint and move everything. */
+    const fonts = (document as Document & { fonts?: FontFaceSet }).fonts
+    fonts?.ready?.then(measure)
+
+    return () => {
+      ro.disconnect()
+      mq.removeEventListener?.('change', measure)
+      window.removeEventListener('resize', measure)
+    }
   }, [measure])
 
   useEffect(() => {
