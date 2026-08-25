@@ -11,10 +11,14 @@ import { brand } from '@/lib/content/brand'
    set at all, on the same host. */
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bhumiestates.in'
 
+/* The one line that names the firm: the browser tab, og:title and
+   twitter:title all show it, and they should never disagree. */
+const SITE_TITLE = 'Bhumi Estates - Property and Branding Consultants.'
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Bhumi Estates — Land sourcing, branding and outdoor advertising',
+    default: SITE_TITLE,
     template: '%s · Bhumi Estates',
   },
   description:
@@ -37,14 +41,14 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: brand.name,
     url: siteUrl,
-    title: 'Bhumi Estates — Land sourcing, branding and outdoor advertising',
+    title: SITE_TITLE,
     description:
       'We find the parcel worth buying, build the identity a project is judged by, and make it impossible to miss. Bengaluru land, branding and outdoor advertising.',
     locale: 'en_IN',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bhumi Estates — Land sourcing, branding and outdoor advertising',
+    title: SITE_TITLE,
     description: 'We find the land, and make it impossible to miss.',
   },
   robots: { index: true, follow: true },
