@@ -4,7 +4,12 @@ import './components.css'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { brand } from '@/lib/content/brand'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhumiestates.in'
+/* www, because that is where the site actually answers — the bare
+   domain 308s to it. Every absolute url built from this is one a
+   crawler fetches directly: og:image above all, which some scrapers
+   will not follow a redirect for. Keep NEXT_PUBLIC_SITE_URL, if it is
+   set at all, on the same host. */
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bhumiestates.in'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -24,9 +29,14 @@ export const metadata: Metadata = {
     'growth corridors Bengaluru',
   ],
   authors: [{ name: brand.name }],
+  /* The image for both cards is app/opengraph-image.png and
+     app/twitter-image.png — Next picks those up by file convention and
+     writes the url, type and dimensions itself. Setting `images` here
+     as well would override them with values nothing keeps in sync. */
   openGraph: {
     type: 'website',
     siteName: brand.name,
+    url: siteUrl,
     title: 'Bhumi Estates — Land sourcing, branding and outdoor advertising',
     description:
       'We find the parcel worth buying, build the identity a project is judged by, and make it impossible to miss. Bengaluru land, branding and outdoor advertising.',
@@ -54,6 +64,10 @@ const organisationJsonLd = {
   description:
     'Land sourcing, verification, development, branding and outdoor advertising for land and property in Bengaluru.',
   url: siteUrl,
+  /* The mark Google may show beside the listing. Absolute, because a
+     crawler resolving structured data has no page to resolve against. */
+  logo: `${siteUrl}/icons/icon-512.png`,
+  image: `${siteUrl}/opengraph-image.png`,
   telephone: brand.phone,
   email: brand.email,
   areaServed: 'Bengaluru, Karnataka, India',
