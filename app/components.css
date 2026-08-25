@@ -1755,9 +1755,9 @@ a.contactLines__row:hover { color: var(--gold-deep); }
     background-image:
       linear-gradient(
         to bottom,
-        rgba(11, 34, 25, .82) 0px,
-        rgba(11, 34, 25, .5) 76px,
-        rgba(11, 34, 25, .16) 150px,
+        rgba(11, 34, 25, .88) 0px,
+        rgba(11, 34, 25, .62) 76px,
+        rgba(11, 34, 25, .18) 150px,
         transparent 210px
       ),
       linear-gradient(
@@ -2057,33 +2057,10 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 .deliverList li:last-child { border-bottom: 0; }
 .deliverList svg { color: var(--verified); flex-shrink: 0; margin-top: 5px; }
 
-/* ─── Brand plate over media ─────────────────────────────── */
-/* The wordmark is always the real artwork in its real colours. Where
-   the header floats over footage, the mark gets an ivory plate sized
-   to itself instead of being recoloured into a knockout — so the
-   green and gold are never substituted. The plate is only as wide as
-   the logo, which is what keeps it from reading as a bar. */
-.siteHeader.is-transparent .siteHeader__brand {
-  background: rgba(252, 251, 248, .95);
-  backdrop-filter: blur(10px) saturate(1.2);
-  border-radius: 100px;
-  padding: 8px 18px;
-  box-shadow: 0 2px 14px -4px rgba(6, 26, 18, .45);
-  transition: background .28s var(--ease), padding .28s var(--ease), box-shadow .28s var(--ease);
-}
-/* Once the header goes solid the plate would be an ivory shape on an
-   ivory bar — drop it and let the wordmark sit directly on the chrome. */
-.siteHeader.is-solid .siteHeader__brand {
-  background: transparent;
-  backdrop-filter: none;
-  padding: 2px 0;
-  box-shadow: none;
-}
-/* The drop shadow existed to rescue the cream knockout against bright
-   frames. The plate does that job now, and the shadow only muddies
-   dark ink on ivory. */
-.siteHeader.is-transparent .logo-wrapper img { filter: none; }
-
-@media (max-width: 640px) {
-  .siteHeader.is-transparent .siteHeader__brand { padding: 7px 14px; }
-}
+/* ─── Logo over media ────────────────────────────────────── */
+/* No plate, no panel, no box. Where the header floats over footage
+   the wordmark uses the reversed artwork — identical shapes, ink
+   swapped to ivory — so it sits directly on the video the way it
+   sits directly on the page everywhere else. */
+.siteHeader__brand { background: none; padding: 2px 0; box-shadow: none; }
+.siteHeader .logo-wrapper img { filter: none; }

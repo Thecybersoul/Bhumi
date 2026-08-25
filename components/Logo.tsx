@@ -18,7 +18,7 @@ interface LogoProps {
 // /img/:path* is served with a one-year immutable Cache-Control, so a
 // content change under the same filename is invisible to every browser
 // and CDN that already cached it — the query string forces a new URL.
-const LOGO_ARTWORK_VERSION = 2
+const LOGO_ARTWORK_VERSION = 3
 
 export default function Logo({ variant = 'horizontal', className = '', style, theme = 'light' }: LogoProps) {
   const isDark = theme === 'dark'
