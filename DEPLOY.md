@@ -52,9 +52,14 @@ a `.next` publish directory. Connect the repository, set the same environment va
 1. **Point a monitor at `/api/health`.** It returns `status: "ok"` when serving and `"degraded"` when
    Supabase is configured but unreachable — that distinction is the useful alert, since a site serving
    seeded content is up, not broken.
-2. **Attach the database.** Add the three Supabase variables, then run in the SQL editor, in order:
-   `supabase/schema.sql`, then `supabase/migrations/004_business_plan_restructure.sql`. The admin's source
-   pill flips from *Seeded data* to *Live database* with no code change.
+2. **Attach the database.** Add the three Supabase variables, then run every file in `supabase/`
+   in the SQL editor, in this order: `schema.sql`, `migrations/004_business_plan_restructure.sql`,
+   `migrations/005_language_cleanup.sql`, `migrations/006_cms.sql`. Every statement is guarded with
+   `IF NOT EXISTS`, so re-running one already applied is harmless. `/admin/setup` shows exactly which
+   of these tables exist already and lets you copy each file's SQL straight from the dashboard — check
+   it first rather than guessing what is still missing. Skipping 006 leaves the content editor and
+   media library unable to save anything; skipping 004 does the same to leads, verification and the
+   data room. The admin's source pill flips from *Seeded data* to *Live database* with no code change.
 3. **Replace the placeholder figures.** The transparency numbers, case studies and corridor price bands in
    `lib/content/` and `lib/data/seed.ts` are illustrative. The site's whole positioning rests on published
    claims being provable, so these must become your real record before you promote the site.

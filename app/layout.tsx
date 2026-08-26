@@ -88,7 +88,11 @@ const organisationJsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN">
+    /* data-scroll-behavior tells the App Router this smooth-scroll is
+       deliberate (see html { scroll-behavior: smooth } in globals.css),
+       so it does not fight it during route transitions and does not
+       print the warning asking for exactly this attribute. */
+    <html lang="en-IN" data-scroll-behavior="smooth">
       <body>
         <a href="#main" className="skip-link">
           Skip to content
