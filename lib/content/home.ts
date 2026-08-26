@@ -80,10 +80,3 @@ export const faq = {
   ],
 }
 
-export const closingCta = {
-  eyebrow: 'One next step',
-  title: { before: 'Tell us what you are trying', italic: 'to do.' },
-  body: 'A parcel to find, a title to check, a project to build, or a launch that needs to be seen. We will tell you what is realistic before we quote it.',
-  primary: { label: 'Tell us what you need', href: '/contact' },
-  secondary: { label: 'Call an advisor', href: 'tel:+918123845749' },
-}

@@ -14,7 +14,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 import { brand } from './brand'
-import { hero, practicesIntro, constructionTeaser, closingCta } from './home'
+import { hero, practicesIntro, constructionTeaser } from './home'
 import { practices } from './services'
 import { billboardIntro } from './billboards'
 import { designIntro } from './designs'
@@ -181,23 +181,10 @@ export const blocks: Block[] = [
       body: constructionTeaser.body,
     },
   },
-  {
-    key: 'home.closing',
-    page: 'home',
-    title: 'Closing band',
-    description: 'The last thing on the homepage before the footer.',
-    preview: '/',
-    fields: [
-      { key: 'eyebrow', label: 'Eyebrow', type: 'text' },
-      titleGroup('title', 'Headline'),
-      { key: 'body', label: 'Body', type: 'textarea', limit: 240 },
-    ],
-    default: {
-      eyebrow: closingCta.eyebrow,
-      title: closingCta.title,
-      body: closingCta.body,
-    },
-  },
+  /* No 'home.closing' block: the homepage no longer has its own
+     closing band — see the comment in app/page.tsx. The footer's
+     "One next step" CTA, present on every page, is what closes it
+     now, and that copy is not CMS-editable. */
 
   /* ─── Property Consultancy ───────────────────────────── */
   {

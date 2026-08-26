@@ -29,7 +29,6 @@ export default async function Home() {
   const media = content['home.heroMedia'] as Copy
   const practicesIntro = content['home.whatWeDo'] as Copy
   const constructionTeaser = content['home.construction'] as Copy
-  const closingCta = content['home.closing'] as Copy
 
   const [property, branding] = practices
 
@@ -236,26 +235,9 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ── Closing ── */}
-        <section className="closing">
-          <div className="wrap">
-            <Reveal>
-              <span className="eyebrow eyebrow-light">{closingCta.eyebrow}</span>
-              <h2 className="display closing__title">
-                {closingCta.title.before} <em>{closingCta.title.italic}</em>
-              </h2>
-              <p className="closing__body">{closingCta.body}</p>
-              <div className="closing__actions">
-                <Link href="/contact" className="btn btn-gold btn-lg">
-                  Tell us what you need <Icon name="arrow" size={15} />
-                </Link>
-                <a href={`tel:${(content['brand.identity'] as Copy).phoneRaw}`} className="btn btn-outline-light btn-lg">
-                  <Icon name="phone" size={15} /> Call an advisor
-                </a>
-              </div>
-            </Reveal>
-          </div>
-        </section>
+        {/* No closing band here — the footer immediately below carries
+           the identical "One next step" CTA, and having both stacked
+           was a straight duplicate rather than two different pitches. */}
       </main>
 
       <SiteFooter />
