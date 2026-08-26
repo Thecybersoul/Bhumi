@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "migrate": "node scripts/migrate.js",
+    "migrate:check": "node scripts/migrate.js --check"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",

@@ -52,14 +52,31 @@ a `.next` publish directory. Connect the repository, set the same environment va
 1. **Point a monitor at `/api/health`.** It returns `status: "ok"` when serving and `"degraded"` when
    Supabase is configured but unreachable — that distinction is the useful alert, since a site serving
    seeded content is up, not broken.
-2. **Attach the database.** Add the three Supabase variables, then run every file in `supabase/`
-   in the SQL editor, in this order: `schema.sql`, `migrations/004_business_plan_restructure.sql`,
-   `migrations/005_language_cleanup.sql`, `migrations/006_cms.sql`. Every statement is guarded with
-   `IF NOT EXISTS`, so re-running one already applied is harmless. `/admin/setup` shows exactly which
-   of these tables exist already and lets you copy each file's SQL straight from the dashboard — check
-   it first rather than guessing what is still missing. Skipping 006 leaves the content editor and
-   media library unable to save anything; skipping 004 does the same to leads, verification and the
-   data room. The admin's source pill flips from *Seeded data* to *Live database* with no code change.
+2. **Attach the database.** Add the three Supabase variables, then create the tables. Two ways,
+   same result — every statement is guarded with `IF NOT EXISTS`, so re-running one already applied
+   is harmless and nothing existing is dropped or renamed.
+
+   *From your machine (preferred).* Put a Postgres connection string in `.env.local` as
+   `SUPABASE_DB_URL` — dashboard → **Settings → Database → Connection string → URI**, with your
+   database password substituted for the `[YOUR-PASSWORD]` placeholder — then:
+
+   ```bash
+   npm run migrate:check   # report what is missing, change nothing
+   npm run migrate         # apply schema.sql then every migration, oldest first
+   ```
+
+   The service role key cannot do this: it reaches PostgREST and Storage but not DDL, which is why
+   a separate connection string is needed. `.env.local` is gitignored, so the password stays local.
+
+   *By hand.* Paste each file into the SQL editor in this order: `schema.sql`,
+   `migrations/004_business_plan_restructure.sql`, `migrations/005_language_cleanup.sql`,
+   `migrations/006_cms.sql`. `/admin/setup` shows which tables exist and has a **Copy SQL** button
+   per file.
+
+   Skipping 006 leaves the content editor and media library unable to save anything — uploads fail
+   outright, because `media` is where a file's URL and metadata are recorded. Skipping 004 does the
+   same to leads, verification and the data room. The admin's source pill flips from *Seeded data*
+   to *Live database* with no code change.
 3. **Replace the placeholder figures.** The transparency numbers, case studies and corridor price bands in
    `lib/content/` and `lib/data/seed.ts` are illustrative. The site's whole positioning rests on published
    claims being provable, so these must become your real record before you promote the site.
