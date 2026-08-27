@@ -48,7 +48,27 @@ export default function SiteHeader({ variant = 'light' }: { variant?: 'light' | 
     <>
       <header className={`siteHeader ${solid ? 'is-solid' : 'is-transparent'}`}>
         <div className="wrap siteHeader__inner">
-          <Link href="/" className="siteHeader__brand" aria-label={`${brand.name} home`}>
+          <Link
+            href="/"
+            className="siteHeader__brand"
+            aria-label={`${brand.name} home`}
+            onClick={(e) => {
+              /* Already on the homepage, the router treats a click
+                 through to the current route as a no-op, so once the
+                 reader had scrolled the logo did nothing at all. Take
+                 them back up to the hero instead.
+
+                 No `behavior` is passed on purpose: omitting it defers
+                 to scroll-behavior on <html>, which globals.css sets to
+                 smooth and then back to auto under
+                 prefers-reduced-motion. Naming 'smooth' here would
+                 animate the jump for people who asked for no motion. */
+              if (pathname === '/') {
+                e.preventDefault()
+                window.scrollTo({ top: 0 })
+              }
+            }}
+          >
             <Logo variant="wordmark" theme={solid ? 'light' : 'dark'} style={{ height: 34 }} />
           </Link>
 
