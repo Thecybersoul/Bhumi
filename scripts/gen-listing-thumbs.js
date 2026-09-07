@@ -74,6 +74,41 @@ async function planCard({ src, crop, eyebrow, caption, out }) {
   console.log('plan ->', path.basename(out))
 }
 
+/** A real photograph of the actual property. Cropped to the card's
+    ratio and lifted a little; no heavy filter, because a buyer is
+    going to stand in front of this building and compare. */
+async function photoCard({ src, out, crop }) {
+  let img = sharp(src)
+  if (crop) img = img.extract(crop)
+  await img
+    .resize(W, H, { fit: 'cover', position: crop ? 'centre' : 'attention' })
+    .modulate({ brightness: 1.04, saturation: 1.06 })
+    .sharpen()
+    .jpeg({ quality: 86, mozjpeg: true })
+    .toFile(out)
+  console.log('photo ->', path.basename(out))
+}
+
+/* Social exports. Same picture, the two ratios a feed actually uses.
+   Written outside public/ — these are for posting, not for serving. */
+const SOCIAL = path.join(root, 'listing-social')
+const SOCIAL_SIZES = { square: [1080, 1080], portrait: [1080, 1350] }
+
+async function socialCuts({ src, name, crop }) {
+  fs.mkdirSync(SOCIAL, { recursive: true })
+  for (const [label, [w, h]] of Object.entries(SOCIAL_SIZES)) {
+    let img = sharp(src)
+    if (crop) img = img.extract(crop)
+    await img
+      .resize(w, h, { fit: 'cover', position: crop ? 'centre' : 'attention' })
+      .modulate({ brightness: 1.04, saturation: 1.06 })
+      .sharpen()
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toFile(path.join(SOCIAL, `${name}-${label}.jpg`))
+  }
+  console.log('social ->', name, Object.keys(SOCIAL_SIZES).join(', '))
+}
+
 /** No drawing: state the listing in type. */
 async function specCard({ eyebrow, headline, sub, caption, out }) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
@@ -117,12 +152,28 @@ async function main() {
     console.log('skip doddasanne — source not found at', planSrc)
   }
 
-  await specCard({
-    eyebrow: 'Ready to move · BDA, A-Khata',
-    headline: '3 BHK',
-    sub: '1,460 sq ft · 36.5 × 40 ft',
-    caption: 'JP Nagar, Bengaluru',
-    out: path.join(outDir, 'jp-nagar-3bhk.png'),
+  const photoSrc = path.join(SCRATCH, 'jp-nagar-building.jpg')
+  if (fs.existsSync(photoSrc)) {
+    /* Shot from the pavement looking up, so the frame is mostly sky.
+       Crop to the facade before the ratio crop, or 'cover' centres on
+       cloud. */
+    const crop = { left: 0, top: 210, width: 1164, height: 1000 }
+    await photoCard({ src: photoSrc, crop, out: path.join(outDir, 'jp-nagar-3bhk.jpg') })
+    await socialCuts({ src: photoSrc, name: 'jp-nagar-3bhk', crop: { left: 0, top: 60, width: 1164, height: 1220 } })
+  } else {
+    /* No photograph yet — say what it is rather than show a grey box. */
+    await specCard({
+      eyebrow: 'Ready to move · BDA, A-Khata',
+      headline: '3 BHK',
+      sub: '1,460 sq ft · 36.5 × 40 ft',
+      caption: 'JP Nagar, Bengaluru',
+      out: path.join(outDir, 'jp-nagar-3bhk.png'),
+    })
+  }
+
+  await socialCuts({
+    src: path.join(outDir, 'doddasanne-layout.png'),
+    name: 'doddasanne-layout',
   })
 }
 

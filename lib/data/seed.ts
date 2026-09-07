@@ -136,7 +136,7 @@ export const seedProperties: Property[] = [
       'Interior work complete · car parking · lift · power backup · Cauvery water connection · borewell',
     description:
       'A ready-to-move 3 BHK of 1,460 sq ft near the East End signal, between Jayanagar and JP Nagar, on a 36.5 × 40 ft plot. Interior work is complete. The flat is planned to Vastu with north-facing main doors, and carries covered car parking, a lift, power backup, and both a Cauvery connection and borewell water. BDA property with A-Khata. Asking ₹2.20 crore, slightly negotiable.',
-    img_url: '/img/listings/jp-nagar-3bhk.png',
+    img_url: '/img/listings/jp-nagar-3bhk.jpg',
     featured: true,
     risk: 'Low',
   }),
