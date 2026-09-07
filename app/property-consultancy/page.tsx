@@ -11,6 +11,7 @@ import { verificationStages } from '@/lib/content/verification'
 import { insights } from '@/lib/content/insights'
 import { designs } from '@/lib/content/designs'
 import { getProperties } from '@/lib/db'
+import { listingHref } from '@/lib/listing'
 import { wa } from '@/lib/content/brand'
 
 export const revalidate = 300
@@ -83,7 +84,7 @@ export default async function PropertyConsultancyPage() {
             {listings.length > 0 ? (
               <Carousel label="Property listings">
                 {listings.map((l) => (
-                  <Link key={l.code} href="/marketplace" className="railCard">
+                  <Link key={l.code} href={listingHref(l)} className="railCard">
                     <div className="railCard__photo">
                       <img src={l.img_url} alt={l.title} loading="lazy" width={800} height={520} />
                       <span className="railCard__type">{l.location}</span>

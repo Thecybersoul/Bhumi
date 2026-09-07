@@ -10,6 +10,7 @@ import { practices } from '@/lib/content/services'
 import { billboards } from '@/lib/content/billboards'
 import { designs } from '@/lib/content/designs'
 import { getProperties } from '@/lib/db'
+import { listingHref } from '@/lib/listing'
 import { getAllContent } from '@/lib/cms'
 import { hero as heroDefault } from '@/lib/content/home'
 
@@ -114,7 +115,7 @@ export default async function Home() {
 
               <Carousel label="Property listings">
                 {featured.map((p) => (
-                  <Link key={p.code} href="/marketplace" className="railCard">
+                  <Link key={p.code} href={listingHref(p)} className="railCard">
                     <div className="railCard__photo">
                       <img src={p.img_url} alt={p.title} loading="lazy" width={800} height={520} />
                       <span className="railCard__type">{p.location}</span>

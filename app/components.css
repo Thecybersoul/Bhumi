@@ -1108,6 +1108,49 @@ a.contactLines__row:hover { color: var(--gold-deep); }
   font-size: .86rem; line-height: 1.6; color: var(--ink);
 }
 .mkDetail__engagement svg { color: var(--gold-deep); flex-shrink: 0; margin-top: 2px; }
+
+/* ─── One listing ─────────────────────────────────────────
+   Record on the left, the way to start a conversation on the
+   right and sticky, so it does not scroll away behind a long
+   fact grid. Collapses to one column before the two get too
+   narrow to read. */
+.crumbs {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: .78rem; color: var(--muted); margin-bottom: 22px;
+}
+.crumbs a { color: var(--ink-2); }
+.crumbs a:hover { color: var(--gold-deep); }
+
+.listing { display: grid; grid-template-columns: 1fr; gap: 34px; }
+@media (min-width: 940px) {
+  .listing { grid-template-columns: minmax(0, 1.55fr) minmax(300px, .85fr); gap: 48px; align-items: start; }
+  .listing__aside { position: sticky; top: calc(var(--header-h) + 24px); }
+}
+
+.listing__photo {
+  width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
+  border-radius: var(--r-lg); background: var(--cream);
+  border: 1px solid var(--line); display: block; margin-bottom: 24px;
+}
+.listing__meta {
+  font-size: .74rem; text-transform: uppercase; letter-spacing: .1em;
+  font-weight: 600; color: var(--gold-deep);
+}
+.listing__title { margin: 10px 0 8px; }
+.listing__figures { font-size: 1.02rem; color: var(--ink-2); margin-bottom: 20px; }
+.listing__facts { margin: 26px 0; }
+.listing__amenities { font-size: .9rem; color: var(--ink-2); line-height: 1.7; }
+.listing__amenities strong { color: var(--navy); }
+.listing__back { margin-top: 40px; display: inline-flex; }
+
+.listing__cta {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: clamp(20px, 2.4vw, 28px); box-shadow: var(--shadow-xs);
+}
+.listing__price {
+  font-family: var(--serif); font-size: 1.6rem; font-weight: 600;
+  color: var(--navy); margin: 12px 0 18px;
+}
 @media (max-width: 620px) { .mkFilters__label { width: auto; } }
 
 /* ═══════════════════════════════════════════════════════════
