@@ -29,7 +29,23 @@ const GOLD_SOFT = '#D9B978'
 const CREAM = '#F6F3EC'
 const PAPER = '#FCFBF8'
 
+const { AVAILABLE, SOLD, availabilityOverlay } = require('./listing-plots')
+
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/** The key for that wash. */
+function legend(x, y, scale = 1) {
+  const s = (v) => Math.round(v * scale)
+  return `
+    <rect x="${x}" y="${y}" width="${s(16)}" height="${s(16)}" rx="2"
+          fill="#1B6B4F" fill-opacity="0.55" stroke="#0E3B2E" stroke-width="1.6"/>
+    <text x="${x + s(26)}" y="${y + s(13)}" font-family="Georgia, serif"
+          font-size="${s(17)}" fill="#0E3B2E">Available — ${AVAILABLE.length} plots</text>
+    <rect x="${x + s(215)}" y="${y}" width="${s(16)}" height="${s(16)}" rx="2"
+          fill="#0A2A20" fill-opacity="0.22"/>
+    <text x="${x + s(241)}" y="${y + s(13)}" font-family="Georgia, serif"
+          font-size="${s(17)}" fill="#0E3B2E" fill-opacity="0.72">Sold — ${SOLD} plots</text>`
+}
 
 /** Greedy wrap on character count — enough for a fixed-width panel. */
 function wrap(text, max) {
@@ -114,13 +130,33 @@ function panel(d) {
 async function poster(d) {
   const planW = W - PANEL
 
-  const drawing = await sharp(d.plan)
+  /* Clean the scan first, tint at full crop resolution, and only then
+     scale — painting after the downscale would soften the edges of
+     every wash against the linework. */
+  const cleaned = await sharp(d.plan)
     .extract(d.crop)
     .greyscale()
     .normalise()
     // Push the scan's grey cast to white without eating the linework.
     .linear(1.9, -70)
-    .resize({ width: planW - 120, height: H - 320, fit: 'inside' })
+    .toBuffer()
+
+  /* Rasterise the wash at exactly the crop's pixel size. sharp renders
+     an SVG at its own density otherwise, and a one-pixel disagreement
+     makes composite refuse outright. */
+  const wash = await sharp(Buffer.from(availabilityOverlay(d.crop.width, d.crop.height)))
+    .resize(d.crop.width, d.crop.height, { fit: 'fill' })
+    .png()
+    .toBuffer()
+
+  /* Two passes on purpose. sharp runs composite AFTER resize within a
+     single pipeline whatever order the calls are written in, so tinting
+     and scaling together would drop a full-size wash onto an already
+     shrunken drawing and throw. */
+  const tinted = await sharp(cleaned).composite([{ input: wash }]).png().toBuffer()
+
+  const drawing = await sharp(tinted)
+    .resize({ width: planW - 120, height: H - 360, fit: 'inside' })
     .toBuffer()
   const meta = await sharp(drawing).metadata()
 
@@ -129,14 +165,15 @@ async function poster(d) {
     <text x="56" y="86" font-family="Georgia, serif" font-size="42" font-weight="bold" fill="${NAVY}">${esc(d.title)}</text>
     <text x="56" y="124" font-family="Georgia, serif" font-size="22" fill="${NAVY}" fill-opacity="0.7">${esc(d.subtitle)}</text>
     <rect x="56" y="148" width="70" height="2" fill="${GOLD}"/>
-    <text x="56" y="${H - 42}" font-family="Georgia, serif" font-size="18" letter-spacing="2" fill="${GOLD}">${esc(d.footnote.toUpperCase())}</text>`
+    <text x="56" y="${H - 42}" font-family="Georgia, serif" font-size="18" letter-spacing="2" fill="${GOLD}">${esc(d.footnote.toUpperCase())}</text>
+    ${legend(56, H - 112)}`
 
   const svg = Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${left}${panel(d)}</svg>`
   )
 
   const dx = Math.round((planW - meta.width) / 2)
-  const dy = 190 + Math.round((H - 320 - meta.height) / 2)
+  const dy = 186 + Math.round((H - 360 - meta.height) / 2)
 
   /* The cleaned scan is pure white and the page is off-white, so the
      drawing would otherwise end in a faint seam. A plate and hairline

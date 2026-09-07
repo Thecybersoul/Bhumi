@@ -25,6 +25,8 @@ const sharp = require('sharp')
 const fs = require('fs')
 const path = require('path')
 
+const { availabilityOverlay } = require('./listing-plots')
+
 const root = path.resolve(__dirname, '..')
 const outDir = path.join(root, 'public/img/listings')
 
@@ -39,14 +41,29 @@ const H = 800
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /** A scanned drawing, cropped and cleaned onto the brand ground. */
-async function planCard({ src, crop, eyebrow, caption, out }) {
-  const drawing = await sharp(src)
+async function planCard({ src, crop, eyebrow, caption, out, availability }) {
+  const cleaned = await sharp(src)
     .extract(crop)
     .greyscale()
     .normalise()
     // Push the scan's grey cast to white without eating the linework.
     .linear(1.9, -70)
     .sharpen()
+    .toBuffer()
+
+  /* Tint at full crop resolution, then scale. sharp composites after
+     resize within one pipeline whatever order the calls are written
+     in, so these have to be separate passes. */
+  let base = cleaned
+  if (availability) {
+    const wash = await sharp(Buffer.from(availabilityOverlay(crop.width, crop.height)))
+      .resize(crop.width, crop.height, { fit: 'fill' })
+      .png()
+      .toBuffer()
+    base = await sharp(cleaned).composite([{ input: wash }]).png().toBuffer()
+  }
+
+  const drawing = await sharp(base)
     .resize({ width: W - 150, height: H - 210, fit: 'inside', withoutEnlargement: false })
     .toBuffer()
 
@@ -144,8 +161,9 @@ async function main() {
     await planCard({
       src: planSrc,
       crop: { left: 60, top: 420, width: 850, height: 930 },
+      availability: true,
       eyebrow: 'Sanctioned layout · Sy. No. 1/1',
-      caption: '23 plots · Doddasanne, Devanahalli',
+      caption: '5 of 23 plots available · Doddasanne, Devanahalli',
       out: path.join(outDir, 'doddasanne-layout.png'),
     })
   } else {
