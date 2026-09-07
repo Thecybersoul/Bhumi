@@ -126,6 +126,9 @@ export interface Property {
      the useful figures are how many there are and how big one is,
      not the extent of the parent parcel. */
   plots_total?: number
+  /** How many of them are still unsold, and which. */
+  plots_available?: number
+  plots_available_list?: string
   plot_size?: string
   conversion_order?: string
 

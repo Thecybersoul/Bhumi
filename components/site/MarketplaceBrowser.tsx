@@ -43,8 +43,8 @@ function price(p: Property): string | null {
   // A flat is quoted whole; land is quoted by the acre. Lead with
   // whichever the seller actually named.
   if (p.price_total_cr) return money(p.price_total_cr)
-  if (p.extent_acres > 0 && p.price_per_acre_cr > 0) return `${money(p.price_per_acre_cr)} / acre`
   if (p.price_per_sqft) return `₹${p.price_per_sqft.toLocaleString('en-IN')} / sq ft`
+  if (p.extent_acres > 0 && p.price_per_acre_cr > 0) return `${money(p.price_per_acre_cr)} / acre`
   return null
 }
 
@@ -52,7 +52,15 @@ function price(p: Property): string | null {
    of these unset, and an empty row reads worse than a shorter list. */
 function facts(p: Property): [string, string][] {
   const rows: ([string, string] | null)[] = [
-    p.plots_total ? ['Plots', `${p.plots_total} sites`] : null,
+    p.plots_total
+      ? [
+          'Plots',
+          p.plots_available !== undefined
+            ? `${p.plots_available} of ${p.plots_total} available`
+            : `${p.plots_total} sites`,
+        ]
+      : null,
+    p.plots_available_list ? ['Available', p.plots_available_list] : null,
     size(p) ? [p.built_up_sqft ? 'Built-up' : 'Extent', size(p)!] : null,
     price(p) ? ['Price', price(p)!] : null,
     p.unit_mix ? ['Configuration', p.unit_mix] : null,

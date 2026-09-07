@@ -79,17 +79,23 @@ export const seedProperties: Property[] = [
     corridor: 'devanahalli',
     zone: 'North',
     status: 'Live',
-    price_type: 'On Request',
+    price_type: 'Fixed',
 
-    /* 1 acre 15.75 guntas. 40 guntas to the acre, and the layout's own
-       area statement gives the metric equivalent as 5,640.23 sqm. */
+    /* 1 acre 15.75 guntas of sanctioned area, plus 2 guntas kharab.
+       40 guntas to the acre; the layout's own area statement gives the
+       metric equivalent as 5,640.23 sqm. Marketing material quoting
+       "1 acre 18 guntas" is the gross including kharab, rounded. */
     extent_acres: 1.39,
     price_per_acre_cr: 0,
+    price_per_sqft: 8500,
 
     plots_total: 23,
+    plots_available: 5,
+    plots_available_list: 'Plot nos. 5, 6, 7, 8 and 15',
     plot_size: '9.14m × 12.19m (30 × 40 ft) on 11 sites; 12 odd sites from 49.94 to 204.95 sqm',
     land_use: 'Residential (Ground + 1 floor, FAR restricted to 1.0)',
     zoning: 'Residential — final sanctioned layout',
+    authority: 'BIAPPA',
     conversion: 'Converted',
     conversion_order: 'No. 34962 dated 29 March 2025',
     survey_number: 'Sy. No. 1/1, Doddasanne Village, Kasaba Hobli',
@@ -98,9 +104,9 @@ export const seedProperties: Property[] = [
     engagement: 'Bhumi Estates is appointed for sales and marketing of this development.',
     use_cases: ['Own construction', 'Plot investment'],
     amenities:
-      'Three parks totalling 565.79 sqm · civic amenity site 281.86 sqm · Devanahalli taluk, Bangalore Rural',
+      'Three parks totalling 565.79 sqm · civic amenity site 281.86 sqm · short drive from Kempegowda International Airport',
     description:
-      'A finally sanctioned residential layout on Sy. No. 1/1 at Doddasanne, released as 23 individual plots. The parent parcel is 1 acre 15.75 guntas (5,640.23 sqm), of which 2,661.98 sqm is saleable residential, 2,130.60 sqm is road, 565.79 sqm is park and open space across three parks, and 281.86 sqm is the civic amenity site. Eleven plots are the standard 30 × 40 ft; the remaining twelve are odd sites ranging from 49.94 to 204.95 sqm. Construction is permitted to ground plus one floor with FAR restricted to 1.0. Conversion order No. 34962 dated 29 March 2025.',
+      'A finally sanctioned residential layout on Sy. No. 1/1 at Doddasanne, released as 23 individual plots. The parent parcel is 1 acre 15.75 guntas (5,640.23 sqm), of which 2,661.98 sqm is saleable residential, 2,130.60 sqm is road, 565.79 sqm is park and open space across three parks, and 281.86 sqm is the civic amenity site. Eleven plots are the standard 30 × 40 ft; the remaining twelve are odd sites ranging from 49.94 to 204.95 sqm. Construction is permitted to ground plus one floor with FAR restricted to 1.0. Conversion order No. 34962 dated 29 March 2025. Eighteen of the 23 plots are sold; plot numbers 5, 6, 7, 8 and 15 remain, at ₹8,500 per sq ft.',
     img_url: '/img/listings/doddasanne-layout.png',
     featured: true,
     risk: 'Low',
