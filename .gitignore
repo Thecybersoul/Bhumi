@@ -37,3 +37,6 @@ __pycache__/
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
+
+# Source documents for listings — owner names, signatures, survey papers.
+.listing-sources/

@@ -1058,6 +1058,56 @@ a.contactLines__row:hover { color: var(--gold-deep); }
   border-radius: var(--r); font-size: .9rem; outline: none; transition: .16s var(--ease);
 }
 .mkFilters__search:focus { border-color: var(--navy); box-shadow: var(--ring); }
+
+/* ─── Marketplace listing card ────────────────────────────
+   A photograph, where it is and what it is, and the two
+   figures a buyer actually sorts on. The card opens the panel
+   rather than navigating, so it is a button — the previous
+   version nested a Link inside a click handler, which both
+   navigated and opened the drawer on the same click. */
+.mkCount {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin: 26px 0 20px;
+  font-size: .88rem; color: var(--ink-2);
+}
+.mkCount strong { color: var(--navy); }
+
+.mkCard {
+  display: flex; flex-direction: column; text-align: left; width: 100%; height: 100%;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+  overflow: hidden; cursor: pointer; font: inherit; padding: 0;
+  transition: transform .22s var(--ease), box-shadow .22s var(--ease), border-color .22s var(--ease);
+}
+.mkCard:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: rgba(194,151,74,.45); }
+.mkCard:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.mkCard__photo { display: block; aspect-ratio: 3 / 2; background: var(--cream); overflow: hidden; }
+.mkCard__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mkCard__body { display: flex; flex-direction: column; gap: 7px; padding: 18px 20px 20px; }
+.mkCard__meta {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .1em;
+  font-weight: 600; color: var(--gold-deep);
+}
+.mkCard__title {
+  font-family: var(--serif); font-size: 1.1rem; font-weight: 600;
+  line-height: 1.34; color: var(--navy);
+}
+.mkCard__figures { font-size: .88rem; color: var(--ink-2); }
+
+.mkDetail__photo {
+  width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
+  border-radius: var(--r-md); background: var(--cream); display: block;
+}
+
+/* Whether we sourced this or were appointed to sell it. Different
+   relationships, and a buyer is entitled to know which one applies
+   before they read the rest of the panel. */
+.mkDetail__engagement {
+  display: flex; align-items: flex-start; gap: 9px;
+  background: var(--gold-tint); border: 1px solid rgba(194,151,74,.32);
+  border-radius: var(--r-md); padding: 13px 15px; margin-bottom: 18px;
+  font-size: .86rem; line-height: 1.6; color: var(--ink);
+}
+.mkDetail__engagement svg { color: var(--gold-deep); flex-shrink: 0; margin-top: 2px; }
 @media (max-width: 620px) { .mkFilters__label { width: auto; } }
 
 /* ═══════════════════════════════════════════════════════════

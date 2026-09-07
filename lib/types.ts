@@ -117,6 +117,31 @@ export interface Property {
   contiguous_status?: string
   data_room_gated?: boolean
   verified_stage?: VerificationStageKey | null
+
+  /* Headline price where the asset is sold whole rather than by
+     the acre or the square foot — a flat, a villa, one plot. */
+  price_total_cr?: number
+
+  /* Plotted developments. A sanctioned layout is sold as sites, so
+     the useful figures are how many there are and how big one is,
+     not the extent of the parent parcel. */
+  plots_total?: number
+  plot_size?: string
+  conversion_order?: string
+
+  /* Statutory position, as stated on the document we were sent. */
+  khata?: string
+  authority?: string
+
+  /* Built units. */
+  dimensions?: string
+  facing?: string
+
+  /** What Bhumi Estates is actually doing on this one — sourcing it,
+      or appointed for sales and marketing by the developer. Stated
+      because the two are different relationships and a buyer is
+      entitled to know which they are dealing with. */
+  engagement?: string
 }
 
 /* ─── Leads (Plan §7, §13) ───────────────────────────────── */

@@ -1,14 +1,70 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
 import Icon from './Icon'
-import PropertyTypeCard from './PropertyTypeCard'
 import LeadForm from './LeadForm'
-import { propertyTypes } from '@/lib/content/propertyTypes'
-import { corridors } from '@/lib/content/corridors'
-import { verificationStages } from '@/lib/content/verification'
+import { getPropertyType } from '@/lib/content/propertyTypes'
+import { whatsapp } from '@/lib/content/brand'
 import type { Property } from '@/lib/types'
+
+/* The marketplace browser.
+
+   Deliberately shallow. An earlier version carried a search box,
+   a verified-only toggle, six type chips and six corridor chips
+   over a card that changed its headline metrics per asset class,
+   opening a drawer with a four-stage verification stepper and a
+   twelve-row fact grid. That is a lot of apparatus for an
+   inventory you can count on one hand, and most of it needed
+   survey-level detail that a new listing does not have yet.
+
+   What is left: two rows of chips, a card with a photograph, and
+   a panel that states what is known and offers a conversation.
+
+   Both filter rows are built from the listings themselves rather
+   than from the full type and corridor registries. A chip only
+   exists if something is behind it, so the filters cannot show a
+   category that returns nothing, and nothing has to be pruned by
+   hand as inventory changes. */
+
+function money(cr: number) {
+  return cr >= 1 ? `₹${cr.toFixed(cr < 10 ? 1 : 0)} Cr` : `₹${Math.round(cr * 100)} L`
+}
+
+/** The size line, in whichever unit the asset is actually sold by. */
+function size(p: Property): string | null {
+  if (p.extent_acres > 0) return `${p.extent_acres} acres`
+  if (p.built_up_sqft) return `${p.built_up_sqft.toLocaleString('en-IN')} sq ft`
+  if (p.carpet_sqft) return `${p.carpet_sqft.toLocaleString('en-IN')} sq ft carpet`
+  return null
+}
+
+function price(p: Property): string | null {
+  if (p.price_type === 'On Request') return 'On request'
+  // A flat is quoted whole; land is quoted by the acre. Lead with
+  // whichever the seller actually named.
+  if (p.price_total_cr) return money(p.price_total_cr)
+  if (p.extent_acres > 0 && p.price_per_acre_cr > 0) return `${money(p.price_per_acre_cr)} / acre`
+  if (p.price_per_sqft) return `₹${p.price_per_sqft.toLocaleString('en-IN')} / sq ft`
+  return null
+}
+
+/* Only what this listing actually states. A lean record leaves most
+   of these unset, and an empty row reads worse than a shorter list. */
+function facts(p: Property): [string, string][] {
+  const rows: ([string, string] | null)[] = [
+    p.plots_total ? ['Plots', `${p.plots_total} sites`] : null,
+    size(p) ? [p.built_up_sqft ? 'Built-up' : 'Extent', size(p)!] : null,
+    price(p) ? ['Price', price(p)!] : null,
+    p.unit_mix ? ['Configuration', p.unit_mix] : null,
+    p.dimensions ? ['Dimensions', p.dimensions] : null,
+    p.khata ? ['Khata', p.authority ? `${p.khata} · ${p.authority}` : p.khata] : null,
+    p.facing ? ['Orientation', p.facing] : null,
+    p.conversion_order ? ['Conversion order', p.conversion_order] : null,
+    p.survey_number ? ['Survey number', p.survey_number] : null,
+    p.land_use ? ['Land use', p.land_use] : null,
+  ]
+  return rows.filter(Boolean).slice(0, 6) as [string, string][]
+}
 
 export default function MarketplaceBrowser({
   properties,
@@ -18,107 +74,82 @@ export default function MarketplaceBrowser({
   source: 'live' | 'fallback'
 }) {
   const [type, setType] = useState('')
-  const [corridor, setCorridor] = useState('')
-  const [search, setSearch] = useState('')
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
+  const [place, setPlace] = useState('')
   const [selected, setSelected] = useState<Property | null>(null)
+
+  const types = useMemo(() => {
+    const seen = new Map<string, string>()
+    for (const p of properties) {
+      if (seen.has(p.property_type)) continue
+      seen.set(p.property_type, getPropertyType(p.property_type)?.shortName ?? p.property_type)
+    }
+    return [...seen].map(([slug, label]) => ({ slug, label }))
+  }, [properties])
+
+  const places = useMemo(
+    () => [...new Set(properties.map((p) => p.location).filter(Boolean))].sort(),
+    [properties]
+  )
 
   const filtered = useMemo(
     () =>
-      properties.filter((p) => {
-        if (type && p.property_type !== type) return false
-        if (corridor && p.corridor !== corridor) return false
-        if (verifiedOnly && p.verified_stage !== 'report') return false
-        if (search) {
-          const q = search.toLowerCase()
-          const hay = `${p.title} ${p.location} ${p.code} ${p.survey_number ?? ''} ${p.land_use}`.toLowerCase()
-          if (!hay.includes(q)) return false
-        }
-        return true
-      }),
-    [properties, type, corridor, search, verifiedOnly]
+      properties.filter(
+        (p) => (!type || p.property_type === type) && (!place || p.location === place)
+      ),
+    [properties, type, place]
   )
-
-  const activeFilters = [type, corridor, search, verifiedOnly ? '1' : ''].filter(Boolean).length
 
   return (
     <>
       <div className="mkFilters">
-        <div className="mkFilters__row">
-          <input
-            className="mkFilters__search"
-            placeholder="Search by location, code or survey number…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Search listings"
-          />
-          <button
-            className={`chip ${verifiedOnly ? 'selected' : ''}`}
-            onClick={() => setVerifiedOnly((v) => !v)}
-            aria-pressed={verifiedOnly}
-          >
-            <Icon name="check" size={12} stroke={3} /> Verified only
-          </button>
-          {activeFilters > 0 && (
-            <button
-              className="btn btn-sm btn-ghost"
-              onClick={() => {
-                setType('')
-                setCorridor('')
-                setSearch('')
-                setVerifiedOnly(false)
-              }}
-            >
-              Clear {activeFilters}
-            </button>
-          )}
-        </div>
-
-        <div className="mkFilters__row">
-          <span className="mkFilters__label">Type</span>
-          <div className="chips">
-            <button className={`chip ${!type ? 'selected' : ''}`} onClick={() => setType('')}>
-              All
-            </button>
-            {propertyTypes.map((t) => (
-              <button
-                key={t.slug}
-                className={`chip ${type === t.slug ? 'selected' : ''}`}
-                onClick={() => setType(type === t.slug ? '' : t.slug)}
-              >
-                {t.shortName}
+        {/* One chip row is pointless when everything shares the value. */}
+        {types.length > 1 && (
+          <div className="mkFilters__row">
+            <span className="mkFilters__label">Type</span>
+            <div className="chips">
+              <button className={`chip ${!type ? 'selected' : ''}`} onClick={() => setType('')}>
+                All
               </button>
-            ))}
+              {types.map((t) => (
+                <button
+                  key={t.slug}
+                  className={`chip ${type === t.slug ? 'selected' : ''}`}
+                  onClick={() => setType(type === t.slug ? '' : t.slug)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="mkFilters__row">
-          <span className="mkFilters__label">Corridor</span>
-          <div className="chips">
-            <button className={`chip ${!corridor ? 'selected' : ''}`} onClick={() => setCorridor('')}>
-              All
-            </button>
-            {corridors.map((c) => (
-              <button
-                key={c.slug}
-                className={`chip ${corridor === c.slug ? 'selected' : ''}`}
-                onClick={() => setCorridor(corridor === c.slug ? '' : c.slug)}
-              >
-                {c.name.split(/[&,]/)[0].trim()}
+        {places.length > 1 && (
+          <div className="mkFilters__row">
+            <span className="mkFilters__label">Location</span>
+            <div className="chips">
+              <button className={`chip ${!place ? 'selected' : ''}`} onClick={() => setPlace('')}>
+                All
               </button>
-            ))}
+              {places.map((l) => (
+                <button
+                  key={l}
+                  className={`chip ${place === l ? 'selected' : ''}`}
+                  onClick={() => setPlace(place === l ? '' : l)}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      <div className="row-wrap" style={{ justifyContent: 'space-between', margin: '26px 0 20px' }}>
-        <span style={{ fontSize: '.88rem', color: 'var(--ink-2)' }}>
-          <strong style={{ color: 'var(--navy)' }}>{filtered.length}</strong>{' '}
-          {filtered.length === 1 ? 'listing' : 'listings'}
-          {type && ` · ${propertyTypes.find((t) => t.slug === type)?.shortName}`}
+      <div className="mkCount">
+        <span>
+          <strong>{filtered.length}</strong> {filtered.length === 1 ? 'listing' : 'listings'}
         </span>
         {source === 'fallback' && (
-          <span className="sourcePill is-fallback" title="No database attached — showing seeded reference inventory">
+          <span className="sourcePill is-fallback" title="No database attached — showing the listings compiled into the site">
             Reference inventory
           </span>
         )}
@@ -126,25 +157,46 @@ export default function MarketplaceBrowser({
 
       {filtered.length === 0 ? (
         <div className="panel center" style={{ padding: 48 }}>
-          <h3 className="h3">Nothing matches those filters.</h3>
+          <h3 className="h3">Nothing under those filters.</h3>
           <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>
-            Tell us what you are looking for — most of what we transact never reaches a public listing.
+            Most of what we transact never reaches a public listing. Tell us what you are looking for.
           </p>
-          <Link href="/contact" className="btn btn-primary" style={{ marginTop: 18 }}>
-            Send us a brief
-          </Link>
+          <a
+            href={whatsapp('Hi Bhumi Estates — I am looking for land and would like to talk it through.')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{ marginTop: 18 }}
+          >
+            <Icon name="whatsapp" size={16} /> Send us a brief
+          </a>
         </div>
       ) : (
         <div className="grid g3">
-          {filtered.map((p) => (
-            <div key={p.code} onClick={() => setSelected(p)} role="button" tabIndex={-1}>
-              <PropertyTypeCard property={p} />
-            </div>
-          ))}
+          {filtered.map((p) => {
+            const t = getPropertyType(p.property_type)
+            const s = size(p)
+            const pr = price(p)
+            return (
+              <button key={p.code} className="mkCard" onClick={() => setSelected(p)}>
+                <span className="mkCard__photo">
+                  <img src={p.img_url} alt="" loading="lazy" width={800} height={520} />
+                </span>
+                <span className="mkCard__body">
+                  <span className="mkCard__meta">
+                    {[t?.shortName, p.location].filter(Boolean).join(' · ')}
+                  </span>
+                  <span className="mkCard__title">{p.title}</span>
+                  {(s || pr) && (
+                    <span className="mkCard__figures">{[s, pr].filter(Boolean).join(' · ')}</span>
+                  )}
+                </span>
+              </button>
+            )
+          })}
         </div>
       )}
 
-      {/* Detail drawer */}
       {selected && (
         <>
           <div className="overlay" onClick={() => setSelected(null)} />
@@ -162,96 +214,65 @@ export default function MarketplaceBrowser({
             </div>
 
             <div className="drawer-body" style={{ padding: 24 }}>
-              <p style={{ fontSize: '.8rem', color: 'var(--muted)', marginBottom: 16 }}>
-                {selected.location} · {selected.zone} Bengaluru ·{' '}
-                {propertyTypes.find((t) => t.slug === selected.property_type)?.name}
+              <img
+                src={selected.img_url}
+                alt=""
+                className="mkDetail__photo"
+                width={800}
+                height={520}
+              />
+
+              <p style={{ fontSize: '.8rem', color: 'var(--muted)', margin: '16px 0' }}>
+                {[selected.location, getPropertyType(selected.property_type)?.name]
+                  .filter(Boolean)
+                  .join(' · ')}
               </p>
 
-              {/* Verification position, shown before the sales copy */}
-              <div className="panel" style={{ marginBottom: 20 }}>
-                <span className="eyebrow" style={{ marginBottom: 10 }}>
-                  Verification position
-                </span>
-                <div className="stack" style={{ gap: 6 }}>
-                  {verificationStages.map((s) => {
-                    const reachedIdx = verificationStages.findIndex((x) => x.key === selected.verified_stage)
-                    const done = reachedIdx >= 0 && s.number <= reachedIdx + 1
-                    const flagged = !selected.title_clear && s.number === reachedIdx + 1
-                    return (
-                      <div key={s.key} className="row" style={{ gap: 10, fontSize: '.83rem' }}>
-                        <span
-                          style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: '50%',
-                            flexShrink: 0,
-                            display: 'grid',
-                            placeItems: 'center',
-                            background: flagged ? 'var(--flagged)' : done ? 'var(--verified)' : 'var(--line-2)',
-                            color: done || flagged ? '#fff' : 'var(--muted)',
-                            fontSize: '.6rem',
-                          }}
-                        >
-                          {flagged ? '!' : done ? '✓' : s.number}
-                        </span>
-                        <span style={{ color: done ? 'var(--ink)' : 'var(--muted)' }}>{s.title}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {selected.risk !== 'Low' && (
-                <div
-                  className="calloutBox"
-                  style={{ background: 'var(--flagged-bg)', borderColor: 'rgba(192,57,43,.25)', marginBottom: 20 }}
-                >
-                  <h3 style={{ color: 'var(--flagged)' }}>{selected.risk} risk — stated openly</h3>
-                  <p>{selected.risk_notes}</p>
-                </div>
+              {selected.engagement && (
+                <p className="mkDetail__engagement">
+                  <Icon name="shield" size={14} /> {selected.engagement}
+                </p>
               )}
 
-              <p className="body-text" style={{ marginBottom: 20 }}>
-                {selected.description}
-              </p>
+              {selected.description && (
+                <p className="body-text" style={{ marginBottom: 20 }}>
+                  {selected.description}
+                </p>
+              )}
 
-              <div className="factGrid" style={{ marginBottom: 20 }}>
-                {[
-                  ['Extent', `${selected.extent_acres} acres`],
-                  selected.built_up_sqft ? ['Built-up', `${selected.built_up_sqft.toLocaleString('en-IN')} sq ft`] : null,
-                  selected.carpet_sqft ? ['Carpet', `${selected.carpet_sqft.toLocaleString('en-IN')} sq ft`] : null,
-                  selected.survey_number ? ['Survey number', selected.survey_number] : null,
-                  ['Zoning', selected.zoning ?? selected.land_use],
-                  ['Conversion', selected.conversion],
-                  ['Ownership', selected.ownership],
-                  ['Access', selected.road_type],
-                  ['Water', selected.water],
-                  selected.ceiling_height_m ? ['Clear height', `${selected.ceiling_height_m} m`] : null,
-                  selected.power_load_kva ? ['Sanctioned power', `${selected.power_load_kva} KVA`] : null,
-                  ['Price', selected.price_type === 'On Request' ? 'On request' : `₹${selected.price_per_acre_cr} Cr / acre`],
-                ]
-                  .filter(Boolean)
-                  .map((row) => {
-                    const [label, value] = row as [string, string]
-                    return (
-                      <div key={label}>
-                        <span className="factGrid__label">{label}</span>
-                        <span className="factGrid__value" style={{ fontSize: '.92rem' }}>
-                          {value}
-                        </span>
-                      </div>
-                    )
-                  })}
+              <div className="factGrid" style={{ marginBottom: 22 }}>
+                {facts(selected).map(([label, value]) => (
+                  <div key={label}>
+                    <span className="factGrid__label">{label}</span>
+                    <span className="factGrid__value" style={{ fontSize: '.92rem' }}>
+                      {value}
+                    </span>
+                  </div>
+                ))}
               </div>
 
+              <a
+                href={whatsapp(
+                  `Hi Bhumi Estates — I'm interested in ${selected.code} (${selected.title}).`
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary btn-block btn-lg"
+              >
+                <Icon name="whatsapp" size={17} /> Ask about this listing
+              </a>
+
+              {/* WhatsApp is the path most people take, but it leaves no
+                  record in the lead inbox — so the form stays underneath
+                  it rather than being dropped with the rest. */}
               <LeadForm
                 kind="Site visit"
                 source="/marketplace"
                 propertyCode={selected.code}
                 corridor={selected.corridor}
                 compact
-                heading="Request a site visit"
-                blurb="We walk the boundary with you and bring the verification file."
+                heading="Or request a site visit"
+                blurb="We walk the boundary with you and bring the file."
                 whatsappMessage={`Hi Bhumi Estates — I'm interested in ${selected.code} (${selected.title}).`}
                 submitLabel="Request a visit"
               />
