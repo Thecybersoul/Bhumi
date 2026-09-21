@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 import Icon from './Icon'
-import { brand, wa } from '@/lib/content/brand'
+import { brand, googleMapsEmbedUrl, wa } from '@/lib/content/brand'
 import { practices } from '@/lib/content/services'
 
 export default function SiteFooter() {
@@ -74,6 +74,19 @@ export default function SiteFooter() {
             </div>
           ))}
 
+          {/* Fills the empty tracks the two practice columns leave in
+              this 5-column grid, rather than that space sitting blank. */}
+          <div className="siteFooter__col siteFooter__mapCol">
+            <h3>Find us</h3>
+            <div className="siteFooter__map">
+              <iframe
+                src={googleMapsEmbedUrl}
+                title={`${brand.name} on Google Maps`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="siteFooter__bottom">

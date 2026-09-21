@@ -741,12 +741,6 @@ a.contactLines__row { font-weight: 600; color: var(--navy); transition: color .1
 a.contactLines__row:hover { color: var(--gold-deep); }
 .contactLines__row small { display: block; font-weight: 400; color: var(--ink-2); margin-top: 2px; }
 
-.mapEmbed {
-  margin-top: 22px; border: 1px solid var(--line); border-radius: var(--r-lg);
-  overflow: hidden; aspect-ratio: 16 / 10;
-}
-.mapEmbed iframe { width: 100%; height: 100%; border: 0; display: block; }
-
 .calloutBox {
   background: var(--gold-tint); border: 1px solid rgba(194,151,74,.35);
   border-radius: var(--r-lg); padding: 24px 26px;
@@ -788,8 +782,8 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 }
 .siteFooter__tagline { font-family: var(--serif); font-size: 1.02rem; color: var(--gold-soft); margin: 18px 0 16px; }
 .siteFooter__address, .siteFooter__contact { font-size: .84rem; line-height: 1.75; color: rgba(255,255,255,.6); }
-a.siteFooter__address { display: block; transition: color .16s var(--ease); }
-a.siteFooter__address:hover { color: var(--gold-soft); }
+.siteFooter__address { display: block; transition: color .16s var(--ease); }
+.siteFooter__address:hover { color: var(--gold-soft); }
 .siteFooter__contact { margin-top: 12px; }
 .siteFooter__contact a:hover { color: var(--gold-soft); }
 .siteFooter__social { display: flex; gap: 10px; margin-top: 18px; }
@@ -807,6 +801,13 @@ a.siteFooter__address:hover { color: var(--gold-soft); }
 .siteFooter__col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
 .siteFooter__col a { font-size: .84rem; color: rgba(255,255,255,.62); transition: .16s; }
 .siteFooter__col a:hover { color: var(--gold-soft); }
+
+.siteFooter__mapCol { grid-column: span 2; }
+.siteFooter__map {
+  border: 1px solid rgba(255,255,255,.14); border-radius: var(--r-lg);
+  overflow: hidden; aspect-ratio: 16 / 11;
+}
+.siteFooter__map iframe { width: 100%; height: 100%; border: 0; display: block; }
 
 .siteFooter__rera {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -832,6 +833,7 @@ a.siteFooter__address:hover { color: var(--gold-soft); }
 @media (max-width: 1000px) {
   .siteFooter__cols { grid-template-columns: repeat(3, 1fr); }
   .siteFooter__brandCol { grid-column: span 3; }
+  .siteFooter__mapCol { grid-column: span 1; }
 }
 /* Mobile footer: two link columns, not four. Property types and
    corridors are one tap away in the nav; repeating all eighteen links
@@ -840,6 +842,7 @@ a.siteFooter__address:hover { color: var(--gold-soft); }
   .siteFooter { padding-bottom: 28px; }
   .siteFooter__cols { grid-template-columns: repeat(2, 1fr); gap: 26px; padding: 32px 0 28px; }
   .siteFooter__brandCol { grid-column: span 2; }
+  .siteFooter__mapCol { grid-column: span 2; }
   .siteFooter__col--secondary { display: none; }
   .siteFooter__ctaActions { min-width: 100%; }
   .siteFooter__cta { padding: 34px 0; }
