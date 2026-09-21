@@ -28,6 +28,15 @@ export const brand = {
   googleMapsUrl: 'https://maps.app.goo.gl/1sL83tMDHrnr71Ni8',
 }
 
+/* The embeddable pin. Google's no-key embed endpoint geocodes a
+   text query rather than following the short link above (short
+   links don't load inside an iframe), so this searches by business
+   name + address — the same way "get directions" would — to land
+   on the actual listing rather than a nearest-address guess. */
+export const googleMapsEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(
+  `${brand.name}, ${brand.address.line1}, ${brand.address.line2}`
+)}&output=embed`
+
 /** Build a click-to-chat link. WhatsApp-first is the primary
     conversion path across the site (Plan §3F). */
 export function whatsapp(message: string): string {

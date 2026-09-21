@@ -6,7 +6,7 @@ import PageHero from '@/components/site/PageHero'
 import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import LeadForm from '@/components/site/LeadForm'
-import { brand, wa } from '@/lib/content/brand'
+import { brand, googleMapsEmbedUrl, wa } from '@/lib/content/brand'
 import { practices } from '@/lib/content/services'
 
 export const metadata: Metadata = {
@@ -152,6 +152,15 @@ export default async function ContactPage({
                         <small>Get directions on Google Maps</small>
                       </span>
                     </a>
+                  </div>
+
+                  <div className="mapEmbed">
+                    <iframe
+                      src={googleMapsEmbedUrl}
+                      title={`${brand.name} on Google Maps`}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
                   </div>
                 </div>
               </Reveal>
