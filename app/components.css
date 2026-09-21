@@ -1261,6 +1261,9 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 .pipelineStage.is-flagged .pipelineStage__name { color: var(--flagged); }
 @media (max-width: 820px) { .pipelineTrack { grid-template-columns: repeat(3, 1fr); } }
 
+.txnTrack { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 820px) { .txnTrack { grid-template-columns: repeat(2, 1fr); } }
+
 .leadRow__kind { font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .payloadChips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
 .payloadChip {

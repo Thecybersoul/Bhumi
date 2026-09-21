@@ -5,6 +5,7 @@ import {
   seedTransparency,
   seedLeads,
   seedDataRoomRequests,
+  seedTransactions,
 } from './data/seed'
 import type {
   Property,
@@ -13,6 +14,7 @@ import type {
   Lead,
   DataRoomRequest,
   VerificationStageKey,
+  PropertyTransaction,
 } from './types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -161,6 +163,14 @@ export async function getLeads(): Promise<Result<Lead[]>> {
 export async function getDataRoomRequests(): Promise<Result<DataRoomRequest[]>> {
   return read<DataRoomRequest[]>('data_room_requests', seedDataRoomRequests, (q) =>
     q.select('*').order('created_at', { ascending: false })
+  )
+}
+
+/* ─── Property transactions (deal pipeline) ─────────────────── */
+
+export async function getTransactions(): Promise<Result<PropertyTransaction[]>> {
+  return read<PropertyTransaction[]>('transactions', seedTransactions, (q) =>
+    q.select('*').order('opened_at', { ascending: false })
   )
 }
 

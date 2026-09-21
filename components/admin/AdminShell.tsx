@@ -27,6 +27,7 @@ const nav: { group: string; items: { href: string; label: string; icon: IconName
     group: 'Inventory',
     items: [
       { href: '/admin/properties', label: 'Listings', icon: 'land' },
+      { href: '/admin/transactions', label: 'Transactions', icon: 'balance', hint: 'Deals being bought or sold' },
       { href: '/admin/verifications', label: 'Verification pipeline', icon: 'shield', hint: 'The four-stage board' },
     ],
   },
