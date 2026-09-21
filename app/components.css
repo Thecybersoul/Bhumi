@@ -739,6 +739,7 @@ body.nav-open .waFloat { display: none !important; }
 .contactLines__row svg { color: var(--gold-deep); flex-shrink: 0; }
 a.contactLines__row { font-weight: 600; color: var(--navy); transition: color .16s var(--ease); }
 a.contactLines__row:hover { color: var(--gold-deep); }
+.contactLines__row small { display: block; font-weight: 400; color: var(--ink-2); margin-top: 2px; }
 
 .calloutBox {
   background: var(--gold-tint); border: 1px solid rgba(194,151,74,.35);
@@ -781,6 +782,8 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 }
 .siteFooter__tagline { font-family: var(--serif); font-size: 1.02rem; color: var(--gold-soft); margin: 18px 0 16px; }
 .siteFooter__address, .siteFooter__contact { font-size: .84rem; line-height: 1.75; color: rgba(255,255,255,.6); }
+a.siteFooter__address { display: block; transition: color .16s var(--ease); }
+a.siteFooter__address:hover { color: var(--gold-soft); }
 .siteFooter__contact { margin-top: 12px; }
 .siteFooter__contact a:hover { color: var(--gold-soft); }
 .siteFooter__social { display: flex; gap: 10px; margin-top: 18px; }

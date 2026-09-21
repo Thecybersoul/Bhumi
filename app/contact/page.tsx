@@ -139,12 +139,19 @@ export default async function ContactPage({
                       <Icon name="mail" size={17} />
                       <span>{brand.email}</span>
                     </a>
-                    <div className="contactLines__row">
+                    <a
+                      href={brand.googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="contactLines__row"
+                    >
                       <Icon name="pin" size={17} />
                       <span>
                         {brand.address.line1}, {brand.address.line2}
+                        <br />
+                        <small>Get directions on Google Maps</small>
                       </span>
-                    </div>
+                    </a>
                   </div>
                 </div>
               </Reveal>

@@ -23,6 +23,9 @@ export const brand = {
     linkedin: 'https://www.linkedin.com/company/bhumi-estates',
     instagram: 'https://www.instagram.com/bhumi.estates',
   },
+  /* Google Business Profile — directions, reviews and the "check us
+     out on Google" listing all resolve through this one short link. */
+  googleMapsUrl: 'https://maps.app.goo.gl/1sL83tMDHrnr71Ni8',
 }
 
 /** Build a click-to-chat link. WhatsApp-first is the primary

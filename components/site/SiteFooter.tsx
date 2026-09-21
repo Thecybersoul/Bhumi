@@ -31,11 +31,16 @@ export default function SiteFooter() {
           <div className="siteFooter__brandCol">
             <Logo variant="wordmark" theme="dark" style={{ height: 46 }} />
             <p className="siteFooter__tagline">{brand.tagline}</p>
-            <p className="siteFooter__address">
+            <a
+              href={brand.googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="siteFooter__address"
+            >
               {brand.address.line1}
               <br />
               {brand.address.line2}
-            </p>
+            </a>
             <p className="siteFooter__contact">
               <a href={`tel:${brand.phoneRaw}`}>{brand.phone}</a>
               <br />
