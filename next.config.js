@@ -53,6 +53,18 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }],
       },
       {
+        // Lets the mobile app call the API cross-origin. Every route that
+        // returns real data still requires the bearer token or admin
+        // cookie (lib/auth.ts) — this only affects whether a browser lets
+        // JS read the response, not who is allowed to ask for it.
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PATCH, PUT, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+        ],
+      },
+      {
         // Admin pages must never be cached by an intermediary.
         source: '/admin/:path*',
         headers: [
