@@ -17,6 +17,7 @@ const nav: { group: string; items: { href: string; label: string; icon: IconName
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', icon: 'gauge' },
       { href: '/admin/properties', label: 'Properties', icon: 'land' },
+      { href: '/admin/transactions', label: 'Transactions', icon: 'balance', hint: 'Deals being bought or sold' },
       { href: '/admin/leads', label: 'Leads', icon: 'handshake' },
       { href: '/admin/verifications', label: 'Verification', icon: 'shield' },
       { href: '/admin/data-room', label: 'Document requests', icon: 'lock' },

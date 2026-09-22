@@ -225,6 +225,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-whatsapp { background: #1FA855; color: #fff; }
 .btn-whatsapp:hover { background: #188945; transform: translateY(-1px); box-shadow: 0 16px 34px -18px rgba(31,168,85,.8); }
 .btn-sm { padding: 7px 13px; font-size: .78rem; border-radius: var(--r-sm); }
+.btn-xs { padding: 4px 10px; font-size: .72rem; border-radius: var(--r-sm); }
 .btn-lg { padding: 15px 26px; font-size: .95rem; border-radius: var(--r); }
 .btn-icon { width: 34px; height: 34px; padding: 0; border-radius: var(--r-sm); }
 .btn-block { width: 100%; }

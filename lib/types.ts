@@ -244,6 +244,60 @@ export interface Insight {
   corridor?: string
 }
 
+/* ─── Property transactions (deal pipeline) ──────────────── */
+/* Every parcel or unit Bhumi Estates is actually transacting —
+   distinct from a marketplace listing, which is inventory on
+   offer. A transaction may reference a listing or stand alone
+   for an off-market deal the site never published. */
+export type TransactionStage = 'Enquiry' | 'Negotiation' | 'Agreement' | 'Registration' | 'Closed'
+export type TransactionOutcome = 'In progress' | 'Closed' | 'Lost'
+export type MeetingStatus = 'Scheduled' | 'Completed' | 'Cancelled'
+export type CommissionType = 'Percentage' | 'Flat'
+export type Representing = 'Buyer' | 'Seller' | 'Both'
+
+export interface TransactionMeeting {
+  id: string
+  title: string
+  with: string
+  scheduled_at: string
+  status: MeetingStatus
+  notes?: string
+}
+
+export interface TransactionDocument {
+  id: string
+  label: string
+  url: string
+}
+
+export interface PropertyTransaction {
+  id: string
+  reference: string
+  property_id?: string | null
+  property_label: string
+  off_market: boolean
+  stage: TransactionStage
+  outcome: TransactionOutcome
+  buyer_name: string
+  buyer_phone?: string
+  buyer_email?: string
+  seller_name: string
+  seller_phone?: string
+  seller_email?: string
+  representing: Representing
+  deal_value_cr?: number | null
+  commission_type: CommissionType
+  commission_value?: number | null
+  commission_collected: boolean
+  advisor?: string
+  meetings: TransactionMeeting[]
+  documents: TransactionDocument[]
+  notes?: string
+  opened_at: string
+  closed_at?: string | null
+  lost_reason?: string
+}
+
 /* ─── Transparency dashboard (Plan §3A) ──────────────────── */
 export interface TransparencyStats {
   period: string

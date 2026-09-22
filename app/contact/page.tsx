@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import SiteHeader from '@/components/site/SiteHeader'
 import SiteFooter from '@/components/site/SiteFooter'
 import PageHero from '@/components/site/PageHero'
@@ -7,7 +6,6 @@ import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import LeadForm from '@/components/site/LeadForm'
 import { brand, wa } from '@/lib/content/brand'
-import { practices } from '@/lib/content/services'
 
 export const metadata: Metadata = {
   title: 'Contact — WhatsApp first, form second',
@@ -139,56 +137,44 @@ export default async function ContactPage({
                       <Icon name="mail" size={17} />
                       <span>{brand.email}</span>
                     </a>
-                    <div className="contactLines__row">
+                    <a
+                      href={brand.googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="contactLines__row"
+                    >
                       <Icon name="pin" size={17} />
                       <span>
                         {brand.address.line1}, {brand.address.line2}
                       </span>
-                    </div>
+                    </a>
                   </div>
                 </div>
               </Reveal>
 
               <Reveal delay={80}>
-                <div className="stack" style={{ gap: 22 }}>
-                  <LeadForm
-                    kind="Enquiry"
-                    source="/contact"
-                    heading="Or leave your details"
-                    blurb="Four fields. An advisor replies, usually the same working day."
-                    qualifier={{
-                      name: 'interest',
-                      label: 'What do you need?',
-                      options: [
-                        'Land verification',
-                        'Land sourcing',
-                        'Large land parcel',
-                        'Development',
-                        'Branding',
-                        'Outdoor advertising',
-                        'Selling land or a property',
-                        'Something else',
-                      ],
-                      defaultValue: preselected,
-                    }}
-                    whatsappMessage="Hi Bhumi Estates — I'd like to speak to someone about:"
-                  />
-
-                  <div className="panel">
-                    <span className="eyebrow" style={{ marginBottom: 10 }}>
-                      What we do
-                    </span>
-                    <div className="chips">
-                      {practices.flatMap((pr) =>
-                        pr.services.map((sv) => (
-                          <Link key={sv.slug} href={`${pr.href}#${sv.slug}`} className="chip">
-                            {sv.name}
-                          </Link>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
+                <LeadForm
+                  kind="Enquiry"
+                  source="/contact"
+                  heading="Or leave your details"
+                  blurb="Four fields. An advisor replies, usually the same working day."
+                  qualifier={{
+                    name: 'interest',
+                    label: 'What do you need?',
+                    options: [
+                      'Land verification',
+                      'Land sourcing',
+                      'Large land parcel',
+                      'Development',
+                      'Branding',
+                      'Outdoor advertising',
+                      'Selling land or a property',
+                      'Something else',
+                    ],
+                    defaultValue: preselected,
+                  }}
+                  whatsappMessage="Hi Bhumi Estates — I'd like to speak to someone about:"
+                />
               </Reveal>
             </div>
           </div>

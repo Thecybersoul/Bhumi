@@ -4,6 +4,7 @@ import type {
   TransparencyStats,
   Lead,
   DataRoomRequest,
+  PropertyTransaction,
 } from '@/lib/types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -177,3 +178,5 @@ export const seedTransparency: TransparencyStats = {
 export const seedLeads: Lead[] = []
 
 export const seedDataRoomRequests: DataRoomRequest[] = []
+
+export const seedTransactions: PropertyTransaction[] = []
