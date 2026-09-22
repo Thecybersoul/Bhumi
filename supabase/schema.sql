@@ -55,11 +55,13 @@ ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE enquiries ENABLE ROW LEVEL SECURITY;
 
 -- Public can read Live properties
+DROP POLICY IF EXISTS "public_read_live_properties" ON properties;
 CREATE POLICY "public_read_live_properties"
   ON properties FOR SELECT
   USING (status = 'Live');
 
 -- Public can insert enquiries
+DROP POLICY IF EXISTS "public_insert_enquiries" ON enquiries;
 CREATE POLICY "public_insert_enquiries"
   ON enquiries FOR INSERT
   WITH CHECK (true);
@@ -67,12 +69,12 @@ CREATE POLICY "public_insert_enquiries"
 -- Service role (admin API) bypasses RLS — no policy needed, handled by service key
 
 -- Indexes
-CREATE INDEX idx_properties_status ON properties(status);
-CREATE INDEX idx_properties_zone ON properties(zone);
-CREATE INDEX idx_properties_featured ON properties(featured);
-CREATE INDEX idx_enquiries_property_id ON enquiries(property_id);
-CREATE INDEX idx_enquiries_stage ON enquiries(stage);
-CREATE INDEX idx_enquiries_created_at ON enquiries(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_properties_status ON properties(status);
+CREATE INDEX IF NOT EXISTS idx_properties_zone ON properties(zone);
+CREATE INDEX IF NOT EXISTS idx_properties_featured ON properties(featured);
+CREATE INDEX IF NOT EXISTS idx_enquiries_property_id ON enquiries(property_id);
+CREATE INDEX IF NOT EXISTS idx_enquiries_stage ON enquiries(stage);
+CREATE INDEX IF NOT EXISTS idx_enquiries_created_at ON enquiries(created_at DESC);
 
 -- ===================================================
 -- Seed Data — existing 7 properties
@@ -86,4 +88,5 @@ VALUES
   ('BLR-1051','30 Acres Fertile Agricultural Land','Kanakapura Road','South',30,1.6,'Negotiable','Live','Agricultural',ARRAY['Agriculture','Land-banking','Resort'],'Village road 30ft',62,34,'Gently undulating','Fertile red loam','Canal + 2 borewells','Not converted','Multiple owners (4)',true,'Moderate','Seasonal stream — verify buffer','Lush, fertile farmland with mature trees and canal access — a strong long-term hold as the southern corridor develops.','NICE Road 22km · Metro Green Line ext. planned · Art-of-Living 14km','/img/p4.jpg',false,62),
   ('BLR-1064','52 Acres Resort-Ready Hill-View Land','Nandi Hills','North',52,4.4,'On Request','Live','Residential / Hospitality',ARRAY['Resort','Villa','Land-banking'],'District road',30,48,'Rolling with elevation','Rocky-loam','Borewell','Partially converted','Single owner',true,'Low','Elevated — no flood risk','Elevated, scenic parcel with hill views — a rare resort/villa development opportunity in a fast-appreciating tourism corridor.','Nandi Hills 6km · Airport 30km · NH-44 12km','/img/p5.jpg',true,70),
   ('BLR-1018','15 Acres Highway Commercial Land','Tumkur Road','West',15,7.1,'Fixed','Live','Commercial',ARRAY['Industrial','Township','Land-banking'],'NH-4 frontage 400m',55,22,'Flat','Hard strata','Cauvery','Converted (NA)','Single owner',true,'Low','Clear','Premium highway-frontage commercial parcel — strong visibility and access for showrooms, logistics or mixed commercial use.','NH-4 · Dabaspet industrial area 8km · rail 5km','/img/p1.jpg',false,79),
-  ('BLR-1073','40 Acres Mixed-Use Township Land','Doddaballapur','North',40,2.9,'Negotiable','Reserved','Residential / Industrial',ARRAY['Township','Industrial','Land-banking'],'STRR frontage',42,46,'Flat','Red loam','Borewell','Not converted','Agreement holder',false,'Moderate','Title under verification','Large STRR-frontage parcel with township & industrial potential — currently reserved pending title verification.','STRR · KIADB 9km · Airport 42km','/img/p3.jpg',false,66);
+  ('BLR-1073','40 Acres Mixed-Use Township Land','Doddaballapur','North',40,2.9,'Negotiable','Reserved','Residential / Industrial',ARRAY['Township','Industrial','Land-banking'],'STRR frontage',42,46,'Flat','Red loam','Borewell','Not converted','Agreement holder',false,'Moderate','Title under verification','Large STRR-frontage parcel with township & industrial potential — currently reserved pending title verification.','STRR · KIADB 9km · Airport 42km','/img/p3.jpg',false,66)
+ON CONFLICT (code) DO NOTHING;
