@@ -78,11 +78,13 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`, `005`, `006`. **006
-creates `site_content` and `media`** — without it the content editor and media library cannot save anything
-and uploads fail outright. The service-role key reaches PostgREST and Storage but *cannot* execute DDL; that
-is why `npm run migrate` needs `SUPABASE_DB_URL` (a real Postgres connection string) separately from the
-Supabase keys.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`, `005`, `006`, `007`.
+**006 creates `site_content` and `media`** — without it the content editor and media library cannot save
+anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
+`properties` (inventory on offer). `schema.sql` itself carries no seed data by design — a listing represents
+real land, so demo rows belong only in `lib/data/seed.ts`, the in-code fallback. The service-role key reaches
+PostgREST and Storage but *cannot* execute DDL; that is why `npm run migrate` needs `SUPABASE_DB_URL` (a real
+Postgres connection string) separately from the Supabase keys.
 
 ## Conventions
 
@@ -91,6 +93,16 @@ Design tokens are in `app/globals.css`, component styles in `app/components.css`
 
 **The `--navy*` tokens are green** (`--navy: #0E3B2E`), and `--green*` are aliases pointing back at them.
 The names are historical — the palette changed, the token names did not. Read the value, not the name.
+
+**`:root` also carries a UI type scale, a motion-duration scale and a z-index scale** — `--text-2xs` through
+`--text-2xl`, `--duration-fast`/`--duration`/`--duration-slow`, and `--z-subnav` through `--z-skip-link`.
+These were extracted from values already in use across both stylesheets (colors, radii and shadows were
+already tokenized; font sizes, transition durations and z-index were not). Pick the nearest existing step
+for new UI text, transitions and stacking contexts rather than writing another one-off `rem`/`s`/number —
+that scatter is exactly what these three scales replace. They cover the *shared* component surface (buttons,
+badges, forms, chips, tables, toast/modal/drawer, the admin dashboard's cards and stat tiles) — page-specific
+marketing sections in `components.css` (hero, pillars, footer, pricing, etc.) were left on their original
+literal values and are not part of this scale.
 
 `--header-h` must stay defined on `:root`. The homepage hero is a *sibling* of the header and pulls itself up
 by that value; scoping it to `.siteHeader` leaves a strip of page background above the hero video.
