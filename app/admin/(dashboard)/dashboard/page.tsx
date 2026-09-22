@@ -1,12 +1,12 @@
 import Link from 'next/link'
 import { checkHealth } from '@/lib/cms'
-import { getProperties, getLeads, getVerificationCases, getDataRoomRequests, deriveFromCases, dealValueCr } from '@/lib/db'
-import type { Lead, LeadStage, Property, PropertyStatus } from '@/lib/types'
+import { getProperties, getTransactions, getVerificationCases, getDataRoomRequests, deriveFromCases, dealValueCr } from '@/lib/db'
+import type { Property, PropertyStatus, PropertyTransaction, TransactionStage } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Dashboard · Admin' }
 
-const LEAD_STAGES: LeadStage[] = ['New', 'Contacted', 'Qualified', 'Visit', 'Closed']
+const TXN_STAGES: TransactionStage[] = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
 const PROPERTY_STATUSES: PropertyStatus[] = ['Live', 'Reserved', 'Sold']
 
 function cr(n: number) {
@@ -14,58 +14,70 @@ function cr(n: number) {
 }
 
 function valueByStatus(props: Property[], status: PropertyStatus) {
-  return props
-    .filter((p) => p.status === status)
-    .reduce((sum, p) => sum + (dealValueCr(p) ?? 0), 0)
+  return props.filter((p) => p.status === status).reduce((sum, p) => sum + (dealValueCr(p) ?? 0), 0)
 }
 
-function timeAgo(iso: string) {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
-  if (days <= 0) return 'Today'
-  if (days === 1) return 'Yesterday'
-  if (days < 30) return `${days}d ago`
+/** Commission actually earned on a deal, in ₹ crore — a percentage
+    of the deal value, or a flat fee stated in lakhs. */
+function commissionCr(t: PropertyTransaction): number {
+  if (t.commission_value == null) return 0
+  return t.commission_type === 'Percentage'
+    ? ((t.deal_value_cr ?? 0) * t.commission_value) / 100
+    : t.commission_value / 100
+}
+
+function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+}
+function fmtDateTime(iso: string) {
+  return new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
 export default async function AdminDashboard() {
-  const [health, propsRes, leadsRes, casesRes, dataRoomRes] = await Promise.all([
+  const [health, propsRes, txnsRes, casesRes, dataRoomRes] = await Promise.all([
     checkHealth(),
     getProperties({ admin: true }),
-    getLeads(),
+    getTransactions(),
     getVerificationCases(),
     getDataRoomRequests(),
   ])
 
   const props = propsRes.data
-  const leads = leadsRes.data
+  const txns = txnsRes.data
   const cases = casesRes.data
   const dataRoom = dataRoomRes.data
   const aggregate = deriveFromCases(cases)
 
-  const live = props.filter((p) => p.status === 'Live').length
-  const reserved = props.filter((p) => p.status === 'Reserved').length
-  const sold = props.filter((p) => p.status === 'Sold').length
-  const pipelineValue = valueByStatus(props, 'Live') + valueByStatus(props, 'Reserved')
-  const closedValue = valueByStatus(props, 'Sold')
+  const active = txns.filter((t) => t.outcome === 'In progress')
+  const closed = txns.filter((t) => t.outcome === 'Closed')
+  const lost = txns.filter((t) => t.outcome === 'Lost')
 
-  const newLeads30d = leads.filter((l) => Date.now() - new Date(l.created_at).getTime() < 30 * 86_400_000)
-  const closedLeads = leads.filter((l) => l.stage === 'Closed')
-  const conversionPct = leads.length ? Math.round((closedLeads.length / leads.length) * 100) : 0
+  const activeValue = active.reduce((sum, t) => sum + (t.deal_value_cr ?? 0), 0)
+  const closedValue = closed.reduce((sum, t) => sum + (t.deal_value_cr ?? 0), 0)
+  const commissionCollected = txns.filter((t) => t.commission_collected).reduce((sum, t) => sum + commissionCr(t), 0)
+  const commissionPending = txns.filter((t) => !t.commission_collected).reduce((sum, t) => sum + commissionCr(t), 0)
+  const decided = closed.length + lost.length
+  const winRatePct = decided ? Math.round((closed.length / decided) * 100) : 0
 
-  const leadStageMax = Math.max(...LEAD_STAGES.map((s) => leads.filter((l) => l.stage === s).length), 1)
+  const stageMax = Math.max(...TXN_STAGES.map((s) => active.filter((t) => t.stage === s).length), 1)
   const statusMax = Math.max(...PROPERTY_STATUSES.map((s) => props.filter((p) => p.status === s).length), 1)
 
-  const recentLeads = leads.slice(0, 6)
-  const pendingDataRoom = dataRoom.filter((d) => d.status === 'Pending').length
+  const recentTxns = txns.slice(0, 6)
+  const upcomingMeetings = txns
+    .flatMap((t) => t.meetings.map((m) => ({ ...m, txnRef: t.reference, txnId: t.id })))
+    .filter((m) => m.status === 'Scheduled')
+    .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+    .slice(0, 5)
 
-  const anySource = propsRes.source === 'live' && leadsRes.source === 'live'
+  const pendingDataRoom = dataRoom.filter((d) => d.status === 'Pending').length
+  const anySource = propsRes.source === 'live' && txnsRes.source === 'live'
 
   return (
     <>
       <div className="adminHead">
         <div>
           <h1>Dashboard</h1>
-          <p>Portfolio value, lead pipeline and verification throughput, at a glance.</p>
+          <p>Deal pipeline, closed value and verification throughput, at a glance.</p>
         </div>
         <div className="row-wrap">
           <span className={`sourcePill ${anySource ? 'is-live' : 'is-fallback'}`}>
@@ -89,24 +101,24 @@ export default async function AdminDashboard() {
 
       <div className="statRow">
         <div className="statTile">
-          <span className="statTile__value">{cr(pipelineValue)}</span>
+          <span className="statTile__value">{cr(activeValue)}</span>
           <span className="statTile__label">Active pipeline value</span>
-          <span className="statTile__note">{live} live · {reserved} reserved</span>
+          <span className="statTile__note">{active.length} deals in progress</span>
         </div>
         <div className="statTile is-verified">
           <span className="statTile__value">{cr(closedValue)}</span>
           <span className="statTile__label">Closed value</span>
-          <span className="statTile__note">{sold} sold</span>
+          <span className="statTile__note">{closed.length} closed</span>
         </div>
         <div className="statTile is-gold">
-          <span className="statTile__value">{newLeads30d.length}</span>
-          <span className="statTile__label">New leads (30d)</span>
-          <span className="statTile__note">{leads.length} all-time</span>
+          <span className="statTile__value">{cr(commissionCollected)}</span>
+          <span className="statTile__label">Commission collected</span>
+          <span className="statTile__note">{cr(commissionPending)} pending</span>
         </div>
         <div className="statTile">
-          <span className="statTile__value">{conversionPct}%</span>
-          <span className="statTile__label">Lead conversion</span>
-          <span className="statTile__note">{closedLeads.length} of {leads.length} closed</span>
+          <span className="statTile__value">{winRatePct}%</span>
+          <span className="statTile__label">Win rate</span>
+          <span className="statTile__note">{closed.length} closed · {lost.length} lost</span>
         </div>
         <div className="statTile is-progress" style={{ borderTopColor: 'var(--progress)' }}>
           <span className="statTile__value">{aggregate.inProgress}</span>
@@ -118,31 +130,35 @@ export default async function AdminDashboard() {
       <div className="adminGrid two" style={{ marginBottom: 18 }}>
         <div className="adminCard">
           <div className="adminCard__head">
-            <span className="adminCard__title">Lead pipeline</span>
-            <Link href="/admin/leads" className="link-arrow">View inbox</Link>
+            <span className="adminCard__title">Transaction pipeline</span>
+            <Link href="/admin/transactions" className="link-arrow">View board</Link>
           </div>
-          <div className="stack" style={{ gap: 10 }}>
-            {LEAD_STAGES.map((s) => {
-              const count = leads.filter((l) => l.stage === s).length
-              return (
-                <div key={s}>
-                  <div className="row-wrap" style={{ justifyContent: 'space-between', fontSize: '.82rem', marginBottom: 4 }}>
-                    <span style={{ color: 'var(--ink-2)' }}>{s}</span>
-                    <strong style={{ color: 'var(--navy)' }}>{count}</strong>
+          {active.length === 0 ? (
+            <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>No deals in progress.</p>
+          ) : (
+            <div className="stack" style={{ gap: 10 }}>
+              {TXN_STAGES.map((s) => {
+                const count = active.filter((t) => t.stage === s).length
+                return (
+                  <div key={s}>
+                    <div className="row-wrap" style={{ justifyContent: 'space-between', fontSize: '.82rem', marginBottom: 4 }}>
+                      <span style={{ color: 'var(--ink-2)' }}>{s}</span>
+                      <strong style={{ color: 'var(--navy)' }}>{count}</strong>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--line-2)', borderRadius: 100, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          width: `${(count / stageMax) * 100}%`,
+                          height: '100%',
+                          background: 'var(--navy-600)',
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div style={{ height: 6, background: 'var(--line-2)', borderRadius: 100, overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        width: `${(count / leadStageMax) * 100}%`,
-                        height: '100%',
-                        background: s === 'Closed' ? 'var(--verified)' : 'var(--navy-600)',
-                      }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="adminCard">
@@ -182,27 +198,27 @@ export default async function AdminDashboard() {
       <div className="adminGrid two">
         <div className="adminCard">
           <div className="adminCard__head">
-            <span className="adminCard__title">Recent leads</span>
-            <Link href="/admin/leads" className="link-arrow">View all</Link>
+            <span className="adminCard__title">Recent transactions</span>
+            <Link href="/admin/transactions" className="link-arrow">View all</Link>
           </div>
-          {recentLeads.length === 0 ? (
-            <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>No leads yet.</p>
+          {recentTxns.length === 0 ? (
+            <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>No transactions yet.</p>
           ) : (
             <div className="stack" style={{ gap: 12 }}>
-              {recentLeads.map((l: Lead) => (
-                <div key={l.id} className="row-wrap" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              {recentTxns.map((t) => (
+                <div key={t.id} className="row-wrap" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '.87rem' }}>{l.name}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '.87rem' }}>{t.property_label}</div>
                     <div style={{ fontSize: '.76rem', color: 'var(--muted)' }}>
-                      {l.kind} · {l.channel} · {timeAgo(l.created_at)}
+                      {t.reference} · {t.deal_value_cr ? cr(t.deal_value_cr) : 'Value TBD'} · {fmtDate(t.opened_at)}
                     </div>
                   </div>
                   <span
                     className={`badge badge-${
-                      l.stage === 'New' ? 'pending' : l.stage === 'Closed' ? 'sold' : l.stage === 'Visit' ? 'verified' : 'progress'
+                      t.outcome === 'Closed' ? 'verified' : t.outcome === 'Lost' ? 'flagged' : 'progress'
                     }`}
                   >
-                    {l.stage}
+                    {t.outcome === 'In progress' ? t.stage : t.outcome}
                   </span>
                 </div>
               ))}
@@ -212,19 +228,28 @@ export default async function AdminDashboard() {
 
         <div className="adminCard">
           <div className="adminCard__head">
-            <span className="adminCard__title">Verification & documents</span>
-            <Link href="/admin/verifications" className="link-arrow">Open board</Link>
+            <span className="adminCard__title">Upcoming meetings</span>
+            <Link href="/admin/verifications" className="link-arrow">Verification board</Link>
           </div>
-          <div className="statRow" style={{ gridTemplateColumns: 'repeat(2, 1fr)', marginBottom: 16 }}>
-            <div className="statTile" style={{ padding: 14 }}>
-              <span className="statTile__value" style={{ fontSize: '1.3rem' }}>{aggregate.verified}</span>
-              <span className="statTile__label">Verified</span>
+          {upcomingMeetings.length === 0 ? (
+            <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>Nothing scheduled.</p>
+          ) : (
+            <div className="stack" style={{ gap: 12, marginBottom: 16 }}>
+              {upcomingMeetings.map((m) => (
+                <div key={m.id} className="row-wrap" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '.87rem' }}>{m.title}</div>
+                    <div style={{ fontSize: '.76rem', color: 'var(--muted)' }}>
+                      {m.with} · {m.txnRef}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '.76rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                    {fmtDateTime(m.scheduled_at)}
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className="statTile is-flagged" style={{ padding: 14 }}>
-              <span className="statTile__value" style={{ fontSize: '1.3rem' }}>{aggregate.flagged}</span>
-              <span className="statTile__label">Flagged</span>
-            </div>
-          </div>
+          )}
           <div
             className="row-wrap"
             style={{ justifyContent: 'space-between', fontSize: '.85rem', paddingTop: 14, borderTop: '1px solid var(--line)' }}
