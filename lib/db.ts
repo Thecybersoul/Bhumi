@@ -6,6 +6,8 @@ import {
   seedLeads,
   seedDataRoomRequests,
   seedTransactions,
+  seedNotes,
+  seedTasks,
 } from './data/seed'
 import type {
   Property,
@@ -15,6 +17,8 @@ import type {
   DataRoomRequest,
   VerificationStageKey,
   PropertyTransaction,
+  Note,
+  Task,
 } from './types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -182,6 +186,16 @@ export async function getTransactions(): Promise<Result<PropertyTransaction[]>> 
   return read<PropertyTransaction[]>('transactions', seedTransactions, (q) =>
     q.select('*').order('opened_at', { ascending: false })
   )
+}
+
+/* ─── Notes & tasks ──────────────────────────────────────── */
+
+export async function getNotes(): Promise<Result<Note[]>> {
+  return read<Note[]>('notes', seedNotes, (q) => q.select('*').order('created_at', { ascending: false }))
+}
+
+export async function getTasks(): Promise<Result<Task[]>> {
+  return read<Task[]>('tasks', seedTasks, (q) => q.select('*').order('due_at', { ascending: true, nullsFirst: false }))
 }
 
 /* ─── Writes ─────────────────────────────────────────────── */

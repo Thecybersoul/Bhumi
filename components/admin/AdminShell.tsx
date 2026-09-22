@@ -6,21 +6,23 @@ import { usePathname, useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
 import Icon, { type IconName } from '@/components/site/Icon'
 
-/* ERP-first ordering: the business — inventory, leads, verification,
-   documents — leads. Editing the site's copy and reference material
-   are real jobs too, but they are not what this admin is for, so
-   they sit lower rather than competing with the work at the top. */
+/* Four things run this business day to day: the inventory, the
+   deal pipeline (which leads and data-room requests both feed),
+   the properties' verification status (folded into Properties —
+   a case is always about one specific parcel), and the follow-up
+   memory (Notes & Tasks). Everything else — editing the site's
+   copy, the original business-plan reference material, database
+   setup — is either a lower-frequency job (Content) or a utility
+   (Setup, in the footer) rather than something to check daily. */
 
 const nav: { group: string; items: { href: string; label: string; icon: IconName; hint?: string }[] }[] = [
   {
     group: 'Business',
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', icon: 'gauge' },
-      { href: '/admin/properties', label: 'Properties', icon: 'land' },
-      { href: '/admin/transactions', label: 'Transactions', icon: 'balance', hint: 'Deals being bought or sold' },
-      { href: '/admin/leads', label: 'Leads', icon: 'handshake' },
-      { href: '/admin/verifications', label: 'Verification', icon: 'shield' },
-      { href: '/admin/data-room', label: 'Document requests', icon: 'lock' },
+      { href: '/admin/properties', label: 'Properties', icon: 'land', hint: 'Listings & verification' },
+      { href: '/admin/deals', label: 'Deals', icon: 'balance', hint: 'Pipeline, leads & documents' },
+      { href: '/admin/notes-tasks', label: 'Notes & Tasks', icon: 'checklist' },
     ],
   },
   {
@@ -31,14 +33,6 @@ const nav: { group: string; items: { href: string; label: string; icon: IconName
       { href: '/admin/content/branding', label: 'Branding & Advertising', icon: 'billboard' },
       { href: '/admin/content/brand', label: 'Brand & contact', icon: 'mail' },
       { href: '/admin/media', label: 'Media', icon: 'map' },
-    ],
-  },
-  {
-    group: 'System',
-    items: [
-      { href: '/admin/metrics', label: 'Metrics', icon: 'checklist' },
-      { href: '/admin/plan', label: 'Business plan', icon: 'compare' },
-      { href: '/admin/setup', label: 'Setup', icon: 'gauge', hint: 'Database status' },
     ],
   },
 ]
@@ -87,6 +81,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="adminSidebar__foot">
           <Link href="/" target="_blank" className="adminSidebar__view">
             <Icon name="arrow" size={14} /> View the live site
+          </Link>
+          <Link href="/admin/setup" onClick={() => setOpen(false)} className="adminSidebar__view">
+            <Icon name="gauge" size={14} /> Setup & database status
           </Link>
           <button className="btn btn-sm btn-ghost btn-block" onClick={logout}>
             Sign out

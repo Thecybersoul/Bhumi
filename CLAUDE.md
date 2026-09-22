@@ -78,13 +78,35 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`, `005`, `006`, `007`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`008`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
-`properties` (inventory on offer). `schema.sql` itself carries no seed data by design — a listing represents
-real land, so demo rows belong only in `lib/data/seed.ts`, the in-code fallback. The service-role key reaches
-PostgREST and Storage but *cannot* execute DDL; that is why `npm run migrate` needs `SUPABASE_DB_URL` (a real
-Postgres connection string) separately from the Supabase keys.
+`properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
+have optional `entity_type`/`entity_id`/`entity_label` columns so a note or task can point at a specific
+lead, transaction, property or verification case, but the shipped UI (`/admin/notes-tasks`) only writes
+`entity_type: 'general'` for now — per-record linking is future work, not yet built. `schema.sql` itself
+carries no seed data by design — a listing represents real land, so demo rows belong only in
+`lib/data/seed.ts`, the in-code fallback. The service-role key reaches PostgREST and Storage but *cannot*
+execute DDL; that is why `npm run migrate` needs `SUPABASE_DB_URL` (a real Postgres connection string)
+separately from the Supabase keys.
+
+### The admin nav folds related views under one entry, not one nav item per table
+
+`/admin/deals` is one page with three tabs (Pipeline, Leads, Document requests) built with the shared
+`AdminTabs` component (`components/admin/AdminTabs.tsx`) — each tab's content is a normal server-rendered
+component (`TransactionBoard`, `LeadInbox`, `DataRoomQueue`) fetched in parallel by the page and handed to
+`AdminTabs` as already-rendered children; switching tabs only toggles `display`, it never remounts, so a
+filter typed into one tab survives a trip to another. `/admin/properties` does the same for Listings and
+Verification, since a verification case is always about one specific parcel. `?tab=<id>` on either route
+preselects a tab (used by cross-links from `/admin/metrics` and the dashboard). Adding a fourth related view
+to either page means adding a tab, not a new top-level nav entry — that consolidation is deliberate, not an
+oversight to "fix" by splitting them back out.
+
+Metrics and Business plan (`/admin/metrics`, `/admin/plan`) are static reference material tied to the
+original business-plan document. They're intentionally **not in the sidebar nav** (routes still work,
+reachable by URL) — day-to-day ERP use doesn't need them front and center. Setup lives in the sidebar
+footer, not the main nav, for the same reason: it's a utility you check when something looks wrong, not
+part of the daily flow.
 
 ## Conventions
 

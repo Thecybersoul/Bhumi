@@ -26,7 +26,7 @@ export default async function MetricsPage() {
       tells: 'Which practice the site is actually generating demand for. If one is near zero, either its page is not working or the market is telling us something.',
       observable: `${propertyLeads.length} property · ${brandingLeads.length} branding`,
       where: 'Lead inbox, filtered by source',
-      href: '/admin/leads',
+      href: '/admin/deals?tab=leads',
       status: leads.length > 0 ? 'Tracking' : 'No leads yet',
     },
     {
@@ -36,7 +36,7 @@ export default async function MetricsPage() {
         leads.length ? Math.round((whatsappLeads.length / leads.length) * 100) : 0
       }%)`,
       where: 'Lead inbox, channel column',
-      href: '/admin/leads',
+      href: '/admin/deals?tab=leads',
       status: 'Tracking',
     },
     {
@@ -52,7 +52,7 @@ export default async function MetricsPage() {
       tells: 'Whether larger enquiries are reaching the point of asking for detail.',
       observable: `${dataRoom.length} requests · ${dataRoom.filter((d) => d.status === 'Approved').length} approved`,
       where: 'Data room queue',
-      href: '/admin/data-room',
+      href: '/admin/deals?tab=documents',
       status: dataRoom.length > 0 ? 'Tracking' : 'No requests yet',
     },
     {
@@ -89,7 +89,7 @@ export default async function MetricsPage() {
       tells: 'Where cases are actually getting stuck — the operational reason turnaround slips, and the thing a client notices first.',
       observable: `${cases.filter((c) => c.outcome === 'In progress').length} cases currently open`,
       where: 'Verification pipeline — overview flags cases past twice their stage duration',
-      href: '/admin/verifications',
+      href: '/admin/properties?tab=verification',
       status: 'Tracking',
     },
     {
@@ -97,7 +97,7 @@ export default async function MetricsPage() {
       tells: 'The one that decides whether any of the rest matters. If enquiries are healthy and this is not, the problem is pricing or the pitch, not traffic.',
       observable: `${leads.filter((l) => l.stage === 'Closed').length} of ${leads.length} leads converted`,
       where: 'Lead inbox, stage column',
-      href: '/admin/leads',
+      href: '/admin/deals?tab=leads',
       status: leads.length > 0 ? 'Tracking' : 'No leads yet',
     },
   ]

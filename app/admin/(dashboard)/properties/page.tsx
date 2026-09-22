@@ -1,14 +1,20 @@
 import Link from 'next/link'
-import { getProperties } from '@/lib/db'
+import AdminTabs from '@/components/admin/AdminTabs'
+import VerificationBoard from '@/components/admin/VerificationBoard'
+import { getProperties, getVerificationCases, deriveFromCases } from '@/lib/db'
 import { propertyTypes, getPropertyType } from '@/lib/content/propertyTypes'
 import { verificationStages } from '@/lib/content/verification'
+import type { Property } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Listings · Admin' }
+export const metadata = { title: 'Properties · Admin' }
 
-export default async function AdminProperties() {
-  const { data, source } = await getProperties({ admin: true })
+/* Verification used to be its own nav entry, but a verification
+   case is always about one specific parcel — it belongs next to
+   the inventory it verifies, not in a separate place someone has
+   to remember to also check. */
 
+function ListingsTab({ data, source }: { data: Property[]; source: 'live' | 'fallback' }) {
   const byType = propertyTypes.map((t) => ({
     ...t,
     count: data.filter((p) => p.property_type === t.slug).length,
@@ -215,5 +221,32 @@ export default async function AdminProperties() {
         </span>
       </div>
     </>
+  )
+}
+
+export default async function AdminProperties({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const [{ data, source }, { data: cases, source: caseSource }] = await Promise.all([
+    getProperties({ admin: true }),
+    getVerificationCases(),
+  ])
+
+  return (
+    <AdminTabs
+      defaultTab={tab}
+      tabs={[
+        { id: 'listings', label: 'Listings', count: data.length, content: <ListingsTab data={data} source={source} /> },
+        {
+          id: 'verification',
+          label: 'Verification',
+          count: cases.length,
+          content: <VerificationBoard cases={cases} source={caseSource} aggregate={deriveFromCases(cases)} />,
+        },
+      ]}
+    />
   )
 }

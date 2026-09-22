@@ -86,14 +86,13 @@ Run migrations in the Supabase SQL editor in order:
 
 | Route | What it does |
 |---|---|
-| `/admin/dashboard` | Operating picture; flags cases past twice their stage's typical duration |
-| `/admin/verifications` | The six-stage board. Click a stage to cycle it; a flag closes the case |
-| `/admin/leads` | One inbox for every conversion path, each lead carrying its qualifying inputs |
-| `/admin/data-room` | NDA-gated requests, released or declined by a named advisor |
-| `/admin/properties` | Listings, with the per-class critical field checked |
+| `/admin/dashboard` | Deal-pipeline KPIs, a trend chart, advisor performance, leads by channel |
+| `/admin/properties` | Tabs: Listings (per-class critical field checked) · Verification (the four-stage board) |
+| `/admin/deals` | Tabs: Pipeline (transactions) · Leads · Document requests — one funnel, three views |
+| `/admin/notes-tasks` | Follow-ups and a running note log, optionally tied to a lead/transaction/property |
 | `/admin/transparency` | Published figures reconciled against the live case record |
-| `/admin/metrics` | Plan §13, each metric tied to where it is observable today |
-| `/admin/plan` | What the plan asked for, and where each requirement now lives |
+| `/admin/metrics` | Plan §13, each metric tied to where it is observable today — reference only, not in the nav |
+| `/admin/plan` | What the plan asked for, and where each requirement now lives — reference only, not in the nav |
 
 Admin APIs (`GET /api/leads`, `?admin=1` on properties, verification case detail, uploads) all return 401
 without a session. Only the aggregate at `/api/verifications?aggregate=1` is public.

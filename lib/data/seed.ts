@@ -5,6 +5,8 @@ import type {
   Lead,
   DataRoomRequest,
   PropertyTransaction,
+  Note,
+  Task,
 } from '@/lib/types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -180,3 +182,7 @@ export const seedLeads: Lead[] = []
 export const seedDataRoomRequests: DataRoomRequest[] = []
 
 export const seedTransactions: PropertyTransaction[] = []
+
+export const seedNotes: Note[] = []
+
+export const seedTasks: Task[] = []

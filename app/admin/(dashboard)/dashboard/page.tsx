@@ -197,7 +197,7 @@ export default async function AdminDashboard() {
         <div className="adminCard">
           <div className="adminCard__head">
             <span className="adminCard__title">Transaction pipeline</span>
-            <Link href="/admin/transactions" className="link-arrow">View board</Link>
+            <Link href="/admin/deals" className="link-arrow">View board</Link>
           </div>
           {active.length === 0 ? (
             <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>No deals in progress.</p>
@@ -301,7 +301,7 @@ export default async function AdminDashboard() {
         <div className="adminCard">
           <div className="adminCard__head">
             <span className="adminCard__title">Leads by channel</span>
-            <Link href="/admin/leads" className="link-arrow">View inbox</Link>
+            <Link href="/admin/deals?tab=leads" className="link-arrow">View inbox</Link>
           </div>
           {channels.length === 0 ? (
             <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>No leads yet.</p>
@@ -330,7 +330,7 @@ export default async function AdminDashboard() {
         <div className="adminCard">
           <div className="adminCard__head">
             <span className="adminCard__title">Recent transactions</span>
-            <Link href="/admin/transactions" className="link-arrow">View all</Link>
+            <Link href="/admin/deals" className="link-arrow">View all</Link>
           </div>
           {recentTxns.length === 0 ? (
             <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>No transactions yet.</p>
@@ -360,7 +360,7 @@ export default async function AdminDashboard() {
         <div className="adminCard">
           <div className="adminCard__head">
             <span className="adminCard__title">Upcoming meetings</span>
-            <Link href="/admin/verifications" className="link-arrow">Verification board</Link>
+            <Link href="/admin/deals" className="link-arrow">View pipeline</Link>
           </div>
           {upcomingMeetings.length === 0 ? (
             <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>Nothing scheduled.</p>
@@ -386,7 +386,7 @@ export default async function AdminDashboard() {
             style={{ justifyContent: 'space-between', fontSize: '.85rem', paddingTop: 14, borderTop: '1px solid var(--line)' }}
           >
             <span style={{ color: 'var(--ink-2)' }}>Pending document requests</span>
-            <Link href="/admin/data-room" className="link-arrow">
+            <Link href="/admin/deals?tab=documents" className="link-arrow">
               <strong style={{ color: pendingDataRoom ? 'var(--navy)' : 'var(--muted)' }}>{pendingDataRoom}</strong>
             </Link>
           </div>

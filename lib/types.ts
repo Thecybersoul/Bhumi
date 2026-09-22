@@ -313,3 +313,42 @@ export interface TransparencyStats {
   acreage_reviewed: number
   methodology: string
 }
+
+/* ─── Notes & tasks ──────────────────────────────────────── */
+/* The one thing an ERP is for that a website never needed: a place
+   to write down what was said on a call and what has to happen
+   next. `entity_type`/`entity_id` let a note or task point at a
+   specific lead, transaction, property or verification case —
+   `entity_label` carries a human-readable reference (a code, a
+   name) so the UI never has to join across tables just to show
+   what something is about. Both are optional: a note or task with
+   no entity is simply general — a reminder, not a record about
+   anything in particular. */
+export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'general'
+
+export interface Note {
+  id: string
+  entity_type: LinkedEntityType
+  entity_id?: string | null
+  entity_label?: string
+  body: string
+  author?: string
+  created_at: string
+}
+
+export type TaskStatus = 'Open' | 'Done'
+export type TaskPriority = 'Low' | 'Normal' | 'High'
+
+export interface Task {
+  id: string
+  title: string
+  entity_type: LinkedEntityType
+  entity_id?: string | null
+  entity_label?: string
+  due_at?: string | null
+  status: TaskStatus
+  priority: TaskPriority
+  assignee?: string
+  created_at: string
+  completed_at?: string | null
+}

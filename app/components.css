@@ -1235,6 +1235,23 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 .adminGrid.sidebarRight { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
 @media (max-width: 1100px) { .adminGrid.two, .adminGrid.sidebarRight { grid-template-columns: 1fr; } }
 
+/* Tabs folding several related admin views under one nav entry */
+.adminTabs { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+.adminTabs__item {
+  background: none; border: 0; cursor: pointer; padding: 10px 4px; margin-bottom: -1px;
+  font-family: var(--sans); font-size: var(--text-base); font-weight: 600; color: var(--muted);
+  border-bottom: 2px solid transparent; transition: var(--duration-fast) var(--ease);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.adminTabs__item + .adminTabs__item { margin-left: 14px; }
+.adminTabs__item:hover { color: var(--ink); }
+.adminTabs__item.is-active { color: var(--navy); border-bottom-color: var(--gold); }
+.adminTabs__count {
+  font-family: var(--mono); font-size: var(--text-2xs); font-weight: 700; color: var(--muted);
+  background: var(--line-2); padding: 1px 7px; border-radius: 100px;
+}
+.adminTabs__item.is-active .adminTabs__count { background: var(--navy-tint); color: var(--navy-700); }
+
 /* Verification pipeline board */
 .pipeline { display: grid; gap: 12px; }
 .pipelineCase { background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 20px; }
