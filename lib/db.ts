@@ -78,6 +78,16 @@ export async function getProperty(code: string): Promise<Result<Property | null>
   return { ...res, data: res.data.find((p) => p.code === code || p.id === code) ?? null }
 }
 
+/** Best available estimate of a listing's deal value in ₹ crore, from
+    whichever price fields the source document actually gave — a
+    headline total, an acre rate, or a built-up rate. */
+export function dealValueCr(p: Property): number | undefined {
+  if (p.price_total_cr) return p.price_total_cr
+  if (p.extent_acres && p.price_per_acre_cr) return p.extent_acres * p.price_per_acre_cr
+  if (p.built_up_sqft && p.price_per_sqft) return (p.built_up_sqft * p.price_per_sqft) / 1e7
+  return undefined
+}
+
 /* ─── Verification cases ─────────────────────────────────── */
 
 export async function getVerificationCases(): Promise<Result<VerificationCase[]>> {

@@ -6,41 +6,36 @@ import { usePathname, useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
 import Icon, { type IconName } from '@/components/site/Icon'
 
-/* Organised around what someone actually comes here to do. Editing
-   the site is the common case and leads; operating the pipeline and
-   reading enquiries follow; reference material sits last rather than
-   competing with the work. */
+/* ERP-first ordering: the business — inventory, leads, verification,
+   documents — leads. Editing the site's copy and reference material
+   are real jobs too, but they are not what this admin is for, so
+   they sit lower rather than competing with the work at the top. */
 
 const nav: { group: string; items: { href: string; label: string; icon: IconName; hint?: string }[] }[] = [
   {
-    group: 'Edit the site',
+    group: 'Business',
     items: [
-      { href: '/admin/dashboard', label: 'Overview', icon: 'gauge' },
-      { href: '/admin/content/home', label: 'Homepage', icon: 'structure' },
-      { href: '/admin/content/property', label: 'Property Consultancy', icon: 'land' },
-      { href: '/admin/content/branding', label: 'Branding & Advertising', icon: 'billboard' },
-      { href: '/admin/content/brand', label: 'Brand & contact', icon: 'shield', hint: 'Name, phone, socials' },
-      { href: '/admin/media', label: 'Media', icon: 'map', hint: 'Images, video, PDFs' },
-    ],
-  },
-  {
-    group: 'Inventory',
-    items: [
-      { href: '/admin/properties', label: 'Listings', icon: 'land' },
-      { href: '/admin/verifications', label: 'Verification pipeline', icon: 'shield', hint: 'The four-stage board' },
-    ],
-  },
-  {
-    group: 'Enquiries',
-    items: [
-      { href: '/admin/leads', label: 'Lead inbox', icon: 'handshake', hint: 'Every conversion path' },
+      { href: '/admin/dashboard', label: 'Dashboard', icon: 'gauge' },
+      { href: '/admin/properties', label: 'Properties', icon: 'land' },
+      { href: '/admin/leads', label: 'Leads', icon: 'handshake' },
+      { href: '/admin/verifications', label: 'Verification', icon: 'shield' },
       { href: '/admin/data-room', label: 'Document requests', icon: 'lock' },
     ],
   },
   {
-    group: 'Reference',
+    group: 'Content',
     items: [
-      { href: '/admin/metrics', label: 'What to measure', icon: 'checklist' },
+      { href: '/admin/content/home', label: 'Homepage', icon: 'structure' },
+      { href: '/admin/content/property', label: 'Property Consultancy', icon: 'land-parcels' },
+      { href: '/admin/content/branding', label: 'Branding & Advertising', icon: 'billboard' },
+      { href: '/admin/content/brand', label: 'Brand & contact', icon: 'mail' },
+      { href: '/admin/media', label: 'Media', icon: 'map' },
+    ],
+  },
+  {
+    group: 'System',
+    items: [
+      { href: '/admin/metrics', label: 'Metrics', icon: 'checklist' },
       { href: '/admin/plan', label: 'Business plan', icon: 'compare' },
       { href: '/admin/setup', label: 'Setup', icon: 'gauge', hint: 'Database status' },
     ],
