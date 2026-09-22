@@ -2,7 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Icon from '@/components/site/Icon'
 import CopyBlock from '@/components/admin/CopyBlock'
+import GoogleCalendarCard from '@/components/admin/GoogleCalendarCard'
 import { checkHealth } from '@/lib/cms'
+import { hasGoogleAuth, isConnected } from '@/lib/google'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Setup · Admin' }
@@ -37,12 +39,18 @@ function readMigrations() {
   }
 }
 
-export default async function SetupPage() {
+export default async function SetupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ google?: string; google_message?: string }>
+}) {
   const health = await checkHealth()
   const ref = projectRef(process.env.NEXT_PUBLIC_SUPABASE_URL)
   const migrations = readMigrations()
   const missing = health.tables.filter((t) => !t.exists)
   const done = health.state === 'live' || health.state === 'empty'
+  const { google, google_message } = await searchParams
+  const [googleConfigured, googleConnected] = await Promise.all([hasGoogleAuth(), isConnected()])
 
   return (
     <>
@@ -86,6 +94,13 @@ export default async function SetupPage() {
           </ul>
         )}
       </section>
+
+      <GoogleCalendarCard
+        configured={googleConfigured}
+        connected={googleConnected}
+        result={google}
+        errorMessage={google_message}
+      />
 
       {done ? (
         <div className="emptyPanel">

@@ -351,4 +351,8 @@ export interface Task {
   assignee?: string
   created_at: string
   completed_at?: string | null
+  /** Set once the task is synced to Google Calendar — see
+      lib/google.ts. Absent until then, and cleared if unsynced. */
+  google_event_id?: string | null
+  google_meet_url?: string | null
 }

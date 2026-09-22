@@ -20,10 +20,12 @@ export default function NotesTasksBoard({
   tasks: initialTasks,
   notes: initialNotes,
   source,
+  googleConnected,
 }: {
   tasks: Task[]
   notes: Note[]
   source: 'live' | 'fallback'
+  googleConnected: boolean
 }) {
   const router = useRouter()
   const [tasks, setTasks] = useState(initialTasks)
@@ -116,6 +118,38 @@ export default function NotesTasksBoard({
     try {
       await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
       router.refresh()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function syncCalendar(t: Task) {
+    setBusy(`cal-${t.id}`)
+    try {
+      const res = await fetch(`/api/tasks/${t.id}/calendar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: t.title, due_at: t.due_at, entity_label: t.entity_label }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'Could not sync')
+      setTasks((prev) =>
+        prev.map((x) => (x.id === t.id ? { ...x, google_event_id: body.google_event_id, google_meet_url: body.google_meet_url } : x))
+      )
+      say('Synced to Google Calendar')
+    } catch (e) {
+      say((e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function unsyncCalendar(t: Task) {
+    setBusy(`cal-${t.id}`)
+    try {
+      await fetch(`/api/tasks/${t.id}/calendar?event_id=${encodeURIComponent(t.google_event_id ?? '')}`, { method: 'DELETE' })
+      setTasks((prev) => (prev.map((x) => (x.id === t.id ? { ...x, google_event_id: null, google_meet_url: null } : x))))
+      say('Removed from calendar')
     } finally {
       setBusy(null)
     }
@@ -265,10 +299,31 @@ export default function NotesTasksBoard({
                         {t.entity_label && ` · ${t.entity_label}`}
                         {t.assignee && ` · ${t.assignee}`}
                       </div>
+                      {t.google_meet_url && (
+                        <a
+                          href={t.google_meet_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="link-arrow"
+                          style={{ fontSize: '.74rem', marginTop: 2, display: 'inline-flex' }}
+                        >
+                          Join Google Meet
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div className="row-wrap" style={{ gap: 6, flexShrink: 0 }}>
                     {t.priority === 'High' && <span className="badge badge-flagged">High</span>}
+                    {googleConnected && t.due_at && (
+                      <button
+                        className="btn btn-xs btn-ghost"
+                        onClick={() => (t.google_event_id ? unsyncCalendar(t) : syncCalendar(t))}
+                        disabled={busy === `cal-${t.id}`}
+                        title={t.google_event_id ? 'Remove from Google Calendar' : 'Add to Google Calendar with a Meet link'}
+                      >
+                        {t.google_event_id ? 'Synced ✓' : 'Sync to Calendar'}
+                      </button>
+                    )}
                     <button className="btn btn-xs btn-ghost" onClick={() => deleteTask(t.id)} disabled={busy === t.id}>
                       Remove
                     </button>
