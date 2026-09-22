@@ -95,5 +95,10 @@ export async function POST(req: NextRequest) {
   })
 
   attempts.delete(ip)
-  return NextResponse.json({ ok: true })
+  // The cookie is what the web admin uses; the token in the body is
+  // for the mobile app, which has nowhere to keep a browser cookie
+  // and stores this in SecureStore instead, sending it back as
+  // `Authorization: Bearer <token>`. Same token, same TTL, same
+  // verifySessionToken() check either way — see lib/auth.ts.
+  return NextResponse.json({ ok: true, token })
 }
