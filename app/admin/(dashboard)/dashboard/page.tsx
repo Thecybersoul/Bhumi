@@ -1,7 +1,16 @@
 import Link from 'next/link'
 import { checkHealth } from '@/lib/cms'
-import { getProperties, getTransactions, getVerificationCases, getDataRoomRequests, deriveFromCases, dealValueCr } from '@/lib/db'
+import {
+  getProperties,
+  getTransactions,
+  getVerificationCases,
+  getDataRoomRequests,
+  getLeads,
+  deriveFromCases,
+  dealValueCr,
+} from '@/lib/db'
 import type { Property, PropertyStatus, PropertyTransaction, TransactionStage } from '@/lib/types'
+import TrendChart from '@/components/admin/TrendChart'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Dashboard · Admin' }
@@ -33,19 +42,43 @@ function fmtDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
+/** Count of `items` opened per week, oldest to newest, over the last
+    `weeks` seven-day windows ending today. Used for the one trend
+    line the dashboard leads with — momentum, not a snapshot. */
+function weeklyCounts(items: { opened_at: string }[], weeks: number) {
+  const todayEnd = new Date()
+  todayEnd.setHours(23, 59, 59, 999)
+  const buckets = Array.from({ length: weeks }, (_, i) => {
+    const to = new Date(todayEnd)
+    to.setDate(to.getDate() - (weeks - 1 - i) * 7)
+    const from = new Date(to)
+    from.setDate(from.getDate() - 6)
+    from.setHours(0, 0, 0, 0)
+    return { label: from.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }), from: from.getTime(), to: to.getTime(), value: 0 }
+  })
+  for (const it of items) {
+    const t = new Date(it.opened_at).getTime()
+    const bucket = buckets.find((b) => t >= b.from && t <= b.to)
+    if (bucket) bucket.value += 1
+  }
+  return buckets.map(({ label, value }) => ({ label, value }))
+}
+
 export default async function AdminDashboard() {
-  const [health, propsRes, txnsRes, casesRes, dataRoomRes] = await Promise.all([
+  const [health, propsRes, txnsRes, casesRes, dataRoomRes, leadsRes] = await Promise.all([
     checkHealth(),
     getProperties({ admin: true }),
     getTransactions(),
     getVerificationCases(),
     getDataRoomRequests(),
+    getLeads(),
   ])
 
   const props = propsRes.data
   const txns = txnsRes.data
   const cases = casesRes.data
   const dataRoom = dataRoomRes.data
+  const leads = leadsRes.data
   const aggregate = deriveFromCases(cases)
 
   const active = txns.filter((t) => t.outcome === 'In progress')
@@ -71,6 +104,29 @@ export default async function AdminDashboard() {
 
   const pendingDataRoom = dataRoom.filter((d) => d.status === 'Pending').length
   const anySource = propsRes.source === 'live' && txnsRes.source === 'live'
+
+  const weeklyDeals = weeklyCounts(txns, 10)
+
+  const advisorNames = Array.from(
+    new Set(txns.map((t) => t.advisor?.trim()).filter((a): a is string => Boolean(a)))
+  )
+  const advisorStats = advisorNames
+    .map((name) => {
+      const mine = txns.filter((t) => t.advisor?.trim() === name)
+      const mineClosed = mine.filter((t) => t.outcome === 'Closed')
+      const mineDecided = mineClosed.length + mine.filter((t) => t.outcome === 'Lost').length
+      return {
+        name,
+        total: mine.length,
+        active: mine.filter((t) => t.outcome === 'In progress').length,
+        closedValue: mineClosed.reduce((sum, t) => sum + (t.deal_value_cr ?? 0), 0),
+        winRate: mineDecided ? Math.round((mineClosed.length / mineDecided) * 100) : null,
+      }
+    })
+    .sort((a, b) => b.closedValue - a.closedValue || b.total - a.total)
+
+  const channels = Array.from(new Set(leads.map((l) => l.channel)))
+  const channelMax = Math.max(...channels.map((c) => leads.filter((l) => l.channel === c).length), 1)
 
   return (
     <>
@@ -125,6 +181,16 @@ export default async function AdminDashboard() {
           <span className="statTile__label">Verifications in review</span>
           <span className="statTile__note">Median {aggregate.medianTurnaround || '—'}d to certificate</span>
         </div>
+      </div>
+
+      <div className="adminCard" style={{ marginBottom: 18 }}>
+        <div className="adminCard__head">
+          <div>
+            <span className="adminCard__title">New deals, last 10 weeks</span>
+            <span className="adminCard__sub" style={{ display: 'block' }}>Momentum, not a snapshot — hover a week for its count.</span>
+          </div>
+        </div>
+        <TrendChart data={weeklyDeals} title="New deals" />
       </div>
 
       <div className="adminGrid two" style={{ marginBottom: 18 }}>
@@ -192,6 +258,71 @@ export default async function AdminDashboard() {
               )
             })}
           </div>
+        </div>
+      </div>
+
+      <div className="adminGrid two" style={{ marginBottom: 18 }}>
+        <div className="adminCard" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="adminCard__head" style={{ padding: '24px 24px 0' }}>
+            <span className="adminCard__title">Advisor performance</span>
+          </div>
+          {advisorStats.length === 0 ? (
+            <p style={{ fontSize: '.85rem', color: 'var(--muted)', padding: '0 24px 24px' }}>
+              No transactions have an advisor assigned yet.
+            </p>
+          ) : (
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Advisor</th>
+                    <th>Deals</th>
+                    <th>Active</th>
+                    <th>Closed value</th>
+                    <th>Win rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {advisorStats.map((a) => (
+                    <tr key={a.name}>
+                      <td style={{ fontWeight: 600, color: 'var(--navy)' }}>{a.name}</td>
+                      <td>{a.total}</td>
+                      <td>{a.active}</td>
+                      <td>{cr(a.closedValue)}</td>
+                      <td>{a.winRate == null ? '—' : `${a.winRate}%`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="adminCard">
+          <div className="adminCard__head">
+            <span className="adminCard__title">Leads by channel</span>
+            <Link href="/admin/leads" className="link-arrow">View inbox</Link>
+          </div>
+          {channels.length === 0 ? (
+            <p style={{ fontSize: '.85rem', color: 'var(--muted)' }}>No leads yet.</p>
+          ) : (
+            <div className="stack" style={{ gap: 10 }}>
+              {channels.map((c) => {
+                const count = leads.filter((l) => l.channel === c).length
+                return (
+                  <div key={c}>
+                    <div className="row-wrap" style={{ justifyContent: 'space-between', fontSize: '.82rem', marginBottom: 4 }}>
+                      <span style={{ color: 'var(--ink-2)' }}>{c}</span>
+                      <strong style={{ color: 'var(--navy)' }}>{count}</strong>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--line-2)', borderRadius: 100, overflow: 'hidden' }}>
+                      <div style={{ width: `${(count / channelMax) * 100}%`, height: '100%', background: 'var(--navy-600)' }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
