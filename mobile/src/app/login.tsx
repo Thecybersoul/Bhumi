@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useSession } from '@/lib/auth'
 import { colors, radius, space, text } from '@/lib/theme'
 
@@ -18,7 +18,11 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.card}>
-        <Text style={styles.brand}>BHUMI ESTATES</Text>
+        <Image
+          source={require('../../assets/wordmark-light.png')}
+          style={styles.wordmark}
+          resizeMode="contain"
+        />
         <Text style={styles.title}>Advisory desk</Text>
         <Text style={styles.sub}>Deals, leads, verification and the notes that go with them.</Text>
 
@@ -53,7 +57,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.navy, alignItems: 'center', justifyContent: 'center', padding: space.lg },
   card: { width: '100%', maxWidth: 380, backgroundColor: colors.white, borderRadius: radius.xl, padding: space.xl },
-  brand: { fontSize: text.xs, fontWeight: '700', color: colors.goldDeep, letterSpacing: 2, marginBottom: 8 },
+  wordmark: { width: 180, height: 180 * (1167 / 5394), marginBottom: space.md },
   title: { fontSize: text['2xl'], fontWeight: '700', color: colors.navy },
   sub: { fontSize: text.md, color: colors.ink2, marginTop: 6, marginBottom: space.lg },
   input: {

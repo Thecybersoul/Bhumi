@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router'
+import { Image } from 'react-native'
 import { colors, text } from '@/lib/theme'
 
 export default function TabsLayout() {
@@ -8,6 +9,13 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: colors.navy },
         headerTintColor: colors.white,
         headerTitleStyle: { fontWeight: '700' },
+        headerLeft: () => (
+          <Image
+            source={require('../../../assets/monogram.png')}
+            style={{ width: 26, height: 26, marginLeft: 16, marginRight: 4 }}
+            resizeMode="contain"
+          />
+        ),
         tabBarActiveTintColor: colors.navy,
         tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: { fontSize: text['2xs'], fontWeight: '600' },
