@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logActivity } from '@/lib/activity'
 import { assertAdmin } from '@/lib/auth'
 import { setContent, resetContent, getContent } from '@/lib/cms'
 import { getBlockDef } from '@/lib/content/schema'
@@ -44,6 +45,7 @@ export async function PUT(req: NextRequest) {
     }
 
     await setContent(key, clean)
+    await logActivity({ action: 'update', entity_type: 'website', entity_id: key, entity_label: key, summary: 'Edited website content' })
     return NextResponse.json({ ok: true, data: await getContent(key) })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })
@@ -61,6 +63,7 @@ export async function DELETE(req: NextRequest) {
   }
   try {
     await resetContent(key)
+    await logActivity({ action: 'update', entity_type: 'website', entity_id: key, entity_label: key, summary: 'Reverted website content to default' })
     return NextResponse.json({ ok: true, data: await getContent(key) })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })

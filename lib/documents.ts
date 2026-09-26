@@ -13,16 +13,18 @@ import { createServiceClient, hasSupabase } from './supabase'
 
 export const DOCUMENTS_BUCKET = 'documents'
 
-export const DOCUMENT_ENTITY_TYPES = ['property', 'note', 'transaction', 'lead', 'verification', 'general'] as const
+export const DOCUMENT_ENTITY_TYPES = ['property', 'note', 'transaction', 'lead', 'verification', 'meeting', 'task', 'general'] as const
 export type DocumentEntityType = (typeof DOCUMENT_ENTITY_TYPES)[number]
 
 /* The folder each record type gets inside the Drive root. */
 export const DRIVE_SECTION: Record<DocumentEntityType, string> = {
   property: 'Listings',
-  note: 'Notes',
-  transaction: 'Transactions',
-  lead: 'Leads',
+  transaction: 'Deals',
   verification: 'Verification',
+  meeting: 'Meetings',
+  note: 'Notes',
+  task: 'Tasks',
+  lead: 'Leads',
   general: 'General',
 }
 
@@ -43,6 +45,7 @@ export interface DocumentRow {
   path: string | null
   drive_file_id: string | null
   url: string | null
+  created_by?: string
   created_at: string
 }
 

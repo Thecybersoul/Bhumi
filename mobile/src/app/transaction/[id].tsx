@@ -5,8 +5,10 @@ import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button, Chips, SectionTitle, TextField, ToggleRow } from '@/components/form'
-import { WhenField } from '@/components/when'
 import { DocumentsPanel } from '@/components/documents'
+import { ActivityFeed } from '@/components/activity'
+import { ByLine } from '@/components/people'
+import { RelatedMeetings } from '@/components/relatedMeetings'
 import type { ApiResult, CommissionType, PropertyTransaction, Representing, TransactionStage } from '@/lib/types'
 
 const STAGES: TransactionStage[] = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
@@ -38,9 +40,6 @@ export default function TransactionScreen() {
   const [losing, setLosing] = useState(false)
   const [lostReason, setLostReason] = useState('')
 
-  const [mTitle, setMTitle] = useState('')
-  const [mWith, setMWith] = useState('')
-  const [mWhen, setMWhen] = useState('')
 
   const hydrate = useCallback((x: PropertyTransaction) => {
     setT(x)
@@ -123,28 +122,6 @@ export default function TransactionScreen() {
     setLostReason('')
   }
 
-  async function addMeeting() {
-    if (!t || !mTitle.trim() || !mWhen) return setError('A meeting needs a title and a date')
-    const meeting = {
-      id: `m-${Date.now()}`,
-      title: mTitle.trim(),
-      with: mWith.trim() || buyer || seller,
-      scheduled_at: mWhen,
-      status: 'Scheduled' as const,
-    }
-    await patch({ meetings: [...t.meetings, meeting] }, { meetings: [...t.meetings, meeting] })
-    setMTitle('')
-    setMWith('')
-    setMWhen('')
-  }
-
-  async function cycleMeeting(mid: string) {
-    if (!t) return
-    const order = ['Scheduled', 'Completed', 'Cancelled'] as const
-    const meetings = t.meetings.map((m) => (m.id === mid ? { ...m, status: order[(order.indexOf(m.status) + 1) % 3] } : m))
-    await patch({ meetings }, { meetings })
-  }
-
   async function remove() {
     if (!t) return
     Alert.alert('Delete transaction?', 'This cannot be undone.', [
@@ -170,6 +147,7 @@ export default function TransactionScreen() {
         {t && (
           <Card>
             <Text style={s.ref}>{t.reference} · {t.outcome}</Text>
+            <ByLine record={t} createdAt={t.opened_at} />
             <SectionTitle>Stage</SectionTitle>
             <Chips label="" options={STAGES} value={t.stage} onChange={(stage) => patch({ stage }, { stage, outcome: stage === 'Closed' ? 'Closed' : 'In progress' })} />
             {t.outcome === 'Lost' ? (
@@ -225,22 +203,8 @@ export default function TransactionScreen() {
 
         {t && (
           <Card style={{ marginTop: space.lg }}>
-            <SectionTitle>Meetings</SectionTitle>
-            {t.meetings.length === 0 ? <Text style={s.muted}>None scheduled.</Text> : null}
-            {t.meetings.map((m) => (
-              <View key={m.id} style={s.meeting}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.mTitle}>{m.title}</Text>
-                  <Text style={s.muted}>{m.with} · {new Date(m.scheduled_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text>
-                </View>
-                <Button label={m.status} tone="ghost" onPress={() => cycleMeeting(m.id)} />
-              </View>
-            ))}
-            <SectionTitle>Add a meeting</SectionTitle>
-            <TextField label="Title" value={mTitle} onChange={setMTitle} placeholder="Site visit, agreement signing…" />
-            <TextField label="With" value={mWith} onChange={setMWith} />
-            <WhenField label="When" value={mWhen} onChange={setMWhen} />
-            <Button label="Add meeting" tone="ghost" onPress={addMeeting} />
+            <SectionTitle>Meetings & calls</SectionTitle>
+            <RelatedMeetings entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
           </Card>
         )}
 
@@ -248,6 +212,13 @@ export default function TransactionScreen() {
           <Card>
             <SectionTitle>Documents</SectionTitle>
             <DocumentsPanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
+          </Card>
+        )}
+
+        {t && (
+          <Card>
+            <SectionTitle>History</SectionTitle>
+            <ActivityFeed entityType="transaction" entityId={t.id} emptyText="No changes recorded yet." />
           </Card>
         )}
 

@@ -5,7 +5,7 @@ import type { LinkedEntityType } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'general']
+const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'general']
 
 // GET /api/notes — admin only, internal record-keeping
 export async function GET() {

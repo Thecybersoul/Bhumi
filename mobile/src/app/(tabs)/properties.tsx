@@ -3,6 +3,7 @@ import { router, useFocusEffect } from 'expo-router'
 import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { API_URL } from '@/lib/config'
+import { Avatar } from '@/components/people'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Badge, EmptyState, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
@@ -151,9 +152,12 @@ export default function PropertiesScreen() {
                   </Text>
                   <View style={s.foot}>
                     <Text style={s.price}>{price}</Text>
-                    <View style={s.docs}>
-                      <Ionicons name="document-text-outline" size={13} color={docs ? colors.goldDeep : colors.muted} />
-                      <Text style={[s.docsText, docs > 0 && { color: colors.goldDeep }]}>{docs}</Text>
+                    <View style={[s.docs, { gap: 8 }]}>
+                      <View style={s.docs}>
+                        <Ionicons name="document-text-outline" size={13} color={docs ? colors.goldDeep : colors.muted} />
+                        <Text style={[s.docsText, docs > 0 && { color: colors.goldDeep }]}>{docs}</Text>
+                      </View>
+                      {p.updated_by || p.created_by ? <Avatar name={p.updated_by || p.created_by} size={18} /> : null}
                     </View>
                   </View>
                 </View>

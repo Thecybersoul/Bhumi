@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getTransactions, insert } from '@/lib/db'
+import { NextRequest, NextResponse, after } from 'next/server'
+import { ensureRecordFolder } from '@/lib/google'
+import { getTransactions, insertReturningId } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
 import type { TransactionStage, CommissionType, Representing } from '@/lib/types'
 
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   const reference = `TXN-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 8999)}`
 
-  const result = await insert('transactions', {
+  const result = await insertReturningId('transactions', {
     reference,
     property_id: body.property_id ? String(body.property_id) : null,
     property_label: propertyLabel.slice(0, 200),
@@ -75,5 +76,12 @@ export async function POST(req: NextRequest) {
   })
 
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
-  return NextResponse.json({ ok: true, persisted: result.persisted, reference }, { status: 201 })
+  // Every deal gets its own Drive folder the moment it exists.
+  if (result.id) {
+    const id = result.id
+    after(() =>
+      ensureRecordFolder({ section: 'Deals', entityType: 'transaction', entityId: id, label: `${reference} · ${propertyLabel}` }).catch(() => null)
+    )
+  }
+  return NextResponse.json({ ok: true, persisted: result.persisted, reference, id: result.id }, { status: 201 })
 }

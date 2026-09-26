@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTasks, insert } from '@/lib/db'
+import { getTasks, insertReturningId } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
 import type { LinkedEntityType, TaskPriority } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'general']
+const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'general']
 const PRIORITIES: TaskPriority[] = ['Low', 'Normal', 'High']
 
 // GET /api/tasks — admin only, internal follow-ups
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     : 'general'
   const priority = PRIORITIES.includes(body.priority as TaskPriority) ? (body.priority as TaskPriority) : 'Normal'
 
-  const result = await insert('tasks', {
+  const result = await insertReturningId('tasks', {
     title: title.slice(0, 200),
     entity_type: entityType,
     entity_id: body.entity_id ? String(body.entity_id) : null,
@@ -50,5 +50,5 @@ export async function POST(req: NextRequest) {
   })
 
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
-  return NextResponse.json({ ok: true, persisted: result.persisted }, { status: 201 })
+  return NextResponse.json({ ok: true, persisted: result.persisted, id: result.id }, { status: 201 })
 }

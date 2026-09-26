@@ -58,40 +58,38 @@ function toBase64Url(bytes: ArrayBuffer): string {
   return btoa(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-/** `<expiresAtMs>.<hmac>` */
-export async function createSessionToken(ttlSeconds = SESSION_TTL_SECONDS): Promise<string | null> {
+/** `<expiresAtMs>.<userId>.<hmac>` — the signature covers both the
+ *  expiry and the account, so a session always names the person it
+ *  belongs to and that name cannot be edited. Tokens from before
+ *  named accounts (`<expiresAtMs>.<hmac>`) no longer verify, which
+ *  signs everyone out once and back in under their own account. */
+export async function createSessionToken(userId: string, ttlSeconds = SESSION_TTL_SECONDS): Promise<string | null> {
+  if (!userId || userId.includes('.')) return null
   const k = await key()
   if (!k) return null
-  const expires = String(Date.now() + ttlSeconds * 1000)
-  const sig = await crypto.subtle.sign('HMAC', k, encoder.encode(expires))
-  return `${expires}.${toBase64Url(sig)}`
+  const payload = `${Date.now() + ttlSeconds * 1000}.${userId}`
+  const sig = await crypto.subtle.sign('HMAC', k, encoder.encode(payload))
+  return `${payload}.${toBase64Url(sig)}`
+}
+
+/** The account id a valid, unexpired token was issued to, or null. */
+export async function readSessionToken(token: string | undefined | null): Promise<{ userId: string; expiresAt: number } | null> {
+  if (!token) return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  const [expires, userId, provided] = parts
+
+  const expiresAt = Number(expires)
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() || !userId) return null
+
+  const k = await key()
+  if (!k) return null
+  const expected = toBase64Url(await crypto.subtle.sign('HMAC', k, encoder.encode(`${expires}.${userId}`)))
+  return safeEqual(expected, provided) ? { userId, expiresAt } : null
 }
 
 export async function verifySessionToken(token: string | undefined | null): Promise<boolean> {
-  if (!token) return false
-
-  const separator = token.lastIndexOf('.')
-  if (separator <= 0) return false
-
-  const expires = token.slice(0, separator)
-  const provided = token.slice(separator + 1)
-
-  const expiresAt = Number(expires)
-  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return false
-
-  const k = await key()
-  if (!k) return false
-
-  const expected = toBase64Url(await crypto.subtle.sign('HMAC', k, encoder.encode(expires)))
-
-  // Length-independent comparison that does not short-circuit on
-  // the first differing byte.
-  if (expected.length !== provided.length) return false
-  let diff = 0
-  for (let i = 0; i < expected.length; i++) {
-    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i)
-  }
-  return diff === 0
+  return (await readSessionToken(token)) !== null
 }
 
 /** A short-lived token good for exactly one purpose, e.g. carrying

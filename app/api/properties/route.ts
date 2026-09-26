@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
+import { ensureRecordFolder } from '@/lib/google'
 import { getProperties, insertReturningId } from '@/lib/db'
 import { assertAdmin, isAdmin } from '@/lib/auth'
 
@@ -42,5 +43,12 @@ export async function POST(req: NextRequest) {
 
   const result = await insertReturningId('properties', body)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+  // Every listing gets its own Drive folder the moment it exists.
+  if (result.id) {
+    const id = result.id
+    after(() =>
+      ensureRecordFolder({ section: 'Listings', entityType: 'property', entityId: id, label: `${body.code} · ${body.title}` }).catch(() => null)
+    )
+  }
   return NextResponse.json({ ok: true, persisted: result.persisted, id: result.id }, { status: 201 })
 }

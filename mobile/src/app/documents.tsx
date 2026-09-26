@@ -14,9 +14,11 @@ const SECTION: Record<DocEntity, string> = {
   verification: 'Verification',
   lead: 'Leads',
   note: 'Notes',
+  meeting: 'Meetings',
+  task: 'Tasks',
   general: 'General',
 }
-const FILTERS: (DocEntity | 'all')[] = ['all', 'property', 'transaction', 'note', 'verification']
+const FILTERS: (DocEntity | 'all')[] = ['all', 'property', 'transaction', 'meeting', 'note']
 
 /* Every document in the ERP in one searchable place — for the moment
    someone asks for "the EC on the Devanahalli parcel" and you don't
@@ -74,6 +76,7 @@ export default function DocumentsScreen() {
     if (!d.entity_id) return
     if (d.entity_type === 'property') router.push({ pathname: '/property/[id]', params: { id: d.entity_id } })
     else if (d.entity_type === 'transaction') router.push({ pathname: '/transaction/[id]', params: { id: d.entity_id } })
+    else if (d.entity_type === 'meeting') router.push({ pathname: '/meeting/[id]', params: { id: d.entity_id } })
     else if (d.entity_type === 'note') router.push('/notes-tasks')
   }
 

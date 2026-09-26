@@ -25,8 +25,16 @@ const storage = {
   },
 }
 
+export interface SessionUser {
+  id: string
+  name: string
+  email: string
+  role: string
+}
+
 interface SessionState {
   token: string | null
+  user: SessionUser | null
   isLoading: boolean
   error: string | null
   signIn: (email: string, password: string) => Promise<boolean>
@@ -34,23 +42,52 @@ interface SessionState {
 }
 
 const SessionContext = createContext<SessionState | null>(null)
+const USER_KEY = 'bhumi_admin_user'
 
-/** The one credential the app holds — the same signed session
-    token `lib/session.ts` issues on the web, just carried in
-    SecureStore + a bearer header instead of a cookie (see
-    lib/auth.ts's isAdmin() on the backend). */
+/* A usable token has three parts (<expiry>.<account>.<signature>)
+   and an expiry still in the future. Tokens from before named
+   accounts have two parts and are dropped, which sends that person
+   to sign in once under their own name. */
+const alive = (t: string | null) => !!t && t.split('.').length === 3 && Number(t.split('.')[0]) > Date.now()
+
+/** The one credential the app holds is the signed session token that
+    `lib/session.ts` issues on the web. Here it is carried in
+    SecureStore and a bearer header instead of a cookie; see
+    lib/auth.ts's currentUser() on the backend. The token names the
+    account, so every change made from this phone is recorded
+    against that person. */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
+  const [user, setUser] = useState<SessionUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    storage
-      .get(TOKEN_KEY)
-      // The token leads with its expiry in ms; drop a dead one here
-      // rather than letting every screen fail with "Not authorised".
-      .then((t) => setToken(t && Number(t.split('.')[0]) > Date.now() ? t : null))
-      .finally(() => setIsLoading(false))
+    ;(async () => {
+      try {
+        const t = await storage.get(TOKEN_KEY)
+        if (!alive(t)) {
+          if (t) await storage.remove(TOKEN_KEY)
+          return
+        }
+        setToken(t)
+        const cached = await storage.get(USER_KEY)
+        if (cached) setUser(JSON.parse(cached))
+        // Refresh the profile in the background; a rejected token is
+        // handled by useApi's 401 → sign-out on the first screen load.
+        fetch(`${API_URL}/api/admin/me`, { headers: { Authorization: `Bearer ${t}` } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((b) => {
+            if (b?.user) {
+              setUser(b.user)
+              storage.set(USER_KEY, JSON.stringify(b.user))
+            }
+          })
+          .catch(() => {})
+      } finally {
+        setIsLoading(false)
+      }
+    })()
   }, [])
 
   async function signIn(email: string, password: string) {
@@ -67,10 +104,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return false
       }
       await storage.set(TOKEN_KEY, body.token)
+      if (body.user) await storage.set(USER_KEY, JSON.stringify(body.user))
+      setUser(body.user ?? null)
       setToken(body.token)
       return true
     } catch {
-      setError('Could not reach the server. Check the app is pointed at the right URL.')
+      setError('Could not reach the server. Check your connection and try again.')
       return false
     }
   }
@@ -78,11 +117,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Stable identity: useApi() depends on it, and screens depend on api.
   const signOut = useCallback(async () => {
     await storage.remove(TOKEN_KEY)
+    await storage.remove(USER_KEY)
+    setUser(null)
     setToken(null)
   }, [])
 
   return (
-    <SessionContext.Provider value={{ token, isLoading, error, signIn, signOut }}>{children}</SessionContext.Provider>
+    <SessionContext.Provider value={{ token, user, isLoading, error, signIn, signOut }}>{children}</SessionContext.Provider>
   )
 }
 

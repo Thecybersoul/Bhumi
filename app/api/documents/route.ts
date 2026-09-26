@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin } from '@/lib/auth'
+import { assertAdmin, currentUser } from '@/lib/auth'
+import { auditReady, logActivity } from '@/lib/activity'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
 import { getDriveFile, hasDrive, startDriveUpload } from '@/lib/google'
 import {
@@ -57,8 +58,8 @@ export async function GET(req: NextRequest) {
      → the stored row. `link` records an existing Drive/URL file
      without uploading anything. */
 export async function POST(req: NextRequest) {
-  const denied = await assertAdmin()
-  if (denied) return denied
+  const me = await currentUser()
+  if (!me) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
   if (!hasSupabase()) return noDatabase()
 
   let body: Record<string, unknown>
@@ -81,7 +82,17 @@ export async function POST(req: NextRequest) {
       }
       const wantDrive = body.destination === 'drive' || (body.destination !== 'storage' && (await hasDrive()))
       if (wantDrive) {
-        const session = await startDriveUpload({ section: DRIVE_SECTION[type], record: label, name, mime, bytes: bytes ?? undefined })
+        const session = await startDriveUpload({
+          section: DRIVE_SECTION[type],
+          entityType: type,
+          entityId: body.entity_id ? String(body.entity_id) : null,
+          record: label,
+          category: String(body.category ?? ''),
+          name,
+          mime,
+          bytes: bytes ?? undefined,
+          uploadedBy: me.name,
+        })
         if (!session) return NextResponse.json({ error: 'Google Drive is not connected' }, { status: 409 })
         return NextResponse.json({
           storage: 'drive',
@@ -96,7 +107,11 @@ export async function POST(req: NextRequest) {
         )
       }
       const sb = await ensureBucket()
-      const path = `${type}/${slug(label) || 'general'}/${Date.now().toString(36)}-${slug(name) || 'file'}.${extension(name)}`
+      // Filed by record id, then category, so a renamed listing keeps
+      // its files together: property/<id>/title-deed/<stamp>-<name>.pdf
+      const record = body.entity_id ? slug(String(body.entity_id)) || 'general' : 'general'
+      const category = slug(String(body.category ?? '')) || 'other'
+      const path = `${type}/${record}/${category}/${Date.now().toString(36)}-${slug(name) || 'file'}.${extension(name)}`
       const { data, error } = await sb.storage.from(DOCUMENTS_BUCKET).createSignedUploadUrl(path)
       if (error || !data) return NextResponse.json({ error: error?.message ?? 'Could not start upload' }, { status: 500 })
       return NextResponse.json({
@@ -137,8 +152,19 @@ export async function POST(req: NextRequest) {
       Object.assign(row, { storage: 'supabase', path })
     }
 
+    if (await auditReady()) Object.assign(row, { created_by: me.name, updated_by: me.name })
     const { data, error } = await createServiceClient().from('documents').insert(row).select().single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await logActivity(
+      {
+        action: body.link ? 'link' : 'upload',
+        entity_type: type,
+        entity_id: row.entity_id as string | null,
+        entity_label: label,
+        summary: `${body.link ? 'Linked' : 'Uploaded'} ${name}${row.category && row.category !== 'Other' && row.category !== 'Attachment' ? ` (${row.category})` : ''}${row.storage === 'drive' ? ' to Google Drive' : ''}`,
+      },
+      me
+    )
     return NextResponse.json({ ok: true, data }, { status: 201 })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })

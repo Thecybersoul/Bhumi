@@ -324,7 +324,7 @@ export interface TransparencyStats {
    what something is about. Both are optional: a note or task with
    no entity is simply general — a reminder, not a record about
    anything in particular. */
-export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'general'
+export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'general'
 
 export interface Note {
   id: string
@@ -355,4 +355,33 @@ export interface Task {
       lib/google.ts. Absent until then, and cleared if unsynced. */
   google_event_id?: string | null
   google_meet_url?: string | null
+}
+
+/* ─── Meetings (migration 012) ───────────────────────────── */
+
+export type MeetingKind = 'In person' | 'Site visit' | 'Call' | 'Video call' | 'Discussion'
+export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'general'
+
+/** A meeting, call, site visit or discussion, optionally tied to the
+    listing, deal, task or lead it was about. */
+export interface Meeting {
+  id: string
+  title: string
+  kind: MeetingKind
+  scheduled_at: string
+  duration_min: number
+  location?: string
+  attendees?: string
+  status: MeetingStatus
+  agenda?: string
+  outcome?: string
+  entity_type: MeetingEntityType
+  entity_id?: string | null
+  entity_label?: string
+  google_event_id?: string | null
+  google_meet_url?: string | null
+  created_by?: string
+  updated_by?: string
+  created_at: string
+  updated_at?: string | null
 }

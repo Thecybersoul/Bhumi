@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
-import { Alert, ScrollView, Text } from 'react-native'
+import { Alert, ScrollView, Text, View } from 'react-native'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button, Chips, MediaField, SectionTitle, TextField, ToggleRow } from '@/components/form'
 import { DocumentsPanel } from '@/components/documents'
+import { ActivityFeed } from '@/components/activity'
+import { ByLine } from '@/components/people'
+import { RelatedMeetings } from '@/components/relatedMeetings'
 import type { ApiResult, Property, PropertyStatus, PropertyTypeSlug, PriceType, Zone } from '@/lib/types'
 
 const TYPES: PropertyTypeSlug[] = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels']
@@ -140,6 +143,11 @@ export default function PropertyScreen() {
     <Screen>
       <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 70 }} keyboardShouldPersistTaps="handled">
         {error && <ErrorBanner message={error} />}
+        {orig && source === 'live' ? (
+          <View style={{ marginBottom: space.md }}>
+            <ByLine record={orig} createdAt={orig.created_at} />
+          </View>
+        ) : null}
 
         <Card>
           <SectionTitle>Status</SectionTitle>
@@ -205,6 +213,19 @@ export default function PropertyScreen() {
 
 
         <Button label={isNew ? 'Publish listing' : 'Save changes'} onPress={save} busy={busy} />
+        {orig && source === 'live' ? (
+          <>
+            <Card style={{ marginTop: space.lg }}>
+              <SectionTitle>Site visits & meetings</SectionTitle>
+              <RelatedMeetings entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} defaultKind="Site visit" />
+            </Card>
+            <Card>
+              <SectionTitle>History</SectionTitle>
+              <ActivityFeed entityType="property" entityId={orig.id} emptyText="No changes recorded yet." />
+            </Card>
+          </>
+        ) : null}
+
         {!isNew && (
           <>
             <Card style={{ backgroundColor: 'transparent', borderWidth: 0, padding: 0, marginTop: space.lg }}>

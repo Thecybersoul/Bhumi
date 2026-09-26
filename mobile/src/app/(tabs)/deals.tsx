@@ -5,6 +5,7 @@ import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Badge, EmptyState, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button } from '@/components/form'
+import { ByLine } from '@/components/people'
 import type { ApiResult, DataRoomRequest, Lead, LeadStage, PropertyTransaction } from '@/lib/types'
 
 const LEAD_STAGES: LeadStage[] = ['New', 'Contacted', 'Qualified', 'Visit', 'Closed']
@@ -119,6 +120,7 @@ export default function DealsScreen() {
               </View>
               <Text style={s.meta}>{t.reference} · {cr(t.deal_value_cr)} · {fmtDate(t.opened_at)}</Text>
               <Text style={s.meta}>{[t.buyer_name, t.seller_name].filter(Boolean).join(' ↔ ') || '—'}</Text>
+              <ByLine record={t} createdAt={t.opened_at} compact />
             </TouchableOpacity>
           )}
         />
@@ -141,6 +143,7 @@ export default function DealsScreen() {
                 <Text style={s.meta}>{l.kind} · {l.channel} · {fmtDate(l.created_at)}</Text>
                 {(l.company || l.phone) && <Text style={s.meta}>{[l.company, l.phone].filter(Boolean).join(' · ')}</Text>}
                 {l.notes ? <Text style={s.note}>{l.notes}</Text> : null}
+                {l.updated_by && l.updated_by !== 'Website' ? <ByLine record={{ updated_by: l.updated_by, updated_at: l.updated_at }} /> : null}
                 <View style={s.actions}>
                   {l.phone ? (
                     <>
@@ -173,6 +176,7 @@ export default function DealsScreen() {
               </View>
               <Text style={s.meta}>{d.parcel_label || d.parcel_code} · {d.buyer_type} · {d.ticket_size || 'ticket n/a'}</Text>
               <Text style={s.meta}>{[d.organisation, d.email, d.phone].filter(Boolean).join(' · ')}</Text>
+              {d.status !== 'Pending' && d.updated_by ? <ByLine record={{ updated_by: d.updated_by, updated_at: d.updated_at }} /> : null}
               {d.status === 'Pending' ? (
                 <View style={s.actions}>
                   <View style={{ flex: 1 }}><Button label="Approve" busy={busy === d.id} onPress={() => decide(d, 'Approved')} /></View>

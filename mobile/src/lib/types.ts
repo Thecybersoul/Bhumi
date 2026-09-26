@@ -1,3 +1,10 @@
+/** Who added and last changed a record (migration 012). Display names. */
+export interface Audited {
+  created_by?: string | null
+  updated_by?: string | null
+  updated_at?: string | null
+}
+
 /* Mirrors the ERP-relevant subset of lib/types.ts in the web repo,
    by hand — the two don't share a build step. Marketing-site
    content types (Corridor, CaseStudy, Insight, TransparencyStats)
@@ -26,7 +33,7 @@ export interface VerificationStage {
   note?: string
 }
 
-export interface VerificationCase {
+export interface VerificationCase extends Audited {
   id: string
   reference: string
   property_id?: string | null
@@ -44,7 +51,7 @@ export interface VerificationCase {
   turnaround_days?: number | null
 }
 
-export interface Property {
+export interface Property extends Audited {
   id: string
   code: string
   title: string
@@ -76,7 +83,7 @@ export type LeadKind =
 
 export type LeadStage = 'New' | 'Contacted' | 'Qualified' | 'Visit' | 'Closed'
 
-export interface Lead {
+export interface Lead extends Audited {
   id: string
   kind: LeadKind
   name: string
@@ -92,7 +99,7 @@ export interface Lead {
   created_at: string
 }
 
-export interface DataRoomRequest {
+export interface DataRoomRequest extends Audited {
   id: string
   parcel_code: string
   parcel_label: string
@@ -128,7 +135,7 @@ export interface TransactionMeeting {
   google_meet_url?: string
 }
 
-export interface PropertyTransaction {
+export interface PropertyTransaction extends Audited {
   id: string
   reference: string
   property_id?: string | null
@@ -153,9 +160,9 @@ export interface PropertyTransaction {
   lost_reason?: string
 }
 
-export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'general'
+export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'general'
 
-export interface Note {
+export interface Note extends Audited {
   id: string
   entity_type: LinkedEntityType
   entity_id?: string | null
@@ -168,7 +175,7 @@ export interface Note {
 export type TaskStatus = 'Open' | 'Done'
 export type TaskPriority = 'Low' | 'Normal' | 'High'
 
-export interface Task {
+export interface Task extends Audited {
   id: string
   title: string
   entity_type: LinkedEntityType
@@ -189,4 +196,42 @@ export interface Task {
 export interface ApiResult<T> {
   data: T
   source: 'live' | 'fallback'
+}
+
+export type MeetingKind = 'In person' | 'Site visit' | 'Call' | 'Video call' | 'Discussion'
+export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'general'
+
+/** A physical meeting, call, site visit or discussion, optionally
+    tied to the listing, deal, task or lead it was about. */
+export interface Meeting extends Audited {
+  id: string
+  title: string
+  kind: MeetingKind
+  scheduled_at: string
+  duration_min: number
+  location?: string
+  attendees?: string
+  status: MeetingStatus
+  agenda?: string
+  outcome?: string
+  entity_type: MeetingEntityType
+  entity_id?: string | null
+  entity_label?: string
+  google_event_id?: string | null
+  google_meet_url?: string | null
+  created_at: string
+}
+
+/** One line of the activity trail. */
+export interface Activity {
+  id: string
+  actor_id: string | null
+  actor_name: string
+  action: string
+  entity_type: string
+  entity_id: string | null
+  entity_label: string
+  summary: string
+  changes?: Record<string, [unknown, unknown]> | null
+  created_at: string
 }

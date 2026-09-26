@@ -93,6 +93,23 @@ async function main() {
       .toBuffer()
   )
 
+  // Full horizontal logo (mark + "Bhumi Estates" wordmark) for in-app
+  // headers and the login/profile screens: -dark is the light-colored
+  // lockup for the green header, -light the dark lockup for white.
+  for (const variant of ['dark', 'light']) {
+    const src = path.join(logos, `bhumi-estates-horizontal-${variant}.svg`)
+    const w = 1200
+    const h = Math.round(w * (1167 / 5394))
+    fs.writeFileSync(
+      path.join(out, `logo-${variant}.png`),
+      await sharp(src, { density: densityFor(src, w) })
+        .resize(w, h, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .trim({ threshold: 1 })
+        .png()
+        .toBuffer()
+    )
+  }
+
   console.log('Mobile brand assets regenerated in mobile/assets.')
 }
 

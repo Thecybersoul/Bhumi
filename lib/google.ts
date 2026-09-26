@@ -18,7 +18,16 @@ import { createServiceClient, hasSupabase } from './supabase'
    created itself (plus ones the admin explicitly opens with it), so
    connecting Drive never exposes the rest of the account. */
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
-const SCOPES = ['https://www.googleapis.com/auth/calendar.events', DRIVE_SCOPE]
+const SCOPES = [
+  'openid',
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/calendar.events',
+  DRIVE_SCOPE,
+]
+
+/** The one Google account the whole ERP runs on. Every admin shares
+    it: whoever connects it, it is connected for everyone. */
+export const WORKSPACE_EMAIL = (process.env.GOOGLE_WORKSPACE_EMAIL || 'sales@bhumiestates.in').toLowerCase()
 const ROOT_FOLDER = 'Bhumi Estates ERP'
 
 /** True when the three OAuth env vars are set. Doesn't mean the
@@ -45,6 +54,7 @@ export function getAuthUrl(state?: string): string {
     prompt: 'consent',
     include_granted_scopes: true,
     scope: SCOPES,
+    login_hint: WORKSPACE_EMAIL,
     state,
   })
 }
@@ -52,12 +62,23 @@ export function getAuthUrl(state?: string): string {
 /** Exchange the OAuth callback's `code` for tokens and store them.
     Single-row table: whatever was there before this connection is
     replaced, since only one Google account is meant to be linked. */
-export async function exchangeCodeAndStore(code: string): Promise<void> {
+export async function exchangeCodeAndStore(code: string, connectedBy: string): Promise<{ email: string }> {
   const client = oauthClient()
   const { tokens } = await client.getToken(code)
+  client.setCredentials(tokens)
+
+  // Only the company account may be connected. Signing in with any
+  // other Google account is refused and its grant revoked, so a
+  // personal Drive can never end up holding company documents.
+  const { data: me } = await google.oauth2({ version: 'v2', auth: client }).userinfo.get()
+  const email = (me.email ?? '').toLowerCase()
+  if (email !== WORKSPACE_EMAIL) {
+    await client.revokeCredentials().catch(() => {})
+    throw new Error(`Signed in as ${email || 'an unknown account'}. Connect ${WORKSPACE_EMAIL} instead.`)
+  }
   if (!tokens.refresh_token) {
     throw new Error(
-      'Google did not return a refresh token. Disconnect this app in your Google Account permissions and try connecting again.'
+      'Google did not return a refresh token. Remove "Bhumi Estates" from the Google account third-party access list and connect again.'
     )
   }
 
@@ -68,8 +89,26 @@ export async function exchangeCodeAndStore(code: string): Promise<void> {
     access_token: tokens.access_token,
     expiry_date: tokens.expiry_date,
     scope: tokens.scope ?? '',
+    connected_email: email,
+    connected_by: connectedBy,
   })
   if (error) throw new Error(error.message)
+  return { email }
+}
+
+/** Which account is connected, by whom, and since when. */
+export async function connectionInfo(): Promise<{ email: string; connected_by: string; connected_at: string } | null> {
+  if (!hasSupabase()) return null
+  try {
+    const { data } = await createServiceClient()
+      .from('google_auth')
+      .select('connected_email,connected_by,connected_at')
+      .limit(1)
+      .maybeSingle()
+    return data ? { email: data.connected_email ?? '', connected_by: data.connected_by ?? '', connected_at: data.connected_at } : null
+  } catch {
+    return null
+  }
 }
 
 export async function isConnected(): Promise<boolean> {
@@ -128,16 +167,19 @@ async function getClient() {
   return client
 }
 
-/** Create a 30-minute calendar event with an auto-generated Google
-    Meet link, starting at `startISO`. Returns null when Google
-    isn't connected — callers treat that exactly like "not
-    persisted" everywhere else in this app: the task still saves,
-    it just doesn't get a calendar entry. */
+/** Create a calendar event starting at `startISO` on the shared
+    account's primary calendar, with an auto-generated Google Meet link
+    unless `meet` is false (an in-person meeting has no need of one).
+    Returns null when Google isn't connected — callers treat that exactly
+    like "not persisted" everywhere else in this app: the record still
+    saves, it just doesn't get a calendar entry. */
 export async function createEventWithMeet(opts: {
   summary: string
   description?: string
+  location?: string
   startISO: string
   durationMinutes?: number
+  meet?: boolean
 }): Promise<{ eventId: string; meetUrl: string | null } | null> {
   const auth = await getClient()
   if (!auth) return null
@@ -146,21 +188,20 @@ export async function createEventWithMeet(opts: {
   const start = new Date(opts.startISO)
   const end = new Date(start.getTime() + (opts.durationMinutes ?? 30) * 60_000)
   const requestId = `bhumi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const withMeet = opts.meet !== false
 
   const { data } = await calendar.events.insert({
     calendarId: 'primary',
-    conferenceDataVersion: 1,
+    conferenceDataVersion: withMeet ? 1 : 0,
     requestBody: {
       summary: opts.summary,
       description: opts.description,
+      location: opts.location || undefined,
       start: { dateTime: start.toISOString() },
       end: { dateTime: end.toISOString() },
-      conferenceData: {
-        createRequest: {
-          requestId,
-          conferenceSolutionKey: { type: 'hangoutsMeet' },
-        },
-      },
+      conferenceData: withMeet
+        ? { createRequest: { requestId, conferenceSolutionKey: { type: 'hangoutsMeet' } } }
+        : undefined,
     },
   })
 
@@ -168,6 +209,26 @@ export async function createEventWithMeet(opts: {
     eventId: data.id!,
     meetUrl: data.hangoutLink ?? null,
   }
+}
+
+/** Move or retitle an existing event (a rescheduled meeting). */
+export async function updateEvent(
+  eventId: string,
+  opts: { summary?: string; description?: string; location?: string; startISO?: string; durationMinutes?: number }
+): Promise<void> {
+  const auth = await getClient()
+  if (!auth) return
+  const calendar = google.calendar({ version: 'v3', auth })
+  const body: Record<string, unknown> = {}
+  if (opts.summary) body.summary = opts.summary
+  if (opts.description !== undefined) body.description = opts.description
+  if (opts.location !== undefined) body.location = opts.location
+  if (opts.startISO) {
+    const start = new Date(opts.startISO)
+    body.start = { dateTime: start.toISOString() }
+    body.end = { dateTime: new Date(start.getTime() + (opts.durationMinutes ?? 30) * 60_000).toISOString() }
+  }
+  await calendar.events.patch({ calendarId: 'primary', eventId, requestBody: body }).catch(() => {})
 }
 
 export async function deleteEvent(eventId: string): Promise<void> {
@@ -178,47 +239,128 @@ export async function deleteEvent(eventId: string): Promise<void> {
 }
 
 /* ─── Drive ─────────────────────────────────────────────────
-   Files go into  Bhumi Estates ERP / <Listings|Notes|…> / <record>
-   so the Drive itself reads like the ERP. Uploads are resumable
-   sessions: the server opens the session with its credentials and
-   hands the session URL to the client, which sends the bytes
-   straight to Google. Nothing large passes through this server,
-   which matters on a host with a small request-body limit. */
+   Layout, all under the one company account:
 
-async function findOrCreateFolder(
-  drive: ReturnType<typeof google.drive>,
-  name: string,
-  parent?: string
-): Promise<string> {
-  const safe = name.replace(/'/g, "\'")
+     Bhumi Estates ERP/
+       Listings/      BLR-P-2601 · Sanctioned layout, Doddasanne/
+                        Title deed/  EC/  Khata/  Survey sketch/ …
+       Deals/         TXN-2026-4821 · 3 BHK, JP Nagar/
+                        Agreement/  Sale deed/  KYC/ …
+       Meetings/      2026-09 September/
+       Notes/         2026-09 September/
+       Verification/  Leads/  Tasks/
+
+   Each listing or deal gets its own folder. The folder is found by a
+   hidden tag (appProperties bhumiEntity = "property:<id>"), not by
+   its name, so renaming a listing renames its folder rather than
+   starting a new one. Uploads are resumable sessions: the server
+   opens the session with its credentials and hands the session URL
+   to the client, which sends the bytes straight to Google. Nothing
+   large passes through this server, which matters on a host with a
+   small request-body limit. */
+
+type Drive = ReturnType<typeof google.drive>
+const FOLDER = 'application/vnd.google-apps.folder'
+const esc = (v: string) => v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+
+async function findOrCreateFolder(drive: Drive, name: string, parent?: string): Promise<string> {
   const q = [
-    `name = '${safe}'`,
-    "mimeType = 'application/vnd.google-apps.folder'",
+    `name = '${esc(name)}'`,
+    `mimeType = '${FOLDER}'`,
     'trashed = false',
     parent ? `'${parent}' in parents` : "'root' in parents",
   ].join(' and ')
   const { data } = await drive.files.list({ q, fields: 'files(id)', pageSize: 1 })
   if (data.files?.[0]?.id) return data.files[0].id
   const { data: created } = await drive.files.create({
-    requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: parent ? [parent] : undefined },
+    requestBody: { name, mimeType: FOLDER, parents: parent ? [parent] : undefined },
     fields: 'id',
   })
   return created.id!
 }
 
+/** The record's own folder, created on first use and renamed if the
+    record's label has changed since. */
+async function recordFolder(drive: Drive, section: string, tag: string, label: string): Promise<{ id: string; url: string }> {
+  const root = await findOrCreateFolder(drive, ROOT_FOLDER)
+  const parent = await findOrCreateFolder(drive, section, root)
+  const name = (label || 'Untitled').replace(/[\\/]/g, '-').slice(0, 120)
+  const { data } = await drive.files.list({
+    q: `appProperties has { key='bhumiEntity' and value='${esc(tag)}' } and mimeType = '${FOLDER}' and trashed = false`,
+    fields: 'files(id,name,webViewLink)',
+    pageSize: 1,
+  })
+  const found = data.files?.[0]
+  if (found?.id) {
+    if (found.name !== name) await drive.files.update({ fileId: found.id, requestBody: { name } }).catch(() => {})
+    return { id: found.id, url: found.webViewLink ?? `https://drive.google.com/drive/folders/${found.id}` }
+  }
+  const { data: created } = await drive.files.create({
+    requestBody: { name, mimeType: FOLDER, parents: [parent], appProperties: { bhumiEntity: tag } },
+    fields: 'id,webViewLink',
+  })
+  return { id: created.id!, url: created.webViewLink ?? `https://drive.google.com/drive/folders/${created.id}` }
+}
+
+const MONTH = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')} ${d.toLocaleString('en-IN', { month: 'long' })}`
+}
+
+/* Listings, deals and verification cases are case files and get a
+   folder each; notes, meetings, tasks and leads are filed by month. */
+const PER_RECORD = new Set(['property', 'transaction', 'verification'])
+
+async function destinationFolder(
+  drive: Drive,
+  opts: { section: string; entityType: string; entityId?: string | null; label: string; category?: string }
+): Promise<string> {
+  let folder: string
+  if (PER_RECORD.has(opts.entityType) && opts.entityId) {
+    folder = (await recordFolder(drive, opts.section, `${opts.entityType}:${opts.entityId}`, opts.label)).id
+  } else {
+    const root = await findOrCreateFolder(drive, ROOT_FOLDER)
+    folder = await findOrCreateFolder(drive, MONTH(), await findOrCreateFolder(drive, opts.section, root))
+  }
+  const category = opts.category && !['Other', 'Attachment'].includes(opts.category) ? opts.category : null
+  return category && PER_RECORD.has(opts.entityType) ? findOrCreateFolder(drive, category.replace(/[\\/]/g, '-'), folder) : folder
+}
+
+/** A listing's or deal's Drive folder, created if it doesn't exist.
+    Null when Drive isn't connected. */
+export async function ensureRecordFolder(opts: {
+  section: string
+  entityType: string
+  entityId: string
+  label: string
+}): Promise<{ id: string; url: string } | null> {
+  if (!(await hasDrive())) return null
+  const auth = await getClient()
+  if (!auth) return null
+  return recordFolder(google.drive({ version: 'v3', auth }), opts.section, `${opts.entityType}:${opts.entityId}`, opts.label)
+}
+
 export async function startDriveUpload(opts: {
   section: string
+  entityType: string
+  entityId?: string | null
   record: string
+  category?: string
   name: string
   mime: string
   bytes?: number
+  uploadedBy?: string
 }): Promise<{ uploadUrl: string } | null> {
   const auth = await getClient()
   if (!auth) return null
   const drive = google.drive({ version: 'v3', auth })
-  const root = await findOrCreateFolder(drive, ROOT_FOLDER)
-  const section = await findOrCreateFolder(drive, opts.section, root)
-  const folder = await findOrCreateFolder(drive, opts.record.slice(0, 120) || 'General', section)
+  const folder = await destinationFolder(drive, {
+    section: opts.section,
+    entityType: opts.entityType,
+    entityId: opts.entityId,
+    label: opts.record,
+    category: opts.category,
+  })
 
   const { token } = await auth.getAccessToken()
   const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', {
@@ -229,7 +371,21 @@ export async function startDriveUpload(opts: {
       'X-Upload-Content-Type': opts.mime || 'application/octet-stream',
       ...(opts.bytes ? { 'X-Upload-Content-Length': String(opts.bytes) } : {}),
     },
-    body: JSON.stringify({ name: opts.name, parents: [folder] }),
+    body: JSON.stringify({
+      name: opts.name,
+      parents: [folder],
+      description: [
+        opts.category && opts.category !== 'Attachment' ? opts.category : null,
+        opts.record ? `${opts.section.replace(/s$/, '')}: ${opts.record}` : null,
+        `Uploaded${opts.uploadedBy ? ` by ${opts.uploadedBy}` : ''} via the Bhumi Estates ERP, ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      appProperties: {
+        bhumiEntity: `${opts.entityType}:${opts.entityId ?? ''}`.slice(0, 120),
+        ...(opts.uploadedBy ? { bhumiUploadedBy: opts.uploadedBy.slice(0, 60) } : {}),
+      },
+    }),
   })
   const uploadUrl = res.headers.get('location')
   if (!res.ok || !uploadUrl) throw new Error(`Drive refused the upload (${res.status})`)

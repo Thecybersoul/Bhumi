@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logActivity } from '@/lib/activity'
 import { assertAdmin } from '@/lib/auth'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
 import { MEDIA_BUCKET } from '@/lib/cms'
@@ -131,6 +132,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    await logActivity({ action: 'upload', entity_type: 'media', entity_id: data?.id, entity_label: file.name, summary: `Uploaded ${spec.kind} to the media library` })
     return NextResponse.json({ ok: true, data })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })
@@ -150,6 +152,7 @@ export async function DELETE(req: NextRequest) {
     if (row?.path) await sb.storage.from(MEDIA_BUCKET).remove([row.path])
     const { error } = await sb.from('media').delete().eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await logActivity({ action: 'delete', entity_type: 'media', entity_id: id, entity_label: row?.path ?? '', summary: 'Removed from the media library' })
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })

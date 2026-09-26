@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin } from '@/lib/auth'
+import { currentUser } from '@/lib/auth'
 import { hasGoogleAuth, getAuthUrl } from '@/lib/google'
 import { createPurposeToken, verifyPurposeToken } from '@/lib/session'
 
@@ -23,32 +23,37 @@ function notConfigured() {
 
 // GET /api/admin/google/connect — redirects to the Google consent screen
 export async function GET(req: NextRequest) {
+  // grant = "<userId>~<token>": who asked, signed, five minutes.
   const grant = req.nextUrl.searchParams.get('grant')
   const fromApp = Boolean(grant)
+  let userId: string
   if (fromApp) {
-    if (!(await verifyPurposeToken('google-connect', grant))) {
+    const [uid, token] = String(grant).split('~')
+    if (!uid || !(await verifyPurposeToken(`google-connect:${uid}`, token))) {
       return NextResponse.json({ error: 'This link has expired. Start again from the app.' }, { status: 401 })
     }
+    userId = uid
   } else {
-    const denied = await assertAdmin()
-    if (denied) return denied
+    const me = await currentUser()
+    if (!me) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
+    userId = me.id
   }
 
   if (!hasGoogleAuth()) return notConfigured()
 
   const mode = fromApp ? 'app' : 'web'
-  const token = await createPurposeToken(`google-oauth-${mode}`, 15 * 60)
-  return NextResponse.redirect(getAuthUrl(`${mode}~${token}`))
+  const token = await createPurposeToken(`google-oauth-${mode}:${userId}`, 15 * 60)
+  return NextResponse.redirect(getAuthUrl(`${mode}~${userId}~${token}`))
 }
 
 // POST /api/admin/google/connect — { url } for the mobile app to open
 export async function POST(req: NextRequest) {
-  const denied = await assertAdmin()
-  if (denied) return denied
+  const me = await currentUser()
+  if (!me) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
   if (!hasGoogleAuth()) return notConfigured()
 
-  const grant = await createPurposeToken('google-connect', 5 * 60)
+  const grant = await createPurposeToken(`google-connect:${me.id}`, 5 * 60)
   const url = new URL('/api/admin/google/connect', req.nextUrl.origin)
-  url.searchParams.set('grant', grant ?? '')
+  url.searchParams.set('grant', `${me.id}~${grant ?? ''}`)
   return NextResponse.json({ url: url.toString() })
 }

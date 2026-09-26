@@ -58,7 +58,9 @@
           "cameraPermission": "Bhumi Estates uses the camera to photograph documents and site visits."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ],
     "extra": {
       "apiUrl": "https://www.bhumiestates.in",

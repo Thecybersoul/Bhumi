@@ -47,7 +47,7 @@ export function DocRow({ doc, onOpen, onRemove }: { doc: Doc; onOpen: () => void
         <View style={s.metaRow}>
           <Text style={s.cat}>{doc.category}</Text>
           <Text style={s.meta}>
-            {[formatBytes(doc.bytes), new Date(doc.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })]
+            {[doc.created_by, formatBytes(doc.bytes), new Date(doc.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })]
               .filter(Boolean)
               .join(' · ')}
           </Text>
@@ -176,6 +176,16 @@ export function DocumentsPanel({
     }
   }
 
+  async function openFolder() {
+    try {
+      const q = new URLSearchParams({ entity_type: entityType, entity_id: entityId, entity_label: entityLabel })
+      const { url } = await api.get<{ url: string }>(`/api/documents/folder?${q}`)
+      await Linking.openURL(url)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   function manage(doc: Doc) {
     const cats = CATEGORIES[entityType]
     Alert.alert(doc.name, doc.storage === 'drive' ? 'Stored in Google Drive' : 'Stored in Bhumi secure storage', [
@@ -230,10 +240,17 @@ export function DocumentsPanel({
         <Action icon="camera-outline" label="Camera" onPress={async () => add(await takePhoto())} />
         <Action icon="logo-google" label="Drive link" onPress={() => setLinking((v) => !v)} />
       </View>
+      {drive && (entityType === 'property' || entityType === 'transaction' || entityType === 'verification') ? (
+        <TouchableOpacity style={s.folder} onPress={openFolder}>
+          <Ionicons name="folder-open" size={16} color={colors.progress} />
+          <Text style={s.folderText}>Open this {entityType === 'property' ? 'listing' : entityType === 'transaction' ? 'deal' : 'case'}’s Drive folder</Text>
+          <Ionicons name="open-outline" size={14} color={colors.progress} />
+        </TouchableOpacity>
+      ) : null}
 
       <Text style={s.dest}>
         <Ionicons name={drive ? 'logo-google' : 'lock-closed'} size={11} color={colors.muted} />{' '}
-        {drive ? 'New files are saved to Google Drive › Bhumi Estates ERP' : 'New files are saved to Bhumi secure storage'}
+        {drive ? 'Saved to Google Drive (sales@bhumiestates.in) › Bhumi Estates ERP' : 'Saved to Bhumi secure storage until Google Drive is connected'}
         {!compact && cats.length > 1 ? ` · as “${category}”` : ''}
       </Text>
 
@@ -314,6 +331,8 @@ const s = StyleSheet.create({
   },
   actionText: { fontSize: text.sm, fontWeight: '700', color: colors.navy },
   dest: { fontSize: text['2xs'], color: colors.muted, marginTop: 8 },
+  folder: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, padding: 10, borderRadius: radius.base, backgroundColor: colors.progressBg },
+  folderText: { flex: 1, fontSize: text.sm, fontWeight: '700', color: colors.progress },
   linkBox: { marginTop: space.sm, gap: 8 },
   input: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.base, padding: 12, fontSize: text.base, backgroundColor: colors.white, color: colors.ink },
   linkSave: { backgroundColor: colors.navy, borderRadius: radius.base, paddingVertical: 11, alignItems: 'center' },

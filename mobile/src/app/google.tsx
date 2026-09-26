@@ -9,7 +9,7 @@ import { LoadingScreen } from '@/components/ui'
 export default function GoogleReturn() {
   useEffect(() => {
     if (router.canGoBack()) router.back()
-    else router.replace('/more')
+    else router.replace('/profile')
   }, [])
   return <LoadingScreen />
 }

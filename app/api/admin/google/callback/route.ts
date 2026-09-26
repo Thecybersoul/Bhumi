@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAdmin } from '@/lib/auth'
+import { currentUser } from '@/lib/auth'
+import { getUser } from '@/lib/users'
+import { logActivity } from '@/lib/activity'
 import { exchangeCodeAndStore } from '@/lib/google'
 import { verifyPurposeToken } from '@/lib/session'
 
@@ -18,18 +20,20 @@ function destination(req: NextRequest, mode: string, params: Record<string, stri
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code')
   const error = req.nextUrl.searchParams.get('error')
-  const [mode, token] = (req.nextUrl.searchParams.get('state') ?? '').split('~')
+  const [mode, uid, token] = (req.nextUrl.searchParams.get('state') ?? '').split('~')
 
-  const trusted =
-    ((mode === 'app' || mode === 'web') && (await verifyPurposeToken(`google-oauth-${mode}`, token))) ||
-    (await isAdmin())
-  if (!trusted) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
+  // The signed state names who started the connection; a phone
+  // browser has no admin cookie, so this is the only proof it has.
+  const signed = (mode === 'app' || mode === 'web') && uid && (await verifyPurposeToken(`google-oauth-${mode}:${uid}`, token))
+  const who = signed ? await getUser(uid) : await currentUser()
+  if (!who) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
 
   if (error) return destination(req, mode, { google: 'denied' })
   if (!code) return destination(req, mode, { google: 'error' })
 
   try {
-    await exchangeCodeAndStore(code)
+    const { email } = await exchangeCodeAndStore(code, who.name)
+    await logActivity({ action: 'connect', entity_type: 'google', entity_label: email, summary: 'Connected Google Workspace (Drive, Calendar, Meet)' }, who)
     return destination(req, mode, { google: 'connected' })
   } catch (e) {
     console.error('[bhumi] google oauth callback failed', e)

@@ -1,4 +1,5 @@
 import { createServiceClient, hasSupabase } from './supabase'
+import { AUDITED, auditReady, currentActor, describe, diff, labelFor, logActivity, type Actor } from './activity'
 import {
   seedProperties,
   seedVerificationCases,
@@ -19,6 +20,7 @@ import type {
   PropertyTransaction,
   Note,
   Task,
+  Meeting,
 } from './types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -198,7 +200,33 @@ export async function getTasks(): Promise<Result<Task[]>> {
   return read<Task[]>('tasks', seedTasks, (q) => q.select('*').order('due_at', { ascending: true, nullsFirst: false }))
 }
 
+export async function getMeetings(): Promise<Result<Meeting[]>> {
+  return read<Meeting[]>('meetings', [], (q) => q.select('*').order('scheduled_at', { ascending: true }))
+}
+
 /* ─── Writes ─────────────────────────────────────────────── */
+
+/* Every write below also records who made it (see lib/activity.ts):
+   the row is stamped with created_by / updated_by, and the change
+   goes into the activity trail. A public caller, such as a website
+   enquiry, is recorded as "Website". Both steps are skipped until
+   migration 012 exists, so an older database keeps working. */
+
+async function stamp(table: string, payload: Record<string, unknown>, kind: 'create' | 'update') {
+  if (!AUDITED[table] || !(await auditReady())) return { payload, actor: null as Actor | null }
+  const actor = await currentActor()
+  const name = actor?.name ?? 'Website'
+  const stamped =
+    kind === 'create'
+      ? { ...payload, created_by: payload.created_by ?? name, updated_by: name }
+      : { ...payload, updated_by: name, updated_at: new Date().toISOString() }
+  return { payload: stamped, actor }
+}
+
+async function recordCreate(table: string, row: Record<string, unknown>, id: string | undefined, actor: Actor | null) {
+  if (!AUDITED[table]) return
+  await logActivity({ action: 'create', entity_type: AUDITED[table], entity_id: id ?? null, entity_label: labelFor(table, row) }, actor)
+}
 
 /** Writes are best-effort: when no database is attached the
     payload is accepted and logged so a demo deployment still
@@ -207,18 +235,8 @@ export async function insert<T extends Record<string, unknown>>(
   table: string,
   payload: T
 ): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
-  if (!hasSupabase()) {
-    console.info(`[bhumi] no database attached — ${table} payload accepted but not persisted`, payload)
-    return { ok: true, persisted: false }
-  }
-  try {
-    const supabase = createServiceClient()
-    const { error } = await supabase.from(table).insert([payload as Record<string, unknown>] as never)
-    if (error) return { ok: false, persisted: false, error: error.message }
-    return { ok: true, persisted: true }
-  } catch (e) {
-    return { ok: false, persisted: false, error: (e as Error).message }
-  }
+  const r = await insertReturningId(table, payload)
+  return { ok: r.ok, persisted: r.persisted, error: r.error }
 }
 
 /** insert(), but hands back the stored row's id — for callers that
@@ -227,12 +245,18 @@ export async function insertReturningId<T extends Record<string, unknown>>(
   table: string,
   payload: T
 ): Promise<{ ok: boolean; persisted: boolean; id?: string; error?: string }> {
-  if (!hasSupabase()) return { ok: true, persisted: false }
+  if (!hasSupabase()) {
+    console.info(`[bhumi] no database attached — ${table} payload accepted but not persisted`, payload)
+    return { ok: true, persisted: false }
+  }
   try {
+    const { payload: row, actor } = await stamp(table, payload, 'create')
     const supabase = createServiceClient()
-    const { data, error } = await supabase.from(table).insert([payload as Record<string, unknown>] as never).select('id').single()
+    const { data, error } = await supabase.from(table).insert([row] as never).select('id').single()
     if (error) return { ok: false, persisted: false, error: error.message }
-    return { ok: true, persisted: true, id: (data as { id: string }).id }
+    const id = (data as { id: string } | null)?.id
+    await recordCreate(table, row, id, actor)
+    return { ok: true, persisted: true, id }
   } catch (e) {
     return { ok: false, persisted: false, error: (e as Error).message }
   }
@@ -246,8 +270,29 @@ export async function update(
   if (!hasSupabase()) return { ok: true, persisted: false }
   try {
     const supabase = createServiceClient()
-    const { error } = await supabase.from(table).update(patch).eq('id', id)
+    const audited = Boolean(AUDITED[table]) && (await auditReady())
+    const before = audited
+      ? ((await supabase.from(table).select('*').eq('id', id).maybeSingle()).data as Record<string, unknown> | null)
+      : null
+    const { payload, actor } = await stamp(table, patch, 'update')
+    const { error } = await supabase.from(table).update(payload).eq('id', id)
     if (error) return { ok: false, persisted: false, error: error.message }
+    if (audited) {
+      const changes = diff(before, patch)
+      if (Object.keys(changes).length) {
+        await logActivity(
+          {
+            action: 'update',
+            entity_type: AUDITED[table],
+            entity_id: id,
+            entity_label: labelFor(table, { ...(before ?? {}), ...patch }),
+            summary: describe(table, changes),
+            changes,
+          },
+          actor
+        )
+      }
+    }
     return { ok: true, persisted: true }
   } catch (e) {
     return { ok: false, persisted: false, error: (e as Error).message }
@@ -261,8 +306,15 @@ export async function remove(
   if (!hasSupabase()) return { ok: true, persisted: false }
   try {
     const supabase = createServiceClient()
+    const audited = Boolean(AUDITED[table]) && (await auditReady())
+    const before = audited
+      ? ((await supabase.from(table).select('*').eq('id', id).maybeSingle()).data as Record<string, unknown> | null)
+      : null
     const { error } = await supabase.from(table).delete().eq('id', id)
     if (error) return { ok: false, persisted: false, error: error.message }
+    if (audited) {
+      await logActivity({ action: 'delete', entity_type: AUDITED[table], entity_id: id, entity_label: labelFor(table, before) })
+    }
     return { ok: true, persisted: true }
   } catch (e) {
     return { ok: false, persisted: false, error: (e as Error).message }

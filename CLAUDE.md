@@ -78,7 +78,7 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`011`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`012`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
@@ -109,6 +109,33 @@ original business-plan document. They're intentionally **not in the sidebar nav*
 reachable by URL) — day-to-day ERP use doesn't need them front and center. Setup lives in the sidebar
 footer, not the main nav, for the same reason: it's a utility you check when something looks wrong, not
 part of the daily flow.
+
+### Named accounts and the activity trail (migration 012)
+
+The admin runs on named accounts (`admin_users`: Chethan, Sanjog, Ranjith), and they all have the same access.
+Passwords are stored as scrypt hashes, created by `node scripts/create-admin-users.js <file-outside-repo>`
+(add `--reset` to issue new ones). The script writes plaintext only to that file, never into the repo. A
+session token is `<expiry>.<userId>.<hmac>`, and `currentUser()` in `lib/auth.ts` resolves it to an active
+account. Once any named account exists, the old shared `ADMIN_EMAIL`/`ADMIN_PASSWORD` login is refused,
+along with every token issued under it.
+
+**Attribution is automatic.** `insert`/`update`/`remove` in `lib/db.ts` stamp `created_by`/`updated_by`/
+`updated_at` and write `activity_log` (who, what, and for updates the changed fields old → new) for every
+table in `AUDITED` (`lib/activity.ts`). A new ERP table gets this for free if it's added there and written
+through those helpers. Writes that bypass them (documents, site content, media, the Google connection) call
+`logActivity()` themselves. Public writes (website enquiries) are attributed to "Website".
+
+**Meetings** (`meetings` table, `/api/meetings`) record in-person meetings, site visits, calls, video calls
+and discussions, each optionally linked to a listing, deal, task or lead. When Google is connected, new
+meetings go on the shared calendar, and video calls get a Meet link. Edits and cancellations update the
+event. The old `transactions.meetings` JSON array was copied into this table by 012 and is no longer written.
+
+**Google is one company account.** `sales@bhumiestates.in` (override with `GOOGLE_WORKSPACE_EMAIL`), shared
+by everyone. The OAuth callback refuses and revokes any other Google account. `google_auth` records who
+connected it. In Drive, listings, deals and verification cases each get their own folder, found by an
+`appProperties` tag rather than by name, so renaming a listing renames its folder. Each folder has category
+subfolders (Title deed, EC, …). Notes, meetings and tasks are filed in month folders. A folder is created
+as soon as a listing or deal is created (`after()` in the POST routes).
 
 ### Documents never pass through the server
 

@@ -6,7 +6,7 @@ import type { useApi } from './api'
    the bytes straight there, then record the result against the
    listing, note or deal it belongs to. */
 
-export type DocEntity = 'property' | 'note' | 'transaction' | 'lead' | 'verification' | 'general'
+export type DocEntity = 'property' | 'note' | 'transaction' | 'lead' | 'verification' | 'meeting' | 'task' | 'general'
 
 export interface Doc {
   id: string
@@ -20,6 +20,7 @@ export interface Doc {
   storage: 'supabase' | 'drive'
   path: string | null
   url: string | null
+  created_by?: string | null
   created_at: string
 }
 
@@ -83,5 +84,7 @@ export const CATEGORIES: Record<DocEntity, string[]> = {
   verification: ['Title deed', 'EC', 'RTC / Pahani', 'Survey sketch', 'Legal opinion', 'Report', 'Other'],
   lead: ['KYC', 'Requirement', 'Other'],
   note: ['Attachment'],
+  meeting: ['Minutes', 'Photos', 'Other'],
+  task: ['Attachment'],
   general: ['Other'],
 }

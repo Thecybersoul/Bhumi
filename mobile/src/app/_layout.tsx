@@ -27,6 +27,8 @@ function RootNavigator() {
         <Stack.Screen name="content/[key]" options={{ title: 'Edit content' }} />
         <Stack.Screen name="media" options={{ title: 'Media library' }} />
         <Stack.Screen name="documents" options={{ title: 'Documents' }} />
+        <Stack.Screen name="meeting/[id]" options={{ title: 'Meeting' }} />
+        <Stack.Screen name="activity" options={{ title: 'Team activity' }} />
         <Stack.Screen name="google" options={{ headerShown: false, animation: 'none' }} />
       </Stack.Protected>
       <Stack.Protected guard={!token}>

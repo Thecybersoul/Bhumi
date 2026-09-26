@@ -1,5 +1,7 @@
-import { useCallback, useState } from 'react'
-import { useFocusEffect } from 'expo-router'
+import { useCallback, useEffect, useState } from 'react'
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
+import { EntityPicker, LINK_ICON, type LinkValue } from '@/components/entityPicker'
+import { Avatar, ByLine, timeAgo } from '@/components/people'
 import { Alert, FlatList, Linking, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
@@ -29,9 +31,21 @@ export default function NotesTasksScreen() {
   const [title, setTitle] = useState('')
   const [due, setDue] = useState('')
   const [priority, setPriority] = useState<TaskPriority>('Normal')
-  const [related, setRelated] = useState('')
+  const NO_LINK: LinkValue = { entity_type: 'general', entity_id: null, entity_label: '' }
+  const [related, setRelated] = useState<LinkValue>(NO_LINK)
   const [noteBody, setNoteBody] = useState('')
-  const [noteRel, setNoteRel] = useState('')
+  const [noteRel, setNoteRel] = useState<LinkValue>(NO_LINK)
+  const [openTask, setOpenTask] = useState<string | null>(null)
+  const params = useLocalSearchParams<{ new?: string }>()
+
+  // Home's "+ Task" lands here with the form already open.
+  useEffect(() => {
+    if (params.new) {
+      setView('open')
+      setAdding(true)
+      router.setParams({ new: undefined })
+    }
+  }, [params.new])
   const [noteFiles, setNoteFiles] = useState<PickedFile[]>([])
   const [noteDocs, setNoteDocs] = useState<Record<string, Doc[]>>({})
   const [openNote, setOpenNote] = useState<string | null>(null)
@@ -72,10 +86,10 @@ export default function NotesTasksScreen() {
     if (!title.trim()) return
     setBusy('add')
     try {
-      await api.post('/api/tasks', { title: title.trim(), due_at: due || undefined, priority, entity_label: related.trim() })
+      await api.post('/api/tasks', { title: title.trim(), due_at: due || undefined, priority, ...linkForTask(related) })
       setTitle('')
       setDue('')
-      setRelated('')
+      setRelated(NO_LINK)
       setPriority('Normal')
       setAdding(false)
       await load()
@@ -84,6 +98,29 @@ export default function NotesTasksScreen() {
     } finally {
       setBusy(null)
     }
+  }
+
+  /* Tasks and notes can point at a listing, deal or lead. A task
+     can't point at another task, so that option is left out. */
+  function linkForTask(l: LinkValue) {
+    return l.entity_type === 'general' || l.entity_type === 'task'
+      ? { entity_type: 'general', entity_id: null, entity_label: l.entity_label }
+      : l
+  }
+
+  async function reschedule(t: Task, due_at: string) {
+    setTasks((p) => p?.map((x) => (x.id === t.id ? { ...x, due_at } : x)) ?? null)
+    try {
+      await api.patch(`/api/tasks/${t.id}`, { due_at: due_at || null })
+      await load()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  async function setTaskPriority(t: Task, p: TaskPriority) {
+    setTasks((prev) => prev?.map((x) => (x.id === t.id ? { ...x, priority: p } : x)) ?? null)
+    await api.patch(`/api/tasks/${t.id}`, { priority: p }).catch((e) => setError(e.message))
   }
 
   async function toggle(t: Task) {
@@ -132,15 +169,15 @@ export default function NotesTasksScreen() {
     setBusy('note')
     try {
       const body = noteBody.trim()
-      const out = await api.post<{ id?: string }>('/api/notes', { body, entity_label: noteRel.trim() })
+      const out = await api.post<{ id?: string }>('/api/notes', { body, ...linkForTask(noteRel) })
       if (noteFiles.length && out.id) {
-        const label = (noteRel.trim() || body).slice(0, 60)
+        const label = (noteRel.entity_label || body).slice(0, 60)
         for (const f of noteFiles) {
           await uploadDocument(api, f, { entity_type: 'note', entity_id: out.id, entity_label: label, category: 'Attachment' })
         }
       }
       setNoteBody('')
-      setNoteRel('')
+      setNoteRel(NO_LINK)
       setNoteFiles([])
       await load()
     } catch (e) {
@@ -172,36 +209,68 @@ export default function NotesTasksScreen() {
   const done = (tasks ?? []).filter((t) => t.status === 'Done')
   const rc = <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.navy} />
 
-  const taskRow = ({ item: t }: { item: Task }) => (
-    <View style={s.card}>
-      <View style={s.top}>
-        <TouchableOpacity onPress={() => toggle(t)} hitSlop={10}>
-          <View style={[s.box, t.status === 'Done' && s.boxOn]}>{t.status === 'Done' ? <Ionicons name="checkmark" size={16} color={colors.white} /> : null}</View>
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={[s.title, t.status === 'Done' && s.strike]}>{t.title}</Text>
-          <Text style={[s.meta, overdue(t) && { color: colors.flagged }]}>
-            {t.due_at ? fmt(t.due_at) : 'No due date'}
-            {t.entity_label ? ` · ${t.entity_label}` : ''}
-          </Text>
+  const taskRow = ({ item: t }: { item: Task }) => {
+    const expanded = openTask === t.id
+    return (
+      <View style={[s.card, overdue(t) && s.cardLate]}>
+        <View style={s.top}>
+          <TouchableOpacity onPress={() => toggle(t)} hitSlop={10}>
+            <View style={[s.box, t.status === 'Done' && s.boxOn]}>{t.status === 'Done' ? <Ionicons name="checkmark" size={16} color={colors.white} /> : null}</View>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => setOpenTask(expanded ? null : t.id)} activeOpacity={0.6}>
+            <Text style={[s.title, t.status === 'Done' && s.strike]}>{t.title}</Text>
+            <View style={s.metaRow}>
+              <Ionicons name={overdue(t) ? 'alert-circle' : 'time-outline'} size={13} color={overdue(t) ? colors.flagged : colors.muted} />
+              <Text style={[s.meta, { marginTop: 0 }, overdue(t) && { color: colors.flagged, fontWeight: '700' }]}>
+                {t.due_at ? `${overdue(t) ? 'Overdue · ' : ''}${fmt(t.due_at)}` : 'No due date'}
+              </Text>
+            </View>
+            {t.entity_label ? (
+              <View style={s.metaRow}>
+                <Ionicons name={LINK_ICON[t.entity_type] ?? 'link-outline'} size={12} color={colors.goldDeep} />
+                <Text style={s.linkText} numberOfLines={1}>{t.entity_label}</Text>
+              </View>
+            ) : null}
+            <ByLine record={t} createdAt={t.created_at} compact />
+          </TouchableOpacity>
+          {t.priority === 'High' ? <Badge label="High" tone="flagged" /> : null}
+          <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.muted} />
         </View>
-        {t.priority === 'High' ? <Badge label="High" tone="flagged" /> : null}
-      </View>
-      {t.google_meet_url ? (
-        <TouchableOpacity onPress={() => Linking.openURL(t.google_meet_url as string)}>
-          <Text style={s.meet}><Ionicons name="videocam" size={13} color={colors.goldDeep} /> Join Google Meet</Text>
-        </TouchableOpacity>
-      ) : null}
-      <View style={s.actions}>
-        {google && t.due_at && t.status === 'Open' ? (
-          <View style={{ flex: 1 }}>
-            <Button label={t.google_event_id ? 'Synced ✓ (remove)' : 'Add to Calendar + Meet'} tone="ghost" busy={busy === `c${t.id}`} onPress={() => sync(t)} />
+        {t.google_meet_url ? (
+          <TouchableOpacity onPress={() => Linking.openURL(t.google_meet_url as string)}>
+            <Text style={s.meet}><Ionicons name="videocam" size={13} color={colors.goldDeep} /> Join Google Meet</Text>
+          </TouchableOpacity>
+        ) : null}
+        {expanded ? (
+          <View style={s.expand}>
+            {t.status === 'Open' ? (
+              <>
+                <WhenField label="Due" value={t.due_at ?? ''} onChange={(v) => reschedule(t, v)} />
+                <Chips label="Priority" options={PRIORITIES} value={t.priority} onChange={(p) => setTaskPriority(t, p)} />
+              </>
+            ) : null}
+            <View style={s.actions}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="Log a meeting"
+                  tone="ghost"
+                  onPress={() => router.push({ pathname: '/meeting/[id]', params: { id: 'new', entity_type: 'task', entity_id: t.id, entity_label: t.title } })}
+                />
+              </View>
+              {google && t.due_at && t.status === 'Open' ? (
+                <View style={{ flex: 1 }}>
+                  <Button label={t.google_event_id ? 'On calendar ✓' : 'Add to calendar'} tone="ghost" busy={busy === `c${t.id}`} onPress={() => sync(t)} />
+                </View>
+              ) : null}
+            </View>
+            <View style={{ marginTop: 8 }}>
+              <Button label="Delete task" tone="danger" onPress={() => removeTask(t)} />
+            </View>
           </View>
         ) : null}
-        <View style={{ flex: 0.5 }}><Button label="Remove" tone="danger" onPress={() => removeTask(t)} /></View>
       </View>
-    </View>
-  )
+    )
+  }
 
   return (
     <Screen>
@@ -227,7 +296,7 @@ export default function NotesTasksScreen() {
           ListHeaderComponent={
             <View style={s.card}>
               <TextField label="New note" value={noteBody} onChange={setNoteBody} multiline placeholder="What was said, what to remember…" />
-              <TextField label="Related to (optional)" value={noteRel} onChange={setNoteRel} placeholder="A lead, deal or listing" />
+              <EntityPicker value={noteRel} onChange={setNoteRel} types={['property', 'transaction', 'lead']} label="Related to (optional)" />
               {noteFiles.map((f, i) => (
                 <View key={f.uri} style={s.pending}>
                   <Ionicons name="attach" size={16} color={colors.navy} />
@@ -261,12 +330,23 @@ export default function NotesTasksScreen() {
             return (
               <View style={s.card}>
                 <TouchableOpacity onPress={() => setOpenNote(expanded ? null : n.id)} onLongPress={() => removeNote(n)}>
+                  <View style={s.noteHead}>
+                    <Avatar name={n.created_by || n.author || null} size={26} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.noteWho}>{n.created_by || n.author || 'Team'}</Text>
+                      <Text style={[s.meta, { marginTop: 0 }]}>{timeAgo(n.created_at)}</Text>
+                    </View>
+                  </View>
                   <Text style={s.noteBody}>{n.body}</Text>
                   <View style={s.noteMeta}>
-                    <Text style={[s.meta, { flex: 1 }]}>
-                      {new Date(n.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                      {n.entity_label ? ` · ${n.entity_label}` : ''}
-                    </Text>
+                    <View style={[s.metaRow, { flex: 1, marginTop: 0 }]}>
+                      {n.entity_label ? (
+                        <>
+                          <Ionicons name={LINK_ICON[n.entity_type] ?? 'link-outline'} size={12} color={colors.goldDeep} />
+                          <Text style={s.linkText} numberOfLines={1}>{n.entity_label}</Text>
+                        </>
+                      ) : null}
+                    </View>
                     <View style={s.clip}>
                       <Ionicons name="attach" size={15} color={docs.length ? colors.goldDeep : colors.muted} />
                       <Text style={[s.clipText, docs.length > 0 && { color: colors.goldDeep }]}>{docs.length || 'Attach'}</Text>
@@ -306,7 +386,7 @@ export default function NotesTasksScreen() {
                     <TextField label="Task" value={title} onChange={setTitle} placeholder="Call back the Devanahalli enquiry" />
                     <WhenField label="Due" value={due} onChange={setDue} />
                     <Chips label="Priority" options={PRIORITIES} value={priority} onChange={setPriority} />
-                    <TextField label="Related to (optional)" value={related} onChange={setRelated} />
+                    <EntityPicker value={related} onChange={setRelated} types={['property', 'transaction', 'lead']} label="Related to (optional)" />
                     <Button label="Add task" onPress={addTask} busy={busy === 'add'} />
                   </View>
                 ) : null}
@@ -337,9 +417,15 @@ const s = StyleSheet.create({
   strike: { textDecorationLine: 'line-through', color: colors.muted },
   meta: { fontSize: text.sm, color: colors.muted, marginTop: 2 },
   meet: { fontSize: text.sm, color: colors.goldDeep, fontWeight: '700', marginTop: 8 },
+  cardLate: { borderColor: '#F0C9C4' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  linkText: { fontSize: text.xs, color: colors.goldDeep, fontWeight: '700', flexShrink: 1 },
+  expand: { marginTop: space.md, paddingTop: space.md, borderTopWidth: 1, borderTopColor: colors.line2 },
   actions: { flexDirection: 'row', gap: 8, marginTop: space.sm },
   noteBody: { fontSize: text.md, color: colors.ink, lineHeight: 21 },
-  noteMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  noteMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  noteHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  noteWho: { fontSize: text.sm, fontWeight: '800', color: colors.ink },
   clip: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingLeft: 8 },
   clipText: { fontSize: text.xs, fontWeight: '700', color: colors.muted },
   pending: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.navyTint, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 6 },

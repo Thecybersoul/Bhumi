@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { assertAdmin } from '@/lib/auth'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
 import { trashDriveFile } from '@/lib/google'
+import { logActivity } from '@/lib/activity'
 import { DOCUMENTS_BUCKET, type DocumentRow } from '@/lib/documents'
 
 export const dynamic = 'force-dynamic'
@@ -62,5 +63,12 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
 
   const { error } = await sb.from('documents').delete().eq('id', doc.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await logActivity({
+    action: 'delete',
+    entity_type: doc.entity_type,
+    entity_id: doc.entity_id,
+    entity_label: doc.entity_label,
+    summary: `Removed ${doc.name}${doc.storage === 'drive' && doc.path !== 'link' ? ' (moved to Drive trash)' : ''}`,
+  })
   return NextResponse.json({ ok: true })
 }
