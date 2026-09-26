@@ -38,7 +38,8 @@
               "arm64-v8a"
             ],
             "enableMinifyInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "useLegacyPackaging": true
           }
         }
       ],
@@ -49,6 +50,12 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 220
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Bhumi Estates needs your photos to upload listing images and website media."
+        }
       ]
     ],
     "extra": {
@@ -58,6 +65,12 @@
         "projectId": "a075b466-d2b0-4127-ba48-7964bf02908a"
       }
     },
-    "owner": "the-cyber-soul"
+    "owner": "the-cyber-soul",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a075b466-d2b0-4127-ba48-7964bf02908a"
+    }
   }
 }

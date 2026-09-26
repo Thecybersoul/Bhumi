@@ -1,41 +1,41 @@
 import { useCallback, useState } from 'react'
-import { useFocusEffect } from 'expo-router'
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { router, useFocusEffect } from 'expo-router'
+import { FlatList, Linking, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Badge, EmptyState, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
-import type { ApiResult, Lead, PropertyTransaction } from '@/lib/types'
+import { Button } from '@/components/form'
+import type { ApiResult, DataRoomRequest, Lead, LeadStage, PropertyTransaction } from '@/lib/types'
+
+const LEAD_STAGES: LeadStage[] = ['New', 'Contacted', 'Qualified', 'Visit', 'Closed']
 
 function cr(n: number | null | undefined) {
   if (n == null) return 'Value TBD'
   return n >= 100 ? `₹${Math.round(n)} Cr` : `₹${n.toFixed(n >= 10 ? 0 : 1)} Cr`
 }
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
-}
-function txnTone(t: PropertyTransaction): 'verified' | 'flagged' | 'progress' {
-  return t.outcome === 'Closed' ? 'verified' : t.outcome === 'Lost' ? 'flagged' : 'progress'
-}
-function leadTone(l: Lead): 'pending' | 'progress' | 'verified' {
-  return l.stage === 'New' ? 'pending' : l.stage === 'Closed' ? 'verified' : 'progress'
-}
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+const digits = (p: string) => p.replace(/[^\d+]/g, '')
 
 export default function DealsScreen() {
   const api = useApi()
-  const [view, setView] = useState<'pipeline' | 'leads'>('pipeline')
-  const [transactions, setTransactions] = useState<PropertyTransaction[] | null>(null)
+  const [view, setView] = useState<'pipeline' | 'leads' | 'documents'>('pipeline')
+  const [txns, setTxns] = useState<PropertyTransaction[] | null>(null)
   const [leads, setLeads] = useState<Lead[] | null>(null)
+  const [docs, setDocs] = useState<DataRoomRequest[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [busy, setBusy] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const [t, l] = await Promise.all([
+      const [t, l, d] = await Promise.all([
         api.get<ApiResult<PropertyTransaction[]>>('/api/transactions'),
         api.get<ApiResult<Lead[]>>('/api/leads'),
+        api.get<ApiResult<DataRoomRequest[]>>('/api/data-room'),
       ])
-      setTransactions(t.data)
+      setTxns(t.data)
       setLeads(l.data)
+      setDocs(d.data)
       setError(null)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not load deals')
@@ -48,70 +48,137 @@ export default function DealsScreen() {
     }, [load])
   )
 
-  async function onRefresh() {
+  async function refresh() {
     setRefreshing(true)
     await load()
     setRefreshing(false)
   }
 
-  const loading = transactions === null && leads === null && !error
+  async function advanceLead(l: Lead, stage: LeadStage) {
+    setBusy(l.id)
+    try {
+      await api.patch(`/api/leads?id=${encodeURIComponent(l.id)}&stage=${stage}`)
+      setLeads((p) => p?.map((x) => (x.id === l.id ? { ...x, stage } : x)) ?? null)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function decide(d: DataRoomRequest, status: 'Approved' | 'Declined') {
+    setBusy(d.id)
+    try {
+      await api.patch(`/api/data-room?id=${encodeURIComponent(d.id)}&status=${status}`)
+      setDocs((p) => p?.map((x) => (x.id === d.id ? { ...x, status } : x)) ?? null)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const loading = txns === null && leads === null && docs === null && !error
+  const tabs = [
+    { id: 'pipeline', label: `Pipeline${txns ? ` (${txns.length})` : ''}` },
+    { id: 'leads', label: `Leads${leads ? ` (${leads.length})` : ''}` },
+    { id: 'documents', label: `Docs${docs ? ` (${docs.filter((d) => d.status === 'Pending').length})` : ''}` },
+  ] as const
+
+  const rc = <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.navy} />
 
   return (
     <Screen>
-      <View style={styles.switcher}>
-        <TouchableOpacity
-          style={[styles.switchBtn, view === 'pipeline' && styles.switchBtnActive]}
-          onPress={() => setView('pipeline')}
-        >
-          <Text style={[styles.switchText, view === 'pipeline' && styles.switchTextActive]}>
-            Pipeline {transactions ? `(${transactions.length})` : ''}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.switchBtn, view === 'leads' && styles.switchBtnActive]} onPress={() => setView('leads')}>
-          <Text style={[styles.switchText, view === 'leads' && styles.switchTextActive]}>
-            Leads {leads ? `(${leads.length})` : ''}
-          </Text>
-        </TouchableOpacity>
+      <View style={s.switcher}>
+        {tabs.map((t) => (
+          <TouchableOpacity key={t.id} style={[s.sw, view === t.id && s.swOn]} onPress={() => setView(t.id)}>
+            <Text style={[s.swText, view === t.id && s.swTextOn]}>{t.label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
-
       {error && <ErrorBanner message={error} />}
+
       {loading ? (
         <LoadingScreen />
       ) : view === 'pipeline' ? (
         <FlatList
-          data={transactions ?? []}
+          data={txns ?? []}
           keyExtractor={(t) => t.id}
-          contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.navy} />}
+          contentContainerStyle={s.list}
+          refreshControl={rc}
+          ListHeaderComponent={<Button label="+ New transaction" onPress={() => router.push('/transaction/new')} />}
           ListEmptyComponent={<EmptyState text="No transactions yet." />}
           renderItem={({ item: t }) => (
-            <View style={styles.card}>
-              <View style={styles.cardHead}>
-                <Text style={styles.cardTitle} numberOfLines={1}>{t.property_label}</Text>
-                <Badge label={t.outcome === 'In progress' ? t.stage : t.outcome} tone={txnTone(t)} />
+            <TouchableOpacity style={s.card} onPress={() => router.push(`/transaction/${t.id}`)}>
+              <View style={s.head}>
+                <Text style={s.title} numberOfLines={1}>{t.property_label}</Text>
+                <Badge
+                  label={t.outcome === 'In progress' ? t.stage : t.outcome}
+                  tone={t.outcome === 'Closed' ? 'verified' : t.outcome === 'Lost' ? 'flagged' : 'progress'}
+                />
               </View>
-              <Text style={styles.cardMeta}>
-                {t.reference} · {cr(t.deal_value_cr)} · {fmtDate(t.opened_at)}
-              </Text>
-              <Text style={styles.cardMeta}>{t.buyer_name || t.seller_name || '—'}</Text>
-            </View>
+              <Text style={s.meta}>{t.reference} · {cr(t.deal_value_cr)} · {fmtDate(t.opened_at)}</Text>
+              <Text style={s.meta}>{[t.buyer_name, t.seller_name].filter(Boolean).join(' ↔ ') || '—'}</Text>
+            </TouchableOpacity>
           )}
         />
-      ) : (
+      ) : view === 'leads' ? (
         <FlatList
           data={leads ?? []}
           keyExtractor={(l) => l.id}
-          contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.navy} />}
+          contentContainerStyle={s.list}
+          refreshControl={rc}
           ListEmptyComponent={<EmptyState text="No leads yet." />}
-          renderItem={({ item: l }) => (
-            <View style={styles.card}>
-              <View style={styles.cardHead}>
-                <Text style={styles.cardTitle} numberOfLines={1}>{l.name}</Text>
-                <Badge label={l.stage} tone={leadTone(l)} />
+          renderItem={({ item: l }) => {
+            const idx = LEAD_STAGES.indexOf(l.stage)
+            const next = LEAD_STAGES[idx + 1]
+            return (
+              <View style={s.card}>
+                <View style={s.head}>
+                  <Text style={s.title} numberOfLines={1}>{l.name}</Text>
+                  <Badge label={l.stage} tone={l.stage === 'New' ? 'pending' : l.stage === 'Closed' ? 'verified' : 'progress'} />
+                </View>
+                <Text style={s.meta}>{l.kind} · {l.channel} · {fmtDate(l.created_at)}</Text>
+                {(l.company || l.phone) && <Text style={s.meta}>{[l.company, l.phone].filter(Boolean).join(' · ')}</Text>}
+                {l.notes ? <Text style={s.note}>{l.notes}</Text> : null}
+                <View style={s.actions}>
+                  {l.phone ? (
+                    <>
+                      <View style={{ flex: 1 }}><Button label="Call" tone="ghost" onPress={() => Linking.openURL(`tel:${digits(l.phone)}`)} /></View>
+                      <View style={{ flex: 1 }}><Button label="WhatsApp" tone="ghost" onPress={() => Linking.openURL(`https://wa.me/${digits(l.phone).replace('+', '')}`)} /></View>
+                    </>
+                  ) : null}
+                  {next ? (
+                    <View style={{ flex: 1.3 }}>
+                      <Button label={`→ ${next}`} busy={busy === l.id} onPress={() => advanceLead(l, next)} />
+                    </View>
+                  ) : null}
+                </View>
               </View>
-              <Text style={styles.cardMeta}>{l.kind} · {l.channel} · {fmtDate(l.created_at)}</Text>
-              {(l.phone || l.company) && <Text style={styles.cardMeta}>{[l.company, l.phone].filter(Boolean).join(' · ')}</Text>}
+            )
+          }}
+        />
+      ) : (
+        <FlatList
+          data={docs ?? []}
+          keyExtractor={(d) => d.id}
+          contentContainerStyle={s.list}
+          refreshControl={rc}
+          ListEmptyComponent={<EmptyState text="No document requests." />}
+          renderItem={({ item: d }) => (
+            <View style={s.card}>
+              <View style={s.head}>
+                <Text style={s.title} numberOfLines={1}>{d.name}</Text>
+                <Badge label={d.status} tone={d.status === 'Approved' ? 'verified' : d.status === 'Declined' ? 'flagged' : 'pending'} />
+              </View>
+              <Text style={s.meta}>{d.parcel_label || d.parcel_code} · {d.buyer_type} · {d.ticket_size || 'ticket n/a'}</Text>
+              <Text style={s.meta}>{[d.organisation, d.email, d.phone].filter(Boolean).join(' · ')}</Text>
+              {d.status === 'Pending' ? (
+                <View style={s.actions}>
+                  <View style={{ flex: 1 }}><Button label="Approve" busy={busy === d.id} onPress={() => decide(d, 'Approved')} /></View>
+                  <View style={{ flex: 1 }}><Button label="Decline" tone="danger" onPress={() => decide(d, 'Declined')} /></View>
+                </View>
+              ) : null}
             </View>
           )}
         />
@@ -120,15 +187,17 @@ export default function DealsScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  switcher: { flexDirection: 'row', gap: 8, padding: space.lg, paddingBottom: space.sm },
-  switchBtn: { flex: 1, paddingVertical: 10, borderRadius: 100, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, alignItems: 'center' },
-  switchBtnActive: { backgroundColor: colors.navy, borderColor: colors.navy },
-  switchText: { fontSize: text.sm, fontWeight: '600', color: colors.ink2 },
-  switchTextActive: { color: colors.white },
-  list: { padding: space.lg, paddingTop: space.sm, gap: space.sm },
+const s = StyleSheet.create({
+  switcher: { flexDirection: 'row', gap: 6, padding: space.lg, paddingBottom: space.sm },
+  sw: { flex: 1, paddingVertical: 10, borderRadius: 100, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, alignItems: 'center' },
+  swOn: { backgroundColor: colors.navy, borderColor: colors.navy },
+  swText: { fontSize: text.xs, fontWeight: '700', color: colors.ink2 },
+  swTextOn: { color: colors.white },
+  list: { padding: space.lg, paddingTop: space.sm },
   card: { backgroundColor: colors.white, borderRadius: 18, borderWidth: 1, borderColor: colors.line, padding: space.md, marginBottom: space.sm },
-  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 4 },
-  cardTitle: { fontSize: text.base, fontWeight: '700', color: colors.navy, flex: 1 },
-  cardMeta: { fontSize: text.sm, color: colors.muted, marginTop: 2 },
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 4 },
+  title: { fontSize: text.base, fontWeight: '700', color: colors.navy, flex: 1 },
+  meta: { fontSize: text.sm, color: colors.muted, marginTop: 2 },
+  note: { fontSize: text.sm, color: colors.ink2, marginTop: 6, lineHeight: 18 },
+  actions: { flexDirection: 'row', gap: 8, marginTop: space.sm },
 })

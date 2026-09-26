@@ -137,7 +137,9 @@ export interface PropertyTransaction {
   stage: TransactionStage
   outcome: TransactionOutcome
   buyer_name: string
+  buyer_phone?: string
   seller_name: string
+  seller_phone?: string
   representing: Representing
   deal_value_cr?: number | null
   commission_type: CommissionType
