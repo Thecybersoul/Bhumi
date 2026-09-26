@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@/lib/auth'
 import { listUsers } from '@/lib/users'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
@@ -23,7 +23,14 @@ export async function GET() {
     for (const row of data ?? []) if (row.actor_id && !lastActive[row.actor_id]) lastActive[row.actor_id] = row.created_at
   }
 
+  let notifyPrefs: Record<string, unknown> = { digest_email: true }
+  if (hasSupabase() && me.id !== 'env') {
+    const { data } = await createServiceClient().from('admin_users').select('notify_prefs').eq('id', me.id).maybeSingle()
+    if (data?.notify_prefs) notifyPrefs = data.notify_prefs
+  }
+
   return NextResponse.json({
+    notify_prefs: notifyPrefs,
     user: {
       id: me.id,
       name: me.name,
@@ -45,4 +52,16 @@ export async function GET() {
         last_active_at: lastActive[u.id] ?? null,
       })),
   })
+}
+
+// PATCH /api/admin/me { notify_prefs: { digest_email: boolean } } — your own email preferences.
+export async function PATCH(req: NextRequest) {
+  const me = await currentUser()
+  if (!me) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
+  if (me.id === 'env' || !hasSupabase()) return NextResponse.json({ error: 'Not available for the shared login' }, { status: 400 })
+  const body = (await req.json().catch(() => ({}))) as { notify_prefs?: { digest_email?: unknown } }
+  const prefs = { digest_email: body.notify_prefs?.digest_email !== false }
+  const { error } = await createServiceClient().from('admin_users').update({ notify_prefs: prefs }).eq('id', me.id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true, notify_prefs: prefs })
 }
