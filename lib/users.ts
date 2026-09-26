@@ -64,26 +64,41 @@ export function invalidateUsers() {
   cache = null
 }
 
-export async function listUsers(): Promise<AdminUser[]> {
-  if (cache && Date.now() - cache.at < TTL_MS) return cache.users
-  if (!hasSupabase()) return []
+/* "No accounts" has to mean the table is really empty, or not there
+   yet (before 012). It must never mean "the database had a bad
+   moment". An error would otherwise read as an empty list and let
+   the retired shared login back in. So an error is reported as
+   unknown, and unknown is treated as "named accounts are on". */
+async function loadUsers(): Promise<{ users: AdminUser[]; known: boolean }> {
+  if (cache && Date.now() - cache.at < TTL_MS) return { users: cache.users, known: true }
+  if (!hasSupabase()) return { users: [], known: true }
   try {
     const { data, error } = await createServiceClient()
       .from('admin_users')
       .select('id,email,name,role,active,created_at,last_login_at,password_changed_at')
       .order('created_at')
-    const users = error ? [] : ((data ?? []) as AdminUser[])
+    if (error) {
+      const missing = error.code === 'PGRST205' || error.code === '42P01' || /does not exist|could not find the table/i.test(error.message)
+      return { users: [], known: missing }
+    }
+    const users = (data ?? []) as AdminUser[]
     cache = { at: Date.now(), users }
-    return users
+    return { users, known: true }
   } catch {
-    return []
+    return { users: cache?.users ?? [], known: Boolean(cache) }
   }
 }
 
-/** True once at least one named account exists. From then on the
-    shared env login is refused. */
+export async function listUsers(): Promise<AdminUser[]> {
+  return (await loadUsers()).users
+}
+
+/** True once at least one named account exists, or whenever that
+    can't be confirmed. The shared env login only works on a database
+    that definitely has no accounts. */
 export async function namedAccountsEnabled(): Promise<boolean> {
-  return (await listUsers()).length > 0
+  const { users, known } = await loadUsers()
+  return !known || users.length > 0
 }
 
 export function envUser(): AdminUser {
@@ -91,8 +106,8 @@ export function envUser(): AdminUser {
 }
 
 export async function getUser(id: string): Promise<AdminUser | null> {
-  const users = await listUsers()
-  if (id === ENV_USER_ID) return users.length ? null : envUser()
+  const { users, known } = await loadUsers()
+  if (id === ENV_USER_ID) return known && users.length === 0 ? envUser() : null
   const u = users.find((x) => x.id === id)
   return u && u.active ? u : null
 }
