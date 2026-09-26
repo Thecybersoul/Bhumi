@@ -29,6 +29,7 @@ function RootNavigator() {
         <Stack.Screen name="documents" options={{ title: 'Documents' }} />
         <Stack.Screen name="meeting/[id]" options={{ title: 'Meeting' }} />
         <Stack.Screen name="activity" options={{ title: 'Team activity' }} />
+        <Stack.Screen name="email" options={{ title: 'New email', presentation: 'modal' }} />
         <Stack.Screen name="google" options={{ headerShown: false, animation: 'none' }} />
       </Stack.Protected>
       <Stack.Protected guard={!token}>

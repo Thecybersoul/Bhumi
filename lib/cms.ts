@@ -129,6 +129,11 @@ const EXPECTED = [
   'notes',
   'tasks',
   'documents',
+  'admin_users',
+  'activity_log',
+  'meetings',
+  'emails',
+  'app_settings',
 ]
 
 export const MEDIA_BUCKET = 'media'

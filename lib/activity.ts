@@ -102,6 +102,19 @@ export async function logActivity(entry: ActivityEntry, actor?: Actor | AdminUse
         summary: (entry.summary ?? '').slice(0, 500),
         changes: entry.changes ?? null,
       })
+    // Keep the Google Sheets register current: after the response has
+    // gone out, re-sync it if it's more than ten minutes stale.
+    if (entry.action !== 'login' && entry.action !== 'sync') {
+      try {
+        const { after } = await import('next/server')
+        after(async () => {
+          const { syncIfStale } = await import('./sheets')
+          await syncIfStale(who?.name ?? 'Auto-sync')
+        })
+      } catch {
+        // Outside a request (scripts): no background work to schedule.
+      }
+    }
   } catch (e) {
     console.error('[bhumi] activity log write failed', e)
   }

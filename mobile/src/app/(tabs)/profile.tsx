@@ -29,6 +29,16 @@ interface GoogleStatus {
   email?: string | null
   connected_by?: string | null
   connected_at?: string | null
+  services?: Record<'drive' | 'calendar' | 'meet' | 'gmail' | 'sheets', boolean>
+  missing?: string[]
+}
+
+interface Register {
+  enabled: boolean
+  url?: string
+  last_synced_at?: string
+  synced_by?: string
+  error?: string
 }
 
 function Row({ icon, title, sub, onPress, right, danger }: { icon: IconName; title: string; sub?: string; onPress?: () => void; right?: React.ReactNode; danger?: boolean }) {
@@ -65,6 +75,8 @@ export default function ProfileScreen() {
   const [pwBusy, setPwBusy] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [feedKey, setFeedKey] = useState(0)
+  const [register, setRegister] = useState<Register | null>(null)
+  const [syncing, setSyncing] = useState(false)
 
   const load = useCallback(async () => {
     const [m, g] = await Promise.all([
@@ -73,6 +85,10 @@ export default function ProfileScreen() {
     ])
     setMe(m)
     setGoogle(g)
+    api
+      .get<Register>('/api/sheets')
+      .then(setRegister)
+      .catch(() => setRegister(null))
     setFeedKey((k) => k + 1)
   }, [api])
 
@@ -117,6 +133,18 @@ export default function ProfileScreen() {
     )
   }
 
+  async function syncSheets() {
+    setSyncing(true)
+    try {
+      await api.post('/api/sheets')
+      setRegister(await api.get<Register>('/api/sheets'))
+    } catch (e) {
+      Alert.alert('Sync failed', (e as Error).message)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   async function changePassword() {
     setPwMsg(null)
     if (pw.next !== pw.confirm) return setPwMsg({ ok: false, text: 'The new passwords don’t match.' })
@@ -157,9 +185,9 @@ export default function ProfileScreen() {
       ? 'Not set up on the server yet'
       : !gConnected
         ? `Not connected — sign in as ${google.account}`
-        : google.drive
-          ? `Connected by ${google.connected_by || 'a team member'} · ${timeAgo(google.connected_at)}`
-          : 'Connected for Calendar only — reconnect to add Drive'
+        : google.missing?.length
+          ? `Connected, but without ${google.missing.join(', ')} — reconnect to add ${google.missing.length > 1 ? 'them' : 'it'}`
+          : `Connected by ${google.connected_by || 'a team member'} · ${timeAgo(google.connected_at)}`
 
   return (
     <Screen>
@@ -261,19 +289,21 @@ export default function ProfileScreen() {
               icon="logo-google"
               title={google?.email || google?.account || 'sales@bhumiestates.in'}
               sub={gSub}
-              right={gConnected ? <View style={[s.dot, { backgroundColor: google?.drive ? colors.verified : colors.pending }]} /> : null}
+              right={gConnected ? <View style={[s.dot, { backgroundColor: google?.missing?.length ? colors.pending : colors.verified }]} /> : null}
             />
             <View style={s.services}>
               {(
                 [
-                  ['folder', 'Drive'],
-                  ['calendar', 'Calendar'],
-                  ['videocam', 'Meet'],
+                  ['drive', 'folder', 'Drive'],
+                  ['calendar', 'calendar', 'Calendar'],
+                  ['meet', 'videocam', 'Meet'],
+                  ['gmail', 'mail', 'Gmail'],
+                  ['sheets', 'grid', 'Sheets'],
                 ] as const
-              ).map(([icon, label]) => {
-                const on = gConnected && (label !== 'Drive' || google?.drive)
+              ).map(([key, icon, label]) => {
+                const on = Boolean(gConnected && google?.services?.[key])
                 return (
-                  <View key={label} style={[s.service, on && s.serviceOn]}>
+                  <View key={key} style={[s.service, on && s.serviceOn]}>
                     <Ionicons name={icon} size={14} color={on ? colors.verified : colors.muted} />
                     <Text style={[s.serviceText, on && { color: colors.verified }]}>{label}</Text>
                   </View>
@@ -286,7 +316,7 @@ export default function ProfileScreen() {
                   {gBusy ? (
                     <ActivityIndicator color={colors.white} />
                   ) : (
-                    <Text style={s.primaryText}>{gConnected ? (google.drive ? 'Reconnect' : 'Reconnect with Drive') : 'Connect Google account'}</Text>
+                    <Text style={s.primaryText}>{gConnected ? (google.missing?.length ? 'Reconnect to add the rest' : 'Reconnect') : 'Connect Google account'}</Text>
                   )}
                 </TouchableOpacity>
                 {gConnected ? (
@@ -307,9 +337,32 @@ export default function ProfileScreen() {
                 />
               </>
             ) : null}
+            {register?.enabled ? (
+              <>
+                <Sep />
+                <Row
+                  icon="grid-outline"
+                  title="Live register in Google Sheets"
+                  sub={
+                    register.error
+                      ? `Last sync failed: ${register.error}`
+                      : register.last_synced_at
+                        ? `Synced ${timeAgo(register.last_synced_at)} by ${register.synced_by ?? 'the team'} · Listings, Deals, Leads, Meetings, Tasks, Activity`
+                        : 'Not created yet — tap Sync now'
+                  }
+                  onPress={register.url ? () => Linking.openURL(register.url as string) : undefined}
+                  right={register.url ? <Ionicons name="open-outline" size={17} color={colors.muted} /> : null}
+                />
+                <View style={s.gActions}>
+                  <TouchableOpacity style={[s.ghost, { flex: 1, paddingVertical: 11, alignItems: 'center' }]} onPress={syncSheets} disabled={syncing}>
+                    {syncing ? <ActivityIndicator color={colors.navy} /> : <Text style={[s.ghostText, { color: colors.navy }]}>Sync now</Text>}
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : null}
           </View>
           <Text style={s.note}>
-            One company account for the whole team. When anyone connects it, it’s connected for everyone. Documents go to Drive in a folder for each listing and deal, and meetings go on its calendar.
+            One company account for the whole team. When anyone connects it, it’s connected for everyone. Documents go to Drive in a folder for each listing and deal, meetings go on its calendar with Meet links, emails are sent from its Gmail, and a Sheets register mirrors the ERP.
           </Text>
 
           <Text style={s.group}>Your recent activity</Text>
@@ -371,7 +424,7 @@ const s = StyleSheet.create({
   active: { fontSize: text['2xs'], color: colors.muted, fontWeight: '600', maxWidth: 110, textAlign: 'right' },
   sep: { height: 1, backgroundColor: colors.line2, marginLeft: 62 },
   dot: { width: 9, height: 9, borderRadius: 5 },
-  services: { flexDirection: 'row', gap: 6, paddingHorizontal: space.md, paddingBottom: space.md },
+  services: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: space.md, paddingBottom: space.md },
   service: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 100, backgroundColor: colors.line2 },
   serviceOn: { backgroundColor: colors.verifiedBg },
   serviceText: { fontSize: text['2xs'], fontWeight: '800', color: colors.muted },

@@ -11,11 +11,41 @@ import { EntityPicker, type LinkValue } from '@/components/entityPicker'
 import { DocumentsPanel } from '@/components/documents'
 import { ActivityFeed } from '@/components/activity'
 import { ByLine } from '@/components/people'
+import { EmailButton, EmailLog, MeetAttendance } from '@/components/google'
 import { KIND_ICON, KIND_TINT, KINDS } from '@/lib/meetings'
 import type { Meeting, MeetingKind, MeetingStatus } from '@/lib/types'
 
 const DURATIONS = [15, 30, 45, 60, 90, 120]
 const STATUSES: MeetingStatus[] = ['Scheduled', 'Completed', 'Cancelled']
+
+/* Upcoming → a confirmation with time, place and Meet link.
+   Completed → the minutes, from the outcome written up here. */
+function meetingEmail(m: Meeting) {
+  const when = new Date(m.scheduled_at).toLocaleString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })
+  if (m.status === 'Completed') {
+    return {
+      subject: `Minutes: ${m.title}`,
+      body: [
+        'Dear all,',
+        `Thank you for your time on ${when}. A summary of what we discussed and agreed:`,
+        m.outcome || '• ',
+        'Please reply if anything needs correcting.',
+        'Warm regards,',
+      ].join('\n\n'),
+    }
+  }
+  const lines = [
+    `When: ${when} (${m.duration_min} min)`,
+    m.google_meet_url ? `Join on Google Meet: ${m.google_meet_url}` : m.location ? `Where: ${m.location}` : '',
+    m.entity_label ? `Regarding: ${m.entity_label}` : '',
+  ].filter(Boolean)
+  return {
+    subject: `${m.kind === 'Site visit' ? 'Site visit' : 'Meeting'} confirmed: ${m.title}`,
+    body: ['Dear Sir / Madam,', `This is to confirm our ${m.kind.toLowerCase()}.`, lines.join('\n'), m.agenda ? `Agenda:\n${m.agenda}` : '', 'Looking forward to it.', 'Warm regards,']
+      .filter(Boolean)
+      .join('\n\n'),
+  }
+}
 
 export default function MeetingScreen() {
   const params = useLocalSearchParams<{ id: string; entity_type?: string; entity_id?: string; entity_label?: string; kind?: string }>()
@@ -258,6 +288,24 @@ export default function MeetingScreen() {
         {m ? (
           <>
             <Card style={{ marginTop: space.lg }}>
+              <SectionTitle>{m.status === 'Completed' ? 'Send the minutes' : 'Send a confirmation'}</SectionTitle>
+              <EmailButton
+                label={m.status === 'Completed' ? 'Email the minutes' : 'Email a confirmation'}
+                draft={{ ...meetingEmail(m), entity_type: 'meeting', entity_id: m.id, entity_label: m.title }}
+              />
+              <View style={{ marginTop: space.sm }}>
+                <EmailLog entityType="meeting" entityId={m.id} />
+              </View>
+            </Card>
+
+            {m.google_meet_url ? (
+              <Card>
+                <SectionTitle>Who joined the Meet</SectionTitle>
+                <MeetAttendance meetingId={m.id} />
+              </Card>
+            ) : null}
+
+            <Card>
               <SectionTitle>Follow-up task</SectionTitle>
               {followDone ? (
                 <View style={s.done}>

@@ -2,7 +2,8 @@ import { google } from 'googleapis'
 import { createServiceClient, hasSupabase } from './supabase'
 
 /* ═══════════════════════════════════════════════════════════
-   Google Calendar / Meet sync.
+   Google Workspace: Calendar, Meet, Drive, Gmail and Sheets, all
+   through one company account (sales@bhumiestates.in).
 
    Same degrade-gracefully shape as Supabase in this codebase:
    nothing here throws when it isn't configured — every caller
@@ -18,12 +19,25 @@ import { createServiceClient, hasSupabase } from './supabase'
    created itself (plus ones the admin explicitly opens with it), so
    connecting Drive never exposes the rest of the account. */
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
-const SCOPES = [
-  'openid',
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/calendar.events',
-  DRIVE_SCOPE,
-]
+
+/* What each service needs. Deliberately narrow:
+   - gmail.send can send mail as the company account but cannot read
+     the mailbox;
+   - Sheets needs no scope of its own: drive.file already covers
+     spreadsheets this app created;
+   - Meet: the app can create meeting spaces, and can read attendance
+     for the account's meetings. */
+export const SERVICE_SCOPES = {
+  calendar: 'https://www.googleapis.com/auth/calendar.events',
+  drive: DRIVE_SCOPE,
+  sheets: DRIVE_SCOPE,
+  gmail: 'https://www.googleapis.com/auth/gmail.send',
+  meet: 'https://www.googleapis.com/auth/meetings.space.created',
+  meetRead: 'https://www.googleapis.com/auth/meetings.space.readonly',
+} as const
+export type GoogleService = keyof typeof SERVICE_SCOPES
+
+const SCOPES = ['openid', 'https://www.googleapis.com/auth/userinfo.email', ...new Set(Object.values(SERVICE_SCOPES))]
 
 /** The one Google account the whole ERP runs on. Every admin shares
     it: whoever connects it, it is connected for everyone. */
@@ -122,17 +136,32 @@ export async function isConnected(): Promise<boolean> {
   }
 }
 
-/** Connected *and* the grant includes Drive. A connection made
-    before Drive was added is calendar-only until it is redone. */
-export async function hasDrive(): Promise<boolean> {
-  if (!hasGoogleAuth() || !hasSupabase()) return false
+/** The scopes the stored connection was actually granted. A
+    connection made before a service was added lacks that service
+    until someone reconnects. */
+async function grantedScopes(): Promise<string> {
+  if (!hasGoogleAuth() || !hasSupabase()) return ''
   try {
-    const sb = createServiceClient()
-    const { data } = await sb.from('google_auth').select('scope').limit(1).maybeSingle()
-    return Boolean(data?.scope && String(data.scope).includes(DRIVE_SCOPE))
+    const { data } = await createServiceClient().from('google_auth').select('scope').limit(1).maybeSingle()
+    return String(data?.scope ?? '')
   } catch {
-    return false
+    return ''
   }
+}
+
+export async function hasService(service: GoogleService): Promise<boolean> {
+  return (await grantedScopes()).includes(SERVICE_SCOPES[service])
+}
+
+/** Every service, on or off — for the status screen. */
+export async function serviceStatus(): Promise<Record<'calendar' | 'drive' | 'sheets' | 'gmail' | 'meet', boolean>> {
+  const g = await grantedScopes()
+  const has = (s: GoogleService) => g.includes(SERVICE_SCOPES[s])
+  return { calendar: has('calendar'), drive: has('drive'), sheets: has('sheets'), gmail: has('gmail'), meet: has('meet') }
+}
+
+export async function hasDrive(): Promise<boolean> {
+  return hasService('drive')
 }
 
 export async function disconnect(): Promise<void> {
@@ -145,7 +174,7 @@ export async function disconnect(): Promise<void> {
     refresh token automatically on the first API call that needs
     it — this just needs to hand back fresh tokens afterwards so
     the next call doesn't pay for another refresh. */
-async function getClient() {
+export async function getClient() {
   if (!hasGoogleAuth() || !hasSupabase()) return null
   const sb = createServiceClient()
   const { data } = await sb.from('google_auth').select('*').limit(1).maybeSingle()
@@ -324,6 +353,13 @@ async function destinationFolder(
   }
   const category = opts.category && !['Other', 'Attachment'].includes(opts.category) ? opts.category : null
   return category && PER_RECORD.has(opts.entityType) ? findOrCreateFolder(drive, category.replace(/[\\/]/g, '-'), folder) : folder
+}
+
+/** The id of the "Bhumi Estates ERP" folder at the top of the Drive. */
+export async function erpRootFolderId(): Promise<string | null> {
+  const auth = await getClient()
+  if (!auth) return null
+  return findOrCreateFolder(google.drive({ version: 'v3', auth }), ROOT_FOLDER)
 }
 
 /** A listing's or deal's Drive folder, created if it doesn't exist.

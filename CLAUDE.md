@@ -78,7 +78,7 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`012`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`013`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
@@ -136,6 +136,19 @@ connected it. In Drive, listings, deals and verification cases each get their ow
 `appProperties` tag rather than by name, so renaming a listing renames its folder. Each folder has category
 subfolders (Title deed, EC, …). Notes, meetings and tasks are filed in month folders. A folder is created
 as soon as a listing or deal is created (`after()` in the POST routes).
+
+**Gmail, Meet and Sheets (migration 013)** use the same connection, and the scopes are listed in
+`SERVICE_SCOPES` (`lib/google.ts`). `/api/admin/google/status` reports each service and flags any missing
+ones. A connection made before a scope was added needs a reconnect. What each service does:
+- **Gmail** (`lib/gmail.ts`, `/api/email`) — send only (`gmail.send`). It sends from sales@ with the sender's
+  name in the display name, attaches ERP documents up to 18 MB, and logs each email in `emails`
+  against its record.
+- **Meet** (`lib/meet.ts`) — `/api/meet/instant` opens a room for a call happening now and logs it as a
+  video-call meeting. `/api/meetings/:id/attendance` reads participants, recordings and transcripts.
+- **Sheets** (`lib/sheets.ts`) — keeps a one-way mirror spreadsheet, "Bhumi Estates ERP — Register", with
+  one tab per record type, written RAW. It re-syncs after a change if it's more than 10 minutes stale
+  (via `after()` in `logActivity`), on demand (`POST /api/sheets`), and daily from Vercel Cron
+  (`/api/cron/sheets`, which needs `CRON_SECRET`). It needs no scope beyond `drive.file`.
 
 ### Documents never pass through the server
 

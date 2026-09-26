@@ -145,8 +145,10 @@ export interface PropertyTransaction extends Audited {
   outcome: TransactionOutcome
   buyer_name: string
   buyer_phone?: string
+  buyer_email?: string
   seller_name: string
   seller_phone?: string
+  seller_email?: string
   representing: Representing
   deal_value_cr?: number | null
   commission_type: CommissionType

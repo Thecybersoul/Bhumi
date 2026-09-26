@@ -20,6 +20,7 @@ const NOUN: Record<string, string> = {
   media: 'media',
   google: 'Google Workspace',
   account: 'account',
+  sheets: 'Google Sheets register',
 }
 
 const VERB: Record<string, string> = {
@@ -31,10 +32,12 @@ const VERB: Record<string, string> = {
   connect: 'connected',
   disconnect: 'disconnected',
   login: 'signed in',
+  email: 'emailed about',
+  sync: 'synced',
 }
 
 export function activityHeadline(a: Activity) {
-  if (a.entity_type === 'google' || a.entity_type === 'account') return `${VERB[a.action] ?? a.action} ${NOUN[a.entity_type] ?? ''}`.trim()
+  if (a.entity_type === 'google' || a.entity_type === 'account' || a.entity_type === 'sheets') return `${VERB[a.action] ?? a.action} ${NOUN[a.entity_type] ?? ''}`.trim()
   return `${VERB[a.action] ?? a.action} ${NOUN[a.entity_type] ?? a.entity_type}`
 }
 

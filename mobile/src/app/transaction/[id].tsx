@@ -9,11 +9,29 @@ import { DocumentsPanel } from '@/components/documents'
 import { ActivityFeed } from '@/components/activity'
 import { ByLine } from '@/components/people'
 import { RelatedMeetings } from '@/components/relatedMeetings'
+import { EmailButton, EmailLog, MeetNowButton } from '@/components/google'
 import type { ApiResult, CommissionType, PropertyTransaction, Representing, TransactionStage } from '@/lib/types'
 
 const STAGES: TransactionStage[] = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
 const REPRESENTING: Representing[] = ['Buyer', 'Seller', 'Both']
 const COMMISSION: CommissionType[] = ['Percentage', 'Flat']
+
+function dealEmail(t: PropertyTransaction, who: 'buyer' | 'seller') {
+  const name = (who === 'buyer' ? t.buyer_name : t.seller_name) || ''
+  return {
+    to: (who === 'buyer' ? t.buyer_email : t.seller_email) || '',
+    subject: `${t.property_label} — next steps | Bhumi Estates`,
+    body: [
+      `Dear ${name ? name.split(' ')[0] : 'Sir / Madam'},`,
+      `Following up on ${t.property_label}. We are now at the ${t.stage.toLowerCase()} stage.`,
+      'Next steps:\n• \n• ',
+      'Warm regards,',
+    ].join('\n\n'),
+    entity_type: 'transaction',
+    entity_id: t.id,
+    entity_label: `${t.reference} · ${t.property_label}`,
+  }
+}
 
 export default function TransactionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -28,8 +46,10 @@ export default function TransactionScreen() {
   const [label, setLabel] = useState('')
   const [buyer, setBuyer] = useState('')
   const [buyerPhone, setBuyerPhone] = useState('')
+  const [buyerEmail, setBuyerEmail] = useState('')
   const [seller, setSeller] = useState('')
   const [sellerPhone, setSellerPhone] = useState('')
+  const [sellerEmail, setSellerEmail] = useState('')
   const [representing, setRepresenting] = useState<Representing>('Both')
   const [value, setValue] = useState('')
   const [ctype, setCtype] = useState<CommissionType>('Percentage')
@@ -46,8 +66,10 @@ export default function TransactionScreen() {
     setLabel(x.property_label)
     setBuyer(x.buyer_name)
     setBuyerPhone(x.buyer_phone ?? '')
+    setBuyerEmail(x.buyer_email ?? '')
     setSeller(x.seller_name)
     setSellerPhone(x.seller_phone ?? '')
+    setSellerEmail(x.seller_email ?? '')
     setRepresenting(x.representing)
     setValue(x.deal_value_cr != null ? String(x.deal_value_cr) : '')
     setCtype(x.commission_type)
@@ -91,8 +113,10 @@ export default function TransactionScreen() {
       property_label: label.trim(),
       buyer_name: buyer.trim(),
       buyer_phone: buyerPhone.trim(),
+      buyer_email: buyerEmail.trim(),
       seller_name: seller.trim(),
       seller_phone: sellerPhone.trim(),
+      seller_email: sellerEmail.trim(),
       representing,
       deal_value_cr: value.trim() === '' ? null : Number(value),
       commission_type: ctype,
@@ -183,8 +207,10 @@ export default function TransactionScreen() {
           <SectionTitle>Parties</SectionTitle>
           <TextField label="Buyer" value={buyer} onChange={setBuyer} />
           <TextField label="Buyer phone" value={buyerPhone} onChange={setBuyerPhone} keyboard="phone-pad" />
+          <TextField label="Buyer email" value={buyerEmail} onChange={setBuyerEmail} keyboard="email-address" />
           <TextField label="Seller" value={seller} onChange={setSeller} />
           <TextField label="Seller phone" value={sellerPhone} onChange={setSellerPhone} keyboard="phone-pad" />
+          <TextField label="Seller email" value={sellerEmail} onChange={setSellerEmail} keyboard="email-address" />
         </Card>
 
         <Card>
@@ -205,6 +231,22 @@ export default function TransactionScreen() {
           <Card style={{ marginTop: space.lg }}>
             <SectionTitle>Meetings & calls</SectionTitle>
             <RelatedMeetings entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
+          </Card>
+        )}
+
+        {t && (
+          <Card>
+            <SectionTitle>Contact</SectionTitle>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <EmailButton compact label={t.buyer_name ? `Email ${t.buyer_name.split(' ')[0]}` : 'Email buyer'} draft={dealEmail(t, 'buyer')} />
+              <EmailButton compact label={t.seller_name ? `Email ${t.seller_name.split(' ')[0]}` : 'Email seller'} draft={dealEmail(t, 'seller')} />
+            </View>
+            <View style={{ marginTop: 8 }}>
+              <MeetNowButton entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} title={`Call · ${t.property_label}`} />
+            </View>
+            <View style={{ marginTop: space.sm }}>
+              <EmailLog entityType="transaction" entityId={t.id} />
+            </View>
           </Card>
         )}
 

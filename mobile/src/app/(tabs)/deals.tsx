@@ -6,6 +6,7 @@ import { colors, space, text } from '@/lib/theme'
 import { Badge, EmptyState, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button } from '@/components/form'
 import { ByLine } from '@/components/people'
+import { EmailButton, MeetNowButton } from '@/components/google'
 import type { ApiResult, DataRoomRequest, Lead, LeadStage, PropertyTransaction } from '@/lib/types'
 
 const LEAD_STAGES: LeadStage[] = ['New', 'Contacted', 'Qualified', 'Visit', 'Closed']
@@ -144,6 +145,27 @@ export default function DealsScreen() {
                 {(l.company || l.phone) && <Text style={s.meta}>{[l.company, l.phone].filter(Boolean).join(' · ')}</Text>}
                 {l.notes ? <Text style={s.note}>{l.notes}</Text> : null}
                 {l.updated_by && l.updated_by !== 'Website' ? <ByLine record={{ updated_by: l.updated_by, updated_at: l.updated_at }} /> : null}
+                <View style={[s.actions, { marginBottom: 0 }]}>
+                  {l.email ? (
+                    <EmailButton
+                      compact
+                      draft={{
+                        to: l.email,
+                        subject: `Your enquiry${l.property_code ? ` about ${l.property_code}` : ''} | Bhumi Estates`,
+                        body: [
+                          `Dear ${l.name.split(' ')[0]},`,
+                          `Thank you for reaching out to Bhumi Estates${l.property_code ? ` about ${l.property_code}` : ''}. I'd be glad to help.`,
+                          'Could you share a convenient time for a quick call or a site visit?',
+                          'Warm regards,',
+                        ].join('\n\n'),
+                        entity_type: 'lead',
+                        entity_id: l.id,
+                        entity_label: l.name,
+                      }}
+                    />
+                  ) : null}
+                  <MeetNowButton compact entityType="lead" entityId={l.id} entityLabel={l.name} title={`Call with ${l.name}`} />
+                </View>
                 <View style={s.actions}>
                   {l.phone ? (
                     <>

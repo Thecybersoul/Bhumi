@@ -6,6 +6,7 @@ import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { MeetingCard } from '@/components/meetingCard'
+import { MeetNowButton } from '@/components/google'
 import { KIND_ICON, KINDS, dayLabel, needsOutcome } from '@/lib/meetings'
 import type { Meeting, MeetingKind } from '@/lib/types'
 
@@ -87,6 +88,9 @@ export default function MeetingsScreen() {
         ListHeaderComponent={
           <View>
             {error ? <ErrorBanner message={error} /> : null}
+            <View style={{ marginBottom: space.sm }}>
+              <MeetNowButton title="Quick call" />
+            </View>
             <View style={s.switcher}>
               {(
                 [

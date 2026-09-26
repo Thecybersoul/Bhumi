@@ -9,6 +9,7 @@ import { DocumentsPanel } from '@/components/documents'
 import { ActivityFeed } from '@/components/activity'
 import { ByLine } from '@/components/people'
 import { RelatedMeetings } from '@/components/relatedMeetings'
+import { EmailButton, EmailLog } from '@/components/google'
 import type { ApiResult, Property, PropertyStatus, PropertyTypeSlug, PriceType, Zone } from '@/lib/types'
 
 const TYPES: PropertyTypeSlug[] = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels']
@@ -30,6 +31,32 @@ const toForm = (p: Partial<Property> & Record<string, unknown>): Form => {
 }
 
 const NUMERIC = ['extent_acres', 'price_per_acre_cr', 'price_total_cr', 'built_up_sqft', 'price_per_sqft', 'plots_total', 'plots_available']
+
+/* A ready-to-edit email with the listing's essentials; its documents
+   can be ticked as attachments in the composer. */
+function listingEmail(p: Property & Record<string, unknown>) {
+  const facts = [
+    ['Location', p.location],
+    ['Extent', p.built_up_sqft ? `${Number(p.built_up_sqft).toLocaleString('en-IN')} sq ft built-up` : p.extent_acres ? `${p.extent_acres} acres` : ''],
+    ['Price', p.price_total_cr ? `₹${p.price_total_cr} Cr` : p.price_per_acre_cr ? `₹${p.price_per_acre_cr} Cr per acre` : p.price_per_sqft ? `₹${Number(p.price_per_sqft).toLocaleString('en-IN')} per sq ft` : String(p.price_type ?? '')],
+    ['Khata', p.khata],
+    ['Conversion', p.conversion],
+  ].filter(([, v]) => v)
+  return {
+    subject: `${p.title} — ${p.code} | Bhumi Estates`,
+    body: [
+      'Dear Sir / Madam,',
+      `Thank you for your interest. Here are the details of ${p.title}:`,
+      facts.map(([k, v]) => `• ${k}: ${v}`).join('\n'),
+      `Full listing: https://www.bhumiestates.in/marketplace/${encodeURIComponent(String(p.code))}`,
+      'Happy to share the title documents and arrange a site visit at your convenience.',
+      'Warm regards,',
+    ].join('\n\n'),
+    entity_type: 'property',
+    entity_id: p.id,
+    entity_label: `${p.code} · ${p.title}`,
+  }
+}
 
 export default function PropertyScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>()
@@ -216,6 +243,13 @@ export default function PropertyScreen() {
         {orig && source === 'live' ? (
           <>
             <Card style={{ marginTop: space.lg }}>
+              <SectionTitle>Share with a client</SectionTitle>
+              <EmailButton label="Email this listing" draft={listingEmail(orig)} />
+              <View style={{ marginTop: space.sm }}>
+                <EmailLog entityType="property" entityId={orig.id} />
+              </View>
+            </Card>
+            <Card>
               <SectionTitle>Site visits & meetings</SectionTitle>
               <RelatedMeetings entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} defaultKind="Site visit" />
             </Card>
