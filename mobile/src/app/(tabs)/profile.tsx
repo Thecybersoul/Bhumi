@@ -287,7 +287,7 @@ export default function ProfileScreen() {
           <View style={s.block}>
             <Row
               icon="logo-google"
-              title={google?.email || google?.account || 'sales@bhumiestates.in'}
+              title={google?.email || google?.account || 'info@bhumiestates.in'}
               sub={gSub}
               right={gConnected ? <View style={[s.dot, { backgroundColor: google?.missing?.length ? colors.pending : colors.verified }]} /> : null}
             />

@@ -38,7 +38,7 @@ Vercel project: `chethan17s-projects/bhumi`. Pushes to `main` deploy to producti
 | `GOOGLE_CLIENT_ID` | OAuth client | Google Cloud → Google Auth Platform → Clients → *Bhumi ERP server* → Client ID (ends in `.apps.googleusercontent.com`) |
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret. **Secret** | Same client → Client secret (also in the JSON you downloaded) |
 | `GOOGLE_REDIRECT_URI` | Where Google sends the admin back | `https://www.bhumiestates.in/api/admin/google/callback`. It must match the redirect URI on the client exactly, `www` included |
-| `GOOGLE_WORKSPACE_EMAIL` | *Optional.* The only Google account allowed to connect | Defaults to `sales@bhumiestates.in`. Set it only to change that |
+| `GOOGLE_WORKSPACE_EMAIL` | *Optional.* The only Google account allowed to connect | Defaults to `info@bhumiestates.in`. Set it only to change that |
 
 The OAuth client must be a **Web application** with these scopes on its consent screen: `openid`,
 `userinfo.email`, `calendar.events`, `drive.file`, `gmail.send`, `meetings.space.created` and
@@ -122,5 +122,5 @@ curl -s https://www.bhumiestates.in/api/health
 ```
 
 That should show `"reachable": true`. Then, in the app: **Profile → Google Workspace** should show
-*Connect Google account*, not "Not set up on the server yet". After connecting as sales@bhumiestates.in,
+*Connect Google account*, not "Not set up on the server yet". After connecting as info@bhumiestates.in,
 all five chips (Drive, Calendar, Meet, Gmail, Sheets) turn green.

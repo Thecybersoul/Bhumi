@@ -2,7 +2,7 @@
 -- 013 — Gmail and Sheets
 --
 -- emails        Every email sent from the ERP through the company
---               Gmail account (sales@bhumiestates.in): who sent it, to
+--               Gmail account (info@bhumiestates.in): who sent it, to
 --               whom, which listing / deal / lead / meeting it was
 --               about, and what was attached. The Gmail message id
 --               ties it back to the Sent folder.

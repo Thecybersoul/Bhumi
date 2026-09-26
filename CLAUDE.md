@@ -130,7 +130,7 @@ and discussions, each optionally linked to a listing, deal, task or lead. When G
 meetings go on the shared calendar, and video calls get a Meet link. Edits and cancellations update the
 event. The old `transactions.meetings` JSON array was copied into this table by 012 and is no longer written.
 
-**Google is one company account.** `sales@bhumiestates.in` (override with `GOOGLE_WORKSPACE_EMAIL`), shared
+**Google is one company account.** `info@bhumiestates.in` (override with `GOOGLE_WORKSPACE_EMAIL`), shared
 by everyone. The OAuth callback refuses and revokes any other Google account. `google_auth` records who
 connected it. In Drive, listings, deals and verification cases each get their own folder, found by an
 `appProperties` tag rather than by name, so renaming a listing renames its folder. Each folder has category
@@ -140,7 +140,7 @@ as soon as a listing or deal is created (`after()` in the POST routes).
 **Gmail, Meet and Sheets (migration 013)** use the same connection, and the scopes are listed in
 `SERVICE_SCOPES` (`lib/google.ts`). `/api/admin/google/status` reports each service and flags any missing
 ones. A connection made before a scope was added needs a reconnect. What each service does:
-- **Gmail** (`lib/gmail.ts`, `/api/email`) — send only (`gmail.send`). It sends from sales@ with the sender's
+- **Gmail** (`lib/gmail.ts`, `/api/email`) — send only (`gmail.send`). It sends from info@ with the sender's
   name in the display name, attaches ERP documents up to 18 MB, and logs each email in `emails`
   against its record.
 - **Meet** (`lib/meet.ts`) — `/api/meet/instant` opens a room for a call happening now and logs it as a

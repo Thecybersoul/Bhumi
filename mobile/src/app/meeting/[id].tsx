@@ -322,7 +322,7 @@ export default function MeetingScreen() {
               <Card>
                 <SectionTitle>Google Calendar</SectionTitle>
                 <Text style={s.muted}>
-                  {m.google_event_id ? 'On the shared calendar (sales@bhumiestates.in). Changes here update it.' : 'Not on the calendar yet.'}
+                  {m.google_event_id ? 'On the shared calendar (info@bhumiestates.in). Changes here update it.' : 'Not on the calendar yet.'}
                 </Text>
                 <View style={{ marginTop: space.sm }}>
                   <Button label={m.google_event_id ? 'Remove from calendar' : 'Add to calendar'} tone="ghost" onPress={toggleCalendar} busy={busy} />

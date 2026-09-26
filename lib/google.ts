@@ -3,7 +3,7 @@ import { createServiceClient, hasSupabase } from './supabase'
 
 /* ═══════════════════════════════════════════════════════════
    Google Workspace: Calendar, Meet, Drive, Gmail and Sheets, all
-   through one company account (sales@bhumiestates.in).
+   through one company account (info@bhumiestates.in).
 
    Same degrade-gracefully shape as Supabase in this codebase:
    nothing here throws when it isn't configured — every caller
@@ -41,7 +41,7 @@ const SCOPES = ['openid', 'https://www.googleapis.com/auth/userinfo.email', ...n
 
 /** The one Google account the whole ERP runs on. Every admin shares
     it: whoever connects it, it is connected for everyone. */
-export const WORKSPACE_EMAIL = (process.env.GOOGLE_WORKSPACE_EMAIL || 'sales@bhumiestates.in').toLowerCase()
+export const WORKSPACE_EMAIL = (process.env.GOOGLE_WORKSPACE_EMAIL || 'info@bhumiestates.in').toLowerCase()
 const ROOT_FOLDER = 'Bhumi Estates ERP'
 
 /** True when the three OAuth env vars are set. Doesn't mean the

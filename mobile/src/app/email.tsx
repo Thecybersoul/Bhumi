@@ -8,9 +8,9 @@ import { docIcon, formatBytes, type Doc } from '@/lib/documents'
 import { colors, radius, space, text } from '@/lib/theme'
 import { ErrorBanner, Screen } from '@/components/ui'
 
-const WORKSPACE = 'sales@bhumiestates.in'
+const WORKSPACE = 'info@bhumiestates.in'
 
-/* Compose and send from sales@bhumiestates.in. The caller passes the
+/* Compose and send from info@bhumiestates.in. The caller passes the
    record it's about, plus any prefilled recipient, subject and body.
    The record's documents are offered as attachments. */
 export default function EmailScreen() {
@@ -103,7 +103,7 @@ export default function EmailScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
-        {gmail === false ? <ErrorBanner message="Gmail isn't connected yet. Connect Google from Profile (sign in as sales@bhumiestates.in)." /> : null}
+        {gmail === false ? <ErrorBanner message="Gmail isn't connected yet. Connect Google from Profile (sign in as info@bhumiestates.in)." /> : null}
         {error ? <ErrorBanner message={error} /> : null}
 
         <View style={s.card}>

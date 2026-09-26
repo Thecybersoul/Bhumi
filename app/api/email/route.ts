@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ data: data ?? [], error: error?.message })
 }
 
-/* POST /api/email — send from sales@bhumiestates.in as the signed-in
+/* POST /api/email — send from info@bhumiestates.in as the signed-in
    person, optionally attaching ERP documents, and file it against the
    listing / deal / lead / meeting it's about.
    { to, cc?, subject, body, document_ids?, entity_type?, entity_id?, entity_label? } */

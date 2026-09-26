@@ -7,7 +7,7 @@ import { DOCUMENTS_BUCKET, type DocumentRow } from './documents'
 /* ═══════════════════════════════════════════════════════════
    Gmail — sending as the company account.
 
-   Mail goes out from sales@bhumiestates.in, with the sender's own
+   Mail goes out from info@bhumiestates.in, with the sender's own
    name in the display name ("Sanjog · Bhumi Estates"), so a client
    sees one consistent company address but knows who they are
    dealing with. It lands in that account's Sent folder like any

@@ -250,7 +250,7 @@ export function DocumentsPanel({
 
       <Text style={s.dest}>
         <Ionicons name={drive ? 'logo-google' : 'lock-closed'} size={11} color={colors.muted} />{' '}
-        {drive ? 'Saved to Google Drive (sales@bhumiestates.in) › Bhumi Estates ERP' : 'Saved to Bhumi secure storage until Google Drive is connected'}
+        {drive ? 'Saved to Google Drive (info@bhumiestates.in) › Bhumi Estates ERP' : 'Saved to Bhumi secure storage until Google Drive is connected'}
         {!compact && cats.length > 1 ? ` · as “${category}”` : ''}
       </Text>
 
