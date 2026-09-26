@@ -92,17 +92,24 @@ carries no seed data by design — a listing represents real land, so demo rows 
 execute DDL; that is why `npm run migrate` needs `SUPABASE_DB_URL` (a real Postgres connection string)
 separately from the Supabase keys.
 
-### The admin nav folds related views under one entry, not one nav item per table
+### The web admin and the app are one ERP with one structure
 
-`/admin/deals` is one page with three tabs (Pipeline, Leads, Document requests) built with the shared
-`AdminTabs` component (`components/admin/AdminTabs.tsx`) — each tab's content is a normal server-rendered
-component (`TransactionBoard`, `LeadInbox`, `DataRoomQueue`) fetched in parallel by the page and handed to
-`AdminTabs` as already-rendered children; switching tabs only toggles `display`, it never remounts, so a
-filter typed into one tab survives a trip to another. `/admin/properties` does the same for Listings and
-Verification, since a verification case is always about one specific parcel. `?tab=<id>` on either route
-preselects a tab (used by cross-links from `/admin/metrics` and the dashboard). Adding a fourth related view
-to either page means adding a tab, not a new top-level nav entry — that consolidation is deliberate, not an
-oversight to "fix" by splitting them back out.
+The web admin (`/admin`) mirrors the mobile app screen for screen:
+- **Workspace:** Home (`/admin/dashboard`), Deals (`/admin/deals`, with a `/admin/deals/[id]` editor),
+  Listings (`/admin/properties` plus `[id]`), Meetings (`/admin/meetings` plus `[id]`), and Tasks & notes.
+- **Records:** Notifications, Documents, Team activity.
+- **Website:** the content editors and Media.
+- **Profile** sits at the sidebar foot and covers the account, team, Google Workspace, Sheets and email
+  digest.
+
+The pages are client components in `components/erp/` (`HomeView`, `DealsView`, `DealEditor`,
+`ListingsView`, `ListingEditor`, `MeetingsView`, `MeetingEditor`, `TasksView`, `ProfileView`,
+`RecordsViews`). They call the same `/api/*` routes as the app, with the session cookie instead of the
+bearer token, so both surfaces always agree and write the same activity trail. When you change a screen in
+one, change it in the other. Styles are the `.erp*` block at the end of `app/components.css`, and icons come
+from `lucide-react`, the same Ionicons-like set the app uses. `/admin/deals` keeps Pipeline, Leads and
+Document requests as tabs of one page, and `/admin/properties` keeps Listings and Verification together
+(`?tab=` preselects). That consolidation is deliberate.
 
 Metrics and Business plan (`/admin/metrics`, `/admin/plan`) are static reference material tied to the
 original business-plan document. They're intentionally **not in the sidebar nav** (routes still work,

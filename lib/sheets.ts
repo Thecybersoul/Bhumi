@@ -211,7 +211,7 @@ async function ensureSpreadsheet(sheets: sheets_v4.Sheets, drive: ReturnType<typ
   }
   const { data } = await sheets.spreadsheets.create({
     requestBody: {
-      properties: { title: TITLE, locale: 'en_IN', timeZone: 'Asia/Kolkata' },
+      properties: { title: TITLE, locale: 'en_GB', timeZone: 'Asia/Kolkata' },
       sheets: [{ properties: { title: 'Summary', index: 0 } }, ...TABS.map((t, i) => ({ properties: { title: t.title, index: i + 1, gridProperties: { frozenRowCount: 1 } } }))],
     },
   })

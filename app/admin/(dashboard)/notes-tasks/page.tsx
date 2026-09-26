@@ -1,16 +1,13 @@
-import NotesTasksBoard from '@/components/admin/NotesTasksBoard'
-import { getTasks, getNotes } from '@/lib/db'
-import { isConnected } from '@/lib/google'
+import { Suspense } from 'react'
+import TasksView from '@/components/erp/TasksView'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Notes & Tasks · Admin' }
+export const metadata = { title: 'Tasks & notes · Admin' }
 
-export default async function NotesTasksPage() {
-  const [{ data: tasks, source: taskSource }, { data: notes, source: noteSource }, googleConnected] = await Promise.all([
-    getTasks(),
-    getNotes(),
-    isConnected(),
-  ])
-  const source = taskSource === 'live' && noteSource === 'live' ? 'live' : 'fallback'
-  return <NotesTasksBoard tasks={tasks} notes={notes} source={source} googleConnected={googleConnected} />
+export default function AdminNotesTasks() {
+  return (
+    <Suspense>
+      <TasksView />
+    </Suspense>
+  )
 }

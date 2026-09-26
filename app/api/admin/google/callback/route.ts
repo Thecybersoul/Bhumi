@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
    straight back into the app via its URL scheme, which also closes
    the in-app browser sheet the app opened for the consent screen. */
 function destination(req: NextRequest, mode: string, params: Record<string, string>) {
-  const url = mode === 'app' ? new URL('bhumiadmin://google') : new URL('/admin/setup', req.url)
+  const url = mode === 'app' ? new URL('bhumiadmin://google') : new URL('/admin/profile', req.url)
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
   return NextResponse.redirect(url)
 }

@@ -19,6 +19,14 @@
         "cd mobile && set EXPO_PUBLIC_API_URL=http://localhost:3000&& npx expo start --web --port 8081 -c"
       ],
       "port": 8081
+    },
+    {
+      "name": "bhumi-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "start"
+      ],
+      "port": 3000
     }
   ]
 }

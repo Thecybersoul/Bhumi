@@ -1,43 +1,75 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import {
+  Activity,
+  Bell,
+  Briefcase,
+  CircleCheck,
+  ExternalLink,
+  FolderOpen,
+  Gauge,
+  House,
+  Image as ImageIcon,
+  LayoutTemplate,
+  LogOut,
+  Mail,
+  Map,
+  Megaphone,
+  Menu,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import Logo from '@/components/Logo'
-import Icon, { type IconName } from '@/components/site/Icon'
+import { Avatar } from '@/components/erp/ui'
 
-/* Four things run this business day to day: the inventory, the
-   deal pipeline (which leads and data-room requests both feed),
-   the properties' verification status (folded into Properties —
-   a case is always about one specific parcel), and the follow-up
-   memory (Notes & Tasks). Everything else — editing the site's
-   copy, the original business-plan reference material, database
-   setup — is either a lower-frequency job (Content) or a utility
-   (Setup, in the footer) rather than something to check daily. */
+/* The same workspace as the mobile app, in the same order: Home,
+   Deals, Listings, Meetings, Tasks. The website's content editors
+   sit below in their own group, and records (documents, the team's
+   activity) below those. The signed-in person sits at the foot and
+   opens their Profile: account, team, Google Workspace. */
 
-const nav: { group: string; items: { href: string; label: string; icon: IconName; hint?: string }[] }[] = [
+type Item = { href: string; label: string; icon: LucideIcon; hint?: string; match?: string }
+
+const nav: { group: string; items: Item[] }[] = [
   {
-    group: 'Business',
+    group: 'Workspace',
     items: [
-      { href: '/admin/dashboard', label: 'Dashboard', icon: 'gauge' },
-      { href: '/admin/properties', label: 'Properties', icon: 'land', hint: 'Listings & verification' },
-      { href: '/admin/deals', label: 'Deals', icon: 'balance', hint: 'Pipeline, leads & documents' },
-      { href: '/admin/notes-tasks', label: 'Notes & Tasks', icon: 'checklist' },
+      { href: '/admin/dashboard', label: 'Home', icon: House },
+      { href: '/admin/deals', label: 'Deals', icon: Briefcase, hint: 'Pipeline, leads & document requests', match: '/admin/deals' },
+      { href: '/admin/properties', label: 'Listings', icon: Map, hint: 'Marketplace & verification', match: '/admin/properties' },
+      { href: '/admin/meetings', label: 'Meetings', icon: Users, hint: 'Visits, calls & discussions', match: '/admin/meetings' },
+      { href: '/admin/notes-tasks', label: 'Tasks & notes', icon: CircleCheck },
     ],
   },
   {
-    group: 'Content',
+    group: 'Records',
     items: [
-      { href: '/admin/content/home', label: 'Homepage', icon: 'structure' },
-      { href: '/admin/content/property', label: 'Property Consultancy', icon: 'land-parcels' },
-      { href: '/admin/content/branding', label: 'Branding & Advertising', icon: 'billboard' },
-      { href: '/admin/content/brand', label: 'Brand & contact', icon: 'mail' },
-      { href: '/admin/media', label: 'Media', icon: 'map' },
+      { href: '/admin/notifications', label: 'Notifications', icon: Bell },
+      { href: '/admin/documents', label: 'Documents', icon: FolderOpen },
+      { href: '/admin/activity', label: 'Team activity', icon: Activity },
+    ],
+  },
+  {
+    group: 'Website',
+    items: [
+      { href: '/admin/content/home', label: 'Homepage', icon: LayoutTemplate },
+      { href: '/admin/content/property', label: 'Property Consultancy', icon: Map },
+      { href: '/admin/content/branding', label: 'Branding & Advertising', icon: Megaphone },
+      { href: '/admin/content/brand', label: 'Brand & contact', icon: Mail },
+      { href: '/admin/media', label: 'Media', icon: ImageIcon },
     ],
   },
 ]
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export interface ShellUser {
+  name: string
+  email: string
+}
+
+export default function AdminShell({ user, children }: { user: ShellUser | null; children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -47,12 +79,24 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.push('/admin/login')
   }
 
+  // Unread team updates, refreshed on every page change.
+  const [unread, setUnread] = useState(0)
+  useEffect(() => {
+    if (pathname === '/admin/notifications') return setUnread(0)
+    fetch('/api/notifications?limit=40', { credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => b && setUnread(b.unread ?? 0))
+      .catch(() => {})
+  }, [pathname])
+
+  const active = (i: Item) => (i.match ? pathname.startsWith(i.match) : pathname === i.href)
+
   return (
     <div className="adminLayout">
       {open && <div className="overlay adminLayout__overlay" onClick={() => setOpen(false)} />}
 
       <aside className={`adminSidebar ${open ? 'is-open' : ''}`}>
-        <Link href="/" className="adminSidebar__brand">
+        <Link href="/admin/dashboard" className="adminSidebar__brand">
           <Logo theme="dark" style={{ height: 34 }} />
         </Link>
 
@@ -65,13 +109,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className={`adminSidebar__item ${pathname === item.href ? 'is-active' : ''}`}
+                  className={`adminSidebar__item ${active(item) ? 'is-active' : ''}`}
                 >
-                  <Icon name={item.icon} size={17} />
-                  <span>
+                  <item.icon size={17} />
+                  <span style={{ flex: 1 }}>
                     {item.label}
                     {item.hint && <small>{item.hint}</small>}
                   </span>
+                  {item.href === '/admin/notifications' && unread ? (
+                    <span className="erpPill" style={{ background: 'var(--gold)', color: '#fff' }}>{unread > 9 ? '9+' : unread}</span>
+                  ) : null}
                 </Link>
               ))}
             </div>
@@ -79,14 +126,23 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </nav>
 
         <div className="adminSidebar__foot">
+          {user ? (
+            <Link href="/admin/profile" className="erpMe" onClick={() => setOpen(false)}>
+              <Avatar name={user.name} size={34} />
+              <span style={{ minWidth: 0 }}>
+                <b>{user.name}</b>
+                <small>{user.email}</small>
+              </span>
+            </Link>
+          ) : null}
           <Link href="/" target="_blank" className="adminSidebar__view">
-            <Icon name="arrow" size={14} /> View the live site
+            <ExternalLink size={14} /> View the live site
           </Link>
           <Link href="/admin/setup" onClick={() => setOpen(false)} className="adminSidebar__view">
-            <Icon name="gauge" size={14} /> Setup & database status
+            <Gauge size={14} /> Setup & database status
           </Link>
           <button className="btn btn-sm btn-ghost btn-block" onClick={logout}>
-            Sign out
+            <LogOut size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Sign out
           </button>
         </div>
       </aside>
@@ -95,7 +151,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="adminMain__topbar">
           <Logo theme="light" style={{ height: 30 }} />
           <button className="btn btn-sm btn-ghost" onClick={() => setOpen(true)} aria-label="Open menu">
-            ☰
+            <Menu size={18} />
           </button>
         </div>
         {children}
