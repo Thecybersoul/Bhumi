@@ -78,13 +78,15 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`008`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`011`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
 have optional `entity_type`/`entity_id`/`entity_label` columns so a note or task can point at a specific
 lead, transaction, property or verification case, but the shipped UI (`/admin/notes-tasks`) only writes
-`entity_type: 'general'` for now — per-record linking is future work, not yet built. `schema.sql` itself
+`entity_type: 'general'` for now — per-record linking is future work, not yet built. **009** adds Google
+Calendar sync, **010** the extra listing fields, and **011 creates `documents`**, the files attached to a
+listing, note, transaction, lead or verification case. `schema.sql` itself
 carries no seed data by design — a listing represents real land, so demo rows belong only in
 `lib/data/seed.ts`, the in-code fallback. The service-role key reaches PostgREST and Storage but *cannot*
 execute DDL; that is why `npm run migrate` needs `SUPABASE_DB_URL` (a real Postgres connection string)
@@ -107,6 +109,27 @@ original business-plan document. They're intentionally **not in the sidebar nav*
 reachable by URL) — day-to-day ERP use doesn't need them front and center. Setup lives in the sidebar
 footer, not the main nav, for the same reason: it's a utility you check when something looks wrong, not
 part of the daily flow.
+
+### Documents never pass through the server
+
+`/api/documents` is a two-step upload. `action: 'start'` returns a destination. With Google Drive connected
+(and the grant including `drive.file`) that is a Drive resumable session, and the file lands in
+`Bhumi Estates ERP / <Listings|Notes|Transactions…> / <record label>`. Otherwise it is a signed upload URL
+into the private `documents` bucket. The client PUTs the bytes there directly, then calls `action: 'record'`.
+The record step re-checks that the file exists. Doing it this way keeps scanned deeds clear of the host's
+request-body limit. Bucket files are opened through ten-minute signed URLs, and the bucket is never public.
+Deleting a Drive document sends the file to Drive's trash. A Drive file that was only *linked* is unlinked
+and never touched. The same Google connection serves Calendar/Meet and Drive, so a connection made before
+Drive was added needs redoing (`/api/admin/google/status` reports `drive`).
+
+### The mobile app (`mobile/`)
+
+This is an Expo Router app that talks to the same API with `Authorization: Bearer`. An app login sends
+`client: 'app'` and gets a 30-day token; the web cookie stays at 8 hours. It connects Google through
+`POST /api/admin/google/connect`, which returns a five-minute signed link. The OAuth `state` is a signed
+purpose token, so the callback works from a phone browser that has no admin cookie, and it redirects back
+to `bhumiadmin://google`. Builds go through EAS (`preview` profile → APK). JS-only changes can ship as an
+OTA update with `eas update --channel preview`.
 
 ## Conventions
 

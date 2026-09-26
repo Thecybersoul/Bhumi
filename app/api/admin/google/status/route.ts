@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { assertAdmin } from '@/lib/auth'
-import { hasGoogleAuth, isConnected, disconnect } from '@/lib/google'
+import { hasGoogleAuth, isConnected, hasDrive, disconnect } from '@/lib/google'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +8,8 @@ export async function GET() {
   const denied = await assertAdmin()
   if (denied) return denied
 
-  return NextResponse.json({ configured: hasGoogleAuth(), connected: await isConnected() })
+  const [connected, drive] = await Promise.all([isConnected(), hasDrive()])
+  return NextResponse.json({ configured: hasGoogleAuth(), connected, drive })
 }
 
 export async function DELETE() {

@@ -128,6 +128,7 @@ const EXPECTED = [
   'transactions',
   'notes',
   'tasks',
+  'documents',
 ]
 
 export const MEDIA_BUCKET = 'media'

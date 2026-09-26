@@ -10,6 +10,15 @@
       ],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "bhumi-app-web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd mobile && set EXPO_PUBLIC_API_URL=http://localhost:3000&& npx expo start --web --port 8081 -c"
+      ],
+      "port": 8081
     }
   ]
 }

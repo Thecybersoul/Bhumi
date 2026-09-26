@@ -14,6 +14,8 @@ function RootNavigator() {
         headerStyle: { backgroundColor: colors.navy },
         headerTintColor: colors.white,
         headerTitleStyle: { fontWeight: '700' },
+        headerShadowVisible: false,
+        headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.bg },
       }}
     >
@@ -24,6 +26,8 @@ function RootNavigator() {
         <Stack.Screen name="content/index" options={{ title: 'Website content' }} />
         <Stack.Screen name="content/[key]" options={{ title: 'Edit content' }} />
         <Stack.Screen name="media" options={{ title: 'Media library' }} />
+        <Stack.Screen name="documents" options={{ title: 'Documents' }} />
+        <Stack.Screen name="google" options={{ headerShown: false, animation: 'none' }} />
       </Stack.Protected>
       <Stack.Protected guard={!token}>
         <Stack.Screen name="login" options={{ headerShown: false }} />

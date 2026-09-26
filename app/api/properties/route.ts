@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getProperties, insert } from '@/lib/db'
+import { getProperties, insertReturningId } from '@/lib/db'
 import { assertAdmin, isAdmin } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Code and title are required' }, { status: 400 })
   }
 
-  const result = await insert('properties', body)
+  const result = await insertReturningId('properties', body)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
-  return NextResponse.json({ ok: true, persisted: result.persisted }, { status: 201 })
+  return NextResponse.json({ ok: true, persisted: result.persisted, id: result.id }, { status: 201 })
 }

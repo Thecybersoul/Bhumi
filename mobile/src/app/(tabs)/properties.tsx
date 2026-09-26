@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
 import { router, useFocusEffect } from 'expo-router'
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { API_URL } from '@/lib/config'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Badge, EmptyState, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
@@ -27,6 +29,7 @@ export default function PropertiesScreen() {
   const [props, setProps] = useState<Property[] | null>(null)
   const [source, setSource] = useState<'live' | 'fallback'>('live')
   const [cases, setCases] = useState<VerificationCase[] | null>(null)
+  const [docCount, setDocCount] = useState<Record<string, number>>({})
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -34,10 +37,14 @@ export default function PropertiesScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [p, v] = await Promise.all([
+      const [p, v, d] = await Promise.all([
         api.get<ApiResult<Property[]>>('/api/properties?admin=1'),
         api.get<ApiResult<VerificationCase[]>>('/api/verifications'),
+        api.get<{ data: { entity_id: string | null }[] }>('/api/documents?entity_type=property').catch(() => ({ data: [] })),
       ])
+      const counts: Record<string, number> = {}
+      for (const x of d.data) if (x.entity_id) counts[x.entity_id] = (counts[x.entity_id] ?? 0) + 1
+      setDocCount(counts)
       setProps(p.data)
       setSource(p.source)
       setCases(v.data)
@@ -118,16 +125,41 @@ export default function PropertiesScreen() {
             </View>
           }
           ListEmptyComponent={<EmptyState text="No listings yet." />}
-          renderItem={({ item: p }) => (
-            <TouchableOpacity style={s.card} onPress={() => router.push(`/property/${encodeURIComponent(p.id)}`)}>
-              <View style={s.head}>
-                <Text style={s.title} numberOfLines={2}>{p.title}</Text>
-                <Badge label={p.status} tone={statusTone(p.status)} />
-              </View>
-              <Text style={s.meta}>{p.code} · {p.location}</Text>
-              <Text style={s.meta}>{p.built_up_sqft ? `${p.built_up_sqft.toLocaleString('en-IN')} sq ft` : `${p.extent_acres} acres`}</Text>
-            </TouchableOpacity>
-          )}
+          renderItem={({ item: p }) => {
+            const img = p.img_url ? (p.img_url.startsWith('http') ? p.img_url : `${API_URL}${p.img_url}`) : null
+            const price = p.price_total_cr
+              ? `₹${p.price_total_cr} Cr`
+              : p.price_per_acre_cr
+                ? `₹${p.price_per_acre_cr} Cr / acre`
+                : p.price_per_sqft
+                  ? `₹${p.price_per_sqft.toLocaleString('en-IN')} / sq ft`
+                  : p.price_type
+            const docs = docCount[p.id] ?? 0
+            return (
+              <TouchableOpacity style={s.listing} activeOpacity={0.8} onPress={() => router.push(`/property/${encodeURIComponent(p.id)}`)}>
+                {img ? <Image source={{ uri: img }} style={s.thumb} /> : <View style={[s.thumb, s.thumbEmpty]}><Ionicons name="image-outline" size={22} color={colors.muted} /></View>}
+                <View style={{ flex: 1, padding: space.md, paddingLeft: 12 }}>
+                  <View style={s.head}>
+                    <Text style={s.code}>{p.code}</Text>
+                    <Badge label={p.status} tone={statusTone(p.status)} />
+                  </View>
+                  <Text style={[s.title, { flex: 0 }]} numberOfLines={2}>{p.title}</Text>
+                  <Text style={s.meta} numberOfLines={1}>
+                    <Ionicons name="location-outline" size={12} color={colors.muted} /> {p.location}
+                    {'  ·  '}
+                    {p.built_up_sqft ? `${p.built_up_sqft.toLocaleString('en-IN')} sq ft` : `${p.extent_acres} acres`}
+                  </Text>
+                  <View style={s.foot}>
+                    <Text style={s.price}>{price}</Text>
+                    <View style={s.docs}>
+                      <Ionicons name="document-text-outline" size={13} color={docs ? colors.goldDeep : colors.muted} />
+                      <Text style={[s.docsText, docs > 0 && { color: colors.goldDeep }]}>{docs}</Text>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )
+          }}
         />
       ) : (
         <FlatList
@@ -169,7 +201,7 @@ export default function PropertiesScreen() {
                   )
                 })}
               </View>
-              {c.flag_reason ? <Text style={s.flag}>⚑ {c.flag_reason}</Text> : null}
+              {c.flag_reason ? <Text style={s.flag}>{c.flag_reason}</Text> : null}
             </View>
           )}
         />
@@ -179,6 +211,14 @@ export default function PropertiesScreen() {
 }
 
 const s = StyleSheet.create({
+  listing: { flexDirection: 'row', backgroundColor: colors.white, borderRadius: 18, borderWidth: 1, borderColor: colors.line, marginBottom: 10, overflow: 'hidden' },
+  thumb: { width: 104, alignSelf: 'stretch', minHeight: 124, backgroundColor: colors.line2 },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
+  code: { fontSize: text['2xs'], fontWeight: '800', color: colors.muted, letterSpacing: 0.6 },
+  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+  price: { fontSize: text.base, fontWeight: '800', color: colors.navy },
+  docs: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  docsText: { fontSize: text.xs, fontWeight: '700', color: colors.muted },
   switcher: { flexDirection: 'row', gap: 8, padding: space.lg, paddingBottom: space.sm },
   sw: { flex: 1, paddingVertical: 10, borderRadius: 100, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, alignItems: 'center' },
   swOn: { backgroundColor: colors.navy, borderColor: colors.navy },

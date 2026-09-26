@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getNotes, insert } from '@/lib/db'
+import { getNotes, insertReturningId } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
 import type { LinkedEntityType } from '@/lib/types'
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     ? (body.entity_type as LinkedEntityType)
     : 'general'
 
-  const result = await insert('notes', {
+  const result = await insertReturningId('notes', {
     entity_type: entityType,
     entity_id: body.entity_id ? String(body.entity_id) : null,
     entity_label: String(body.entity_label ?? '').slice(0, 160),
@@ -45,5 +45,5 @@ export async function POST(req: NextRequest) {
   })
 
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
-  return NextResponse.json({ ok: true, persisted: result.persisted }, { status: 201 })
+  return NextResponse.json({ ok: true, persisted: result.persisted, id: result.id }, { status: 201 })
 }

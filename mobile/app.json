@@ -54,9 +54,11 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Bhumi Estates needs your photos to upload listing images and website media."
+          "photosPermission": "Bhumi Estates needs your photos to upload listing images and website media.",
+          "cameraPermission": "Bhumi Estates uses the camera to photograph documents and site visits."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "apiUrl": "https://www.bhumiestates.in",

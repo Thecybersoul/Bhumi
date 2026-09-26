@@ -13,6 +13,7 @@
 
 export const ADMIN_COOKIE = 'bhumi_admin'
 export const SESSION_TTL_SECONDS = 60 * 60 * 8
+export const APP_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
 
 const encoder = new TextEncoder()
 
@@ -91,6 +92,30 @@ export async function verifySessionToken(token: string | undefined | null): Prom
     diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i)
   }
   return diff === 0
+}
+
+/** A short-lived token good for exactly one purpose, e.g. carrying
+ *  an admin through the Google consent screen from a phone browser
+ *  that has no admin cookie. The purpose is part of what is signed,
+ *  so it can never be replayed as a session token or vice versa. */
+export async function createPurposeToken(purpose: string, ttlSeconds: number): Promise<string | null> {
+  const k = await key()
+  if (!k) return null
+  const expires = String(Date.now() + ttlSeconds * 1000)
+  const sig = await crypto.subtle.sign('HMAC', k, encoder.encode(`${purpose}:${expires}`))
+  return `${expires}.${toBase64Url(sig)}`
+}
+
+export async function verifyPurposeToken(purpose: string, token: string | undefined | null): Promise<boolean> {
+  if (!token) return false
+  const separator = token.lastIndexOf('.')
+  if (separator <= 0) return false
+  const expires = token.slice(0, separator)
+  if (!(Number(expires) > Date.now())) return false
+  const k = await key()
+  if (!k) return false
+  const expected = toBase64Url(await crypto.subtle.sign('HMAC', k, encoder.encode(`${purpose}:${expires}`)))
+  return safeEqual(expected, token.slice(separator + 1))
 }
 
 /** Constant-time string equality for credential checks. */

@@ -221,6 +221,23 @@ export async function insert<T extends Record<string, unknown>>(
   }
 }
 
+/** insert(), but hands back the stored row's id — for callers that
+    attach something to the new record straight away (a note's files). */
+export async function insertReturningId<T extends Record<string, unknown>>(
+  table: string,
+  payload: T
+): Promise<{ ok: boolean; persisted: boolean; id?: string; error?: string }> {
+  if (!hasSupabase()) return { ok: true, persisted: false }
+  try {
+    const supabase = createServiceClient()
+    const { data, error } = await supabase.from(table).insert([payload as Record<string, unknown>] as never).select('id').single()
+    if (error) return { ok: false, persisted: false, error: error.message }
+    return { ok: true, persisted: true, id: (data as { id: string }).id }
+  } catch (e) {
+    return { ok: false, persisted: false, error: (e as Error).message }
+  }
+}
+
 export async function update(
   table: string,
   id: string,

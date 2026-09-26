@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
-import { Alert, ScrollView } from 'react-native'
+import { Alert, ScrollView, Text } from 'react-native'
 import { useApi, ApiError } from '@/lib/api'
-import { space } from '@/lib/theme'
+import { colors, space, text } from '@/lib/theme'
 import { Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button, Chips, MediaField, SectionTitle, TextField, ToggleRow } from '@/components/form'
+import { DocumentsPanel } from '@/components/documents'
 import type { ApiResult, Property, PropertyStatus, PropertyTypeSlug, PriceType, Zone } from '@/lib/types'
 
 const TYPES: PropertyTypeSlug[] = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels']
@@ -89,7 +90,9 @@ export default function PropertyScreen() {
     setError(null)
     try {
       if (isNew) {
-        await api.post('/api/properties', { ...payload(), use_cases: [], amenities: '', risk: 'Low', img_url: f.img_url || '/img/p1.jpg' })
+        const out = await api.post<{ id?: string }>('/api/properties', { ...payload(), use_cases: [], amenities: '', risk: 'Low', img_url: f.img_url || '/img/p1.jpg' })
+        // Straight into the saved listing, where its documents can be attached.
+        if (out.id) return router.replace({ pathname: '/property/[id]', params: { id: out.id } })
       } else if (source === 'fallback') {
         // The built-in listings only exist in code. Save them all to the
         // database first (reads switch to the database the moment it has
@@ -150,6 +153,17 @@ export default function PropertyScreen() {
         </Card>
 
         <Card>
+          <SectionTitle>Documents</SectionTitle>
+          {orig && source === 'live' ? (
+            <DocumentsPanel entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} />
+          ) : (
+            <Text style={{ color: colors.muted, fontSize: text.sm }}>
+              {isNew ? 'Publish the listing first, then attach its title deed, EC, RTC, khata and sketches here.' : 'Save this built-in listing once to start attaching documents.'}
+            </Text>
+          )}
+        </Card>
+
+        <Card>
           <SectionTitle>Basics</SectionTitle>
           <TextField label="Code" value={f.code} onChange={set('code')} hint="Unique, e.g. BLR-P-2603" />
           <TextField label="Title" value={f.title} onChange={set('title')} />
@@ -188,6 +202,7 @@ export default function PropertyScreen() {
           <TextField label="Survey number" value={f.survey_number} onChange={set('survey_number')} />
           <TextField label="Our role" value={f.engagement} onChange={set('engagement')} hint="Sourcing it, or appointed for sales and marketing" />
         </Card>
+
 
         <Button label={isNew ? 'Publish listing' : 'Save changes'} onPress={save} busy={busy} />
         {!isNew && (

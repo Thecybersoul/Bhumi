@@ -14,7 +14,12 @@ import { createServiceClient, hasSupabase } from './supabase'
    one shared login rather than per-user accounts.
    ═══════════════════════════════════════════════════════════ */
 
-const SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+/* drive.file, not drive: the app can only see and touch files it
+   created itself (plus ones the admin explicitly opens with it), so
+   connecting Drive never exposes the rest of the account. */
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
+const SCOPES = ['https://www.googleapis.com/auth/calendar.events', DRIVE_SCOPE]
+const ROOT_FOLDER = 'Bhumi Estates ERP'
 
 /** True when the three OAuth env vars are set. Doesn't mean the
     admin has actually connected an account yet — see isConnected(). */
@@ -34,11 +39,13 @@ function oauthClient() {
     `prompt: 'consent'` forces a refresh_token back even on a
     re-connect — without it, a second authorization can come back
     with no refresh_token at all if one was already issued once. */
-export function getAuthUrl(): string {
+export function getAuthUrl(state?: string): string {
   return oauthClient().generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
+    include_granted_scopes: true,
     scope: SCOPES,
+    state,
   })
 }
 
@@ -60,6 +67,7 @@ export async function exchangeCodeAndStore(code: string): Promise<void> {
     refresh_token: tokens.refresh_token,
     access_token: tokens.access_token,
     expiry_date: tokens.expiry_date,
+    scope: tokens.scope ?? '',
   })
   if (error) throw new Error(error.message)
 }
@@ -70,6 +78,19 @@ export async function isConnected(): Promise<boolean> {
     const sb = createServiceClient()
     const { count } = await sb.from('google_auth').select('*', { count: 'exact', head: true })
     return (count ?? 0) > 0
+  } catch {
+    return false
+  }
+}
+
+/** Connected *and* the grant includes Drive. A connection made
+    before Drive was added is calendar-only until it is redone. */
+export async function hasDrive(): Promise<boolean> {
+  if (!hasGoogleAuth() || !hasSupabase()) return false
+  try {
+    const sb = createServiceClient()
+    const { data } = await sb.from('google_auth').select('scope').limit(1).maybeSingle()
+    return Boolean(data?.scope && String(data.scope).includes(DRIVE_SCOPE))
   } catch {
     return false
   }
@@ -154,4 +175,88 @@ export async function deleteEvent(eventId: string): Promise<void> {
   if (!auth) return
   const calendar = google.calendar({ version: 'v3', auth })
   await calendar.events.delete({ calendarId: 'primary', eventId }).catch(() => {})
+}
+
+/* ─── Drive ─────────────────────────────────────────────────
+   Files go into  Bhumi Estates ERP / <Listings|Notes|…> / <record>
+   so the Drive itself reads like the ERP. Uploads are resumable
+   sessions: the server opens the session with its credentials and
+   hands the session URL to the client, which sends the bytes
+   straight to Google. Nothing large passes through this server,
+   which matters on a host with a small request-body limit. */
+
+async function findOrCreateFolder(
+  drive: ReturnType<typeof google.drive>,
+  name: string,
+  parent?: string
+): Promise<string> {
+  const safe = name.replace(/'/g, "\'")
+  const q = [
+    `name = '${safe}'`,
+    "mimeType = 'application/vnd.google-apps.folder'",
+    'trashed = false',
+    parent ? `'${parent}' in parents` : "'root' in parents",
+  ].join(' and ')
+  const { data } = await drive.files.list({ q, fields: 'files(id)', pageSize: 1 })
+  if (data.files?.[0]?.id) return data.files[0].id
+  const { data: created } = await drive.files.create({
+    requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: parent ? [parent] : undefined },
+    fields: 'id',
+  })
+  return created.id!
+}
+
+export async function startDriveUpload(opts: {
+  section: string
+  record: string
+  name: string
+  mime: string
+  bytes?: number
+}): Promise<{ uploadUrl: string } | null> {
+  const auth = await getClient()
+  if (!auth) return null
+  const drive = google.drive({ version: 'v3', auth })
+  const root = await findOrCreateFolder(drive, ROOT_FOLDER)
+  const section = await findOrCreateFolder(drive, opts.section, root)
+  const folder = await findOrCreateFolder(drive, opts.record.slice(0, 120) || 'General', section)
+
+  const { token } = await auth.getAccessToken()
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': opts.mime || 'application/octet-stream',
+      ...(opts.bytes ? { 'X-Upload-Content-Length': String(opts.bytes) } : {}),
+    },
+    body: JSON.stringify({ name: opts.name, parents: [folder] }),
+  })
+  const uploadUrl = res.headers.get('location')
+  if (!res.ok || !uploadUrl) throw new Error(`Drive refused the upload (${res.status})`)
+  return { uploadUrl }
+}
+
+export async function getDriveFile(
+  fileId: string
+): Promise<{ id: string; name: string; mime: string; bytes: number | null; url: string } | null> {
+  const auth = await getClient()
+  if (!auth) return null
+  const drive = google.drive({ version: 'v3', auth })
+  const { data } = await drive.files.get({ fileId, fields: 'id,name,mimeType,size,webViewLink' })
+  return {
+    id: data.id!,
+    name: data.name ?? 'Untitled',
+    mime: data.mimeType ?? '',
+    bytes: data.size ? Number(data.size) : null,
+    url: data.webViewLink ?? `https://drive.google.com/file/d/${data.id}/view`,
+  }
+}
+
+/** Moves the file to Drive's trash rather than deleting it outright,
+    so removing a document in the ERP is recoverable for 30 days. */
+export async function trashDriveFile(fileId: string): Promise<void> {
+  const auth = await getClient()
+  if (!auth) return
+  const drive = google.drive({ version: 'v3', auth })
+  await drive.files.update({ fileId, requestBody: { trashed: true } }).catch(() => {})
 }

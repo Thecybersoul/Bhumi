@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import {
   ADMIN_COOKIE,
   SESSION_TTL_SECONDS,
+  APP_SESSION_TTL_SECONDS,
   createSessionToken,
   safeEqual,
   sessionsEnabled,
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 })
   }
 
-  let body: { email?: unknown; password?: unknown }
+  let body: { email?: unknown; password?: unknown; client?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -95,6 +96,14 @@ export async function POST(req: NextRequest) {
   })
 
   attempts.delete(ip)
+
+  // A phone is signed into for weeks, not a working day: the app gets
+  // its own 30-day token (in the OS keystore, never a browser), while
+  // the web cookie keeps the 8-hour session.
+  if (body.client === 'app') {
+    const appToken = await createSessionToken(APP_SESSION_TTL_SECONDS)
+    return NextResponse.json({ ok: true, token: appToken })
+  }
   // The cookie is what the web admin uses; the token in the body is
   // for the mobile app, which has nowhere to keep a browser cookie
   // and stores this in SecureStore instead, sending it back as

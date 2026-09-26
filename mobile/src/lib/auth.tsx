@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { API_URL } from './config'
@@ -47,7 +47,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     storage
       .get(TOKEN_KEY)
-      .then(setToken)
+      // The token leads with its expiry in ms; drop a dead one here
+      // rather than letting every screen fail with "Not authorised".
+      .then((t) => setToken(t && Number(t.split('.')[0]) > Date.now() ? t : null))
       .finally(() => setIsLoading(false))
   }, [])
 
@@ -57,7 +59,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`${API_URL}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, client: 'app' }),
       })
       const body = await res.json()
       if (!res.ok || !body.token) {
@@ -73,10 +75,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function signOut() {
+  // Stable identity: useApi() depends on it, and screens depend on api.
+  const signOut = useCallback(async () => {
     await storage.remove(TOKEN_KEY)
     setToken(null)
-  }
+  }, [])
 
   return (
     <SessionContext.Provider value={{ token, isLoading, error, signIn, signOut }}>{children}</SessionContext.Provider>

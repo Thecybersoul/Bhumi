@@ -6,6 +6,7 @@ import { colors, space, text } from '@/lib/theme'
 import { Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button, Chips, SectionTitle, TextField, ToggleRow } from '@/components/form'
 import { WhenField } from '@/components/when'
+import { DocumentsPanel } from '@/components/documents'
 import type { ApiResult, CommissionType, PropertyTransaction, Representing, TransactionStage } from '@/lib/types'
 
 const STAGES: TransactionStage[] = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
@@ -33,6 +34,9 @@ export default function TransactionScreen() {
   const [cvalue, setCvalue] = useState('')
   const [advisor, setAdvisor] = useState('')
   const [notes, setNotes] = useState('')
+
+  const [losing, setLosing] = useState(false)
+  const [lostReason, setLostReason] = useState('')
 
   const [mTitle, setMTitle] = useState('')
   const [mWith, setMWith] = useState('')
@@ -111,9 +115,12 @@ export default function TransactionScreen() {
     }
   }
 
-  function markLost() {
-    Alert.prompt?.('Mark as lost', 'Why was it lost?', (reason) => patch({ mark_lost: true, lost_reason: reason ?? '' }, { outcome: 'Lost', lost_reason: reason ?? '' }))
-    if (!Alert.prompt) patch({ mark_lost: true, lost_reason: '' }, { outcome: 'Lost' })
+  // Alert.prompt is iOS-only, so the reason is asked for inline.
+  async function markLost() {
+    const reason = lostReason.trim()
+    await patch({ mark_lost: true, lost_reason: reason }, { outcome: 'Lost', lost_reason: reason })
+    setLosing(false)
+    setLostReason('')
   }
 
   async function addMeeting() {
@@ -171,7 +178,17 @@ export default function TransactionScreen() {
                 <Button label="Reopen deal" tone="ghost" onPress={() => patch({ reopen: true }, { outcome: 'In progress', lost_reason: '' })} />
               </>
             ) : t.outcome === 'In progress' ? (
-              <Button label="Mark as lost" tone="danger" onPress={markLost} />
+              losing ? (
+                <View>
+                  <TextField label="Why was it lost?" value={lostReason} onChange={setLostReason} placeholder="Buyer went with another parcel, price gap…" />
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <View style={{ flex: 1 }}><Button label="Cancel" tone="ghost" onPress={() => setLosing(false)} /></View>
+                    <View style={{ flex: 1 }}><Button label="Mark lost" tone="danger" onPress={markLost} /></View>
+                  </View>
+                </View>
+              ) : (
+                <Button label="Mark as lost" tone="danger" onPress={() => setLosing(true)} />
+              )
             ) : null}
           </Card>
         )}
@@ -224,6 +241,13 @@ export default function TransactionScreen() {
             <TextField label="With" value={mWith} onChange={setMWith} />
             <WhenField label="When" value={mWhen} onChange={setMWhen} />
             <Button label="Add meeting" tone="ghost" onPress={addMeeting} />
+          </Card>
+        )}
+
+        {t && (
+          <Card>
+            <SectionTitle>Documents</SectionTitle>
+            <DocumentsPanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
           </Card>
         )}
 
