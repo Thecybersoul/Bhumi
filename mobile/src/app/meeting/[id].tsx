@@ -11,6 +11,7 @@ import { EntityPicker, type LinkValue } from '@/components/entityPicker'
 import { DocumentsPanel } from '@/components/documents'
 import { ActivityFeed } from '@/components/activity'
 import { ByLine } from '@/components/people'
+import { syncReminders } from '@/lib/notify'
 import { EmailButton, EmailLog, MeetAttendance } from '@/components/google'
 import { KIND_ICON, KIND_TINT, KINDS } from '@/lib/meetings'
 import type { Meeting, MeetingKind, MeetingStatus } from '@/lib/types'
@@ -131,6 +132,7 @@ export default function MeetingScreen() {
       } else {
         await api.patch(`/api/meetings/${params.id}`, body)
       }
+      syncReminders().catch(() => {})
       router.back()
     } catch (e) {
       setError((e as Error).message)

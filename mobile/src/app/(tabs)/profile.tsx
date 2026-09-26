@@ -12,6 +12,7 @@ import { colors, radius, space, text } from '@/lib/theme'
 import { Screen } from '@/components/ui'
 import { Avatar, timeAgo } from '@/components/people'
 import { ActivityFeed } from '@/components/activity'
+import { NotifySettings } from '@/components/notifySettings'
 
 type IconName = keyof typeof Ionicons.glyphMap
 
@@ -260,6 +261,11 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
             ) : null}
+          </View>
+
+          <Text style={s.group}>Notifications & reminders</Text>
+          <View style={[s.block, { paddingHorizontal: space.md, paddingVertical: space.sm }]}>
+            <NotifySettings />
           </View>
 
           <Text style={s.group}>Team</Text>

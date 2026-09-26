@@ -3,14 +3,14 @@ import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { API_URL } from './config'
 
-const TOKEN_KEY = 'bhumi_admin_token'
+export const TOKEN_KEY = 'bhumi_admin_token'
 
 /* SecureStore has no web implementation at all (it throws, rather
    than degrading) — localStorage is the web equivalent for a
    token that isn't especially sensitive on a platform with no
    OS-level secure storage anyway. Native (iOS/Android, the actual
    target) keeps the hardware-backed SecureStore. */
-const storage = {
+export const storage = {
   async get(key: string) {
     if (Platform.OS === 'web') return globalThis.localStorage?.getItem(key) ?? null
     return SecureStore.getItemAsync(key)

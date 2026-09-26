@@ -1,5 +1,7 @@
-import { Tabs, router } from 'expo-router'
-import { Image, Platform, StyleSheet, TouchableOpacity, View, type ColorValue } from 'react-native'
+import { useCallback, useEffect, useState } from 'react'
+import { Tabs, router, useFocusEffect } from 'expo-router'
+import { useApi } from '@/lib/api'
+import { AppState, Image, Platform, StyleSheet, Text, TouchableOpacity, View, type ColorValue } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { colors } from '@/lib/theme'
@@ -32,14 +34,40 @@ function Logo() {
   return <Image source={require('../../../assets/logo-dark.png')} style={s.logo} resizeMode="contain" />
 }
 
+/* Bell with the unread count, then the signed-in person. The count
+   refreshes whenever a tab gains focus and when the app returns to
+   the foreground. */
 function Me() {
   const { user } = useSession()
+  const api = useApi()
+  const [unread, setUnread] = useState(0)
+  const load = useCallback(() => {
+    api
+      .get<{ unread: number }>('/api/notifications?limit=40')
+      .then((r) => setUnread(r.unread))
+      .catch(() => {})
+  }, [api])
+  useFocusEffect(load)
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (st) => st === 'active' && load())
+    return () => sub.remove()
+  }, [load])
   return (
-    <TouchableOpacity onPress={() => router.push('/profile')} style={{ marginRight: 16 }} hitSlop={8}>
-      <View style={s.meRing}>
-        <Avatar name={user?.name} size={30} />
-      </View>
-    </TouchableOpacity>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginRight: 16 }}>
+      <TouchableOpacity onPress={() => router.push('/notifications')} hitSlop={8}>
+        <Ionicons name={unread ? 'notifications' : 'notifications-outline'} size={23} color={colors.white} />
+        {unread ? (
+          <View style={s.badge}>
+            <Text style={s.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+          </View>
+        ) : null}
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push('/profile')} hitSlop={8}>
+        <View style={s.meRing}>
+          <Avatar name={user?.name} size={30} />
+        </View>
+      </TouchableOpacity>
+    </View>
   )
 }
 
@@ -81,10 +109,10 @@ export default function TabsLayout() {
       <Tabs.Screen name="deals" options={{ title: 'Deals', tabBarIcon: tabIcon('briefcase-outline', 'briefcase') }} />
       <Tabs.Screen name="properties" options={{ title: 'Listings', tabBarIcon: tabIcon('map-outline', 'map') }} />
       <Tabs.Screen name="meetings" options={{ title: 'Meetings', tabBarIcon: tabIcon('people-outline', 'people') }} />
-      <Tabs.Screen name="notes-tasks" options={{ title: 'Tasks', tabBarIcon: tabIcon('checkmark-circle-outline', 'checkmark-circle') }} />
+      <Tabs.Screen name="notes-tasks" options={{ title: 'Tasks', headerTitle: 'Tasks & notes', tabBarIcon: tabIcon('checkmark-circle-outline', 'checkmark-circle') }} />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', headerRight: () => null, tabBarIcon: tabIcon('person-circle-outline', 'person-circle') }}
+        options={{ title: 'Profile', tabBarIcon: tabIcon('person-circle-outline', 'person-circle') }}
       />
     </Tabs>
   )
@@ -96,4 +124,6 @@ const s = StyleSheet.create({
   monogram: { width: 26, height: 26, marginLeft: 16, marginRight: 6 },
   logo: { width: 150, height: 150 * (260 / 1200) },
   meRing: { borderRadius: 17, borderWidth: 2, borderColor: 'rgba(255,255,255,0.25)' },
+  badge: { position: 'absolute', top: -5, right: -7, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: colors.navy },
+  badgeText: { color: colors.white, fontSize: 10, fontWeight: '800' },
 })

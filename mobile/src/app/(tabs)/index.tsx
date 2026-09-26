@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { router, useFocusEffect } from 'expo-router'
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -29,9 +29,15 @@ type AgendaItem =
   | { kind: 'meeting'; at: string; m: Meeting }
   | { kind: 'task'; at: string | null; t: Task; overdue: boolean }
 
-function greeting() {
-  const h = new Date().getHours()
-  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+/* Follows the clock: morning from 5, afternoon from 12, evening
+   from 5 pm, night from 10 pm. Late hours get "Working late", not a
+   "Good morning" at 2 am. */
+function greeting(d = new Date()) {
+  const h = d.getHours()
+  if (h >= 5 && h < 12) return 'Good morning'
+  if (h >= 12 && h < 17) return 'Good afternoon'
+  if (h >= 17 && h < 22) return 'Good evening'
+  return h >= 22 ? 'Good night' : 'Working late'
 }
 
 const endOfDay = (offset = 0) => {
@@ -48,6 +54,12 @@ export default function HomeScreen() {
   const api = useApi()
   const { user } = useSession()
   const [data, setData] = useState<Data | null>(null)
+  // Re-render each minute so the greeting and "today" stay right when the app is left open.
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000)
+    return () => clearInterval(t)
+  }, [])
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -144,10 +156,10 @@ export default function HomeScreen() {
       >
         <View style={s.hero}>
           <Text style={s.hello}>
-            {greeting()}
+            {greeting(now)}
             {first ? `, ${first}` : ''}
           </Text>
-          <Text style={s.date}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
+          <Text style={s.date}>{now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
           {view ? (
             <View style={s.stats}>
               <Stat icon="checkbox" value={view.dueToday.length + view.overdue.length} label="Tasks due" alert={view.overdue.length ? `${view.overdue.length} late` : undefined} onPress={() => router.push('/notes-tasks')} />
@@ -163,6 +175,7 @@ export default function HomeScreen() {
 
           <View style={s.quick}>
             <Quick icon="checkbox-outline" label="Task" onPress={() => router.push({ pathname: '/notes-tasks', params: { new: '1' } })} />
+            <Quick icon="create-outline" label="Note" onPress={() => router.push({ pathname: '/notes-tasks', params: { view: 'notes' } })} />
             <Quick icon="people-outline" label="Meeting" onPress={() => router.push({ pathname: '/meeting/[id]', params: { id: 'new' } })} />
             <Quick icon="briefcase-outline" label="Deal" onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: 'new' } })} />
             <Quick icon="map-outline" label="Listing" onPress={() => router.push({ pathname: '/property/[id]', params: { id: 'new' } })} />
@@ -398,7 +411,7 @@ const s = StyleSheet.create({
     elevation: 3,
   },
   quickItem: { flex: 1, alignItems: 'center', gap: 6 },
-  quickIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.navyTint, alignItems: 'center', justifyContent: 'center' },
+  quickIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.navyTint, alignItems: 'center', justifyContent: 'center' },
   plus: { position: 'absolute', right: -3, bottom: -3, width: 17, height: 17, borderRadius: 9, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.white },
   quickLabel: { fontSize: text.xs, fontWeight: '700', color: colors.ink2 },
   section: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: space.md, marginBottom: space.md },

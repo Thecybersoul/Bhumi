@@ -11,6 +11,7 @@ import { WhenField } from '@/components/when'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { DocRow, DocumentsPanel, pickFiles, takePhoto } from '@/components/documents'
 import { uploadDocument, type Doc, type PickedFile } from '@/lib/documents'
+import { syncReminders } from '@/lib/notify'
 import type { ApiResult, Note, Task, TaskPriority } from '@/lib/types'
 
 const PRIORITIES: TaskPriority[] = ['Low', 'Normal', 'High']
@@ -36,16 +37,19 @@ export default function NotesTasksScreen() {
   const [noteBody, setNoteBody] = useState('')
   const [noteRel, setNoteRel] = useState<LinkValue>(NO_LINK)
   const [openTask, setOpenTask] = useState<string | null>(null)
-  const params = useLocalSearchParams<{ new?: string }>()
+  const params = useLocalSearchParams<{ new?: string; view?: string }>()
 
-  // Home's "+ Task" lands here with the form already open.
+  // Home's "+ Task" lands here with the form already open; "+ Note" on Notes.
   useEffect(() => {
     if (params.new) {
       setView('open')
       setAdding(true)
       router.setParams({ new: undefined })
+    } else if (params.view === 'notes') {
+      setView('notes')
+      router.setParams({ view: undefined })
     }
-  }, [params.new])
+  }, [params.new, params.view])
   const [noteFiles, setNoteFiles] = useState<PickedFile[]>([])
   const [noteDocs, setNoteDocs] = useState<Record<string, Doc[]>>({})
   const [openNote, setOpenNote] = useState<string | null>(null)
@@ -93,6 +97,7 @@ export default function NotesTasksScreen() {
       setPriority('Normal')
       setAdding(false)
       await load()
+      syncReminders().catch(() => {})
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -113,6 +118,7 @@ export default function NotesTasksScreen() {
     try {
       await api.patch(`/api/tasks/${t.id}`, { due_at: due_at || null })
       await load()
+      syncReminders().catch(() => {})
     } catch (e) {
       setError((e as Error).message)
     }
@@ -128,6 +134,7 @@ export default function NotesTasksScreen() {
     setTasks((p) => p?.map((x) => (x.id === t.id ? { ...x, status } : x)) ?? null)
     try {
       await api.patch(`/api/tasks/${t.id}`, { status })
+      syncReminders().catch(() => {})
     } catch (e) {
       setError((e as Error).message)
       load()

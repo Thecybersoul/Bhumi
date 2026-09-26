@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bhumi Estates Admin",
+    "name": "Bhumi",
     "slug": "bhumi",
     "scheme": "bhumiadmin",
     "version": "1.0.0",
@@ -60,7 +60,16 @@
       ],
       "expo-web-browser",
       "@react-native-community/datetimepicker",
-      "expo-font"
+      "expo-font",
+      "expo-background-task",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#0E3B2E",
+          "defaultChannel": "reminders"
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "https://www.bhumiestates.in",

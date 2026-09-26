@@ -1,11 +1,51 @@
-import { Stack } from 'expo-router'
+import { useEffect, useRef } from 'react'
+import { AppState, Platform } from 'react-native'
+import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as Notifications from 'expo-notifications'
 import { SessionProvider, useSession } from '@/lib/auth'
+import { clearAll, configureNotifications, ensurePermission, refreshAll, registerBackgroundRefresh } from '@/lib/notify'
 import { LoadingScreen } from '@/components/ui'
 import { colors } from '@/lib/theme'
 
+configureNotifications()
+
+/* Reminders and team updates while someone is signed in. Refresh on
+   sign-in and whenever the app comes back to the foreground (at most
+   every two minutes). Background refresh covers the rest. Signing out
+   clears every scheduled reminder. */
+function useNotifications(token: string | null) {
+  const last = useRef(0)
+  useEffect(() => {
+    if (Platform.OS === 'web') return
+    if (!token) {
+      clearAll()
+      return
+    }
+    const run = () => {
+      if (Date.now() - last.current < 120_000) return
+      last.current = Date.now()
+      refreshAll().catch(() => {})
+    }
+    ensurePermission().then(() => {
+      registerBackgroundRefresh()
+      run()
+    })
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && run())
+    return () => sub.remove()
+  }, [token])
+
+  // Tapping a notification opens what it's about.
+  const response = Notifications.useLastNotificationResponse()
+  useEffect(() => {
+    const path = response?.notification.request.content.data?.path
+    if (token && typeof path === 'string' && path) router.push(path as never)
+  }, [response, token])
+}
+
 function RootNavigator() {
   const { token, isLoading } = useSession()
+  useNotifications(token)
   if (isLoading) return <LoadingScreen />
 
   return (
@@ -29,6 +69,7 @@ function RootNavigator() {
         <Stack.Screen name="documents" options={{ title: 'Documents' }} />
         <Stack.Screen name="meeting/[id]" options={{ title: 'Meeting' }} />
         <Stack.Screen name="activity" options={{ title: 'Team activity' }} />
+        <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
         <Stack.Screen name="email" options={{ title: 'New email', presentation: 'modal' }} />
         <Stack.Screen name="google" options={{ headerShown: false, animation: 'none' }} />
       </Stack.Protected>
