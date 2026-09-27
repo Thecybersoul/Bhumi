@@ -383,5 +383,5 @@ export const waHref = (p?: string | null, text?: string) => `https://wa.me/${pho
 export const followUpDue = (l: Pick<Lead, 'next_follow_up_at' | 'stage'>) =>
   !!l.next_follow_up_at && leadIsOpen(l.stage) && new Date(l.next_follow_up_at).getTime() < new Date().setHours(23, 59, 59, 999)
 
-/** The ERP assistant's entry points (sidebar, top bar, ⌘K); off until /admin/assistant ships. */
-export const ASSISTANT = false
+/** The ERP assistant's entry points: sidebar, top bar and ⌘K. */
+export const ASSISTANT = true

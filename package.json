@@ -10,6 +10,7 @@
     "migrate:check": "node scripts/migrate.js --check"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@supabase/supabase-js": "^2.110.2",
     "dotenv": "^17.4.2",
     "googleapis": "^181.0.0",

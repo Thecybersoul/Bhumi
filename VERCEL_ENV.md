@@ -50,6 +50,12 @@ The OAuth client must be a **Web application** with these scopes on its consent 
 |---|---|---|
 | `SUPABASE_DB_URL` | Lets production deploys apply new migrations themselves (`scripts/migrate.js --deploy` runs before `next build`), and powers Setup's **Apply pending updates** button. **Secret** | Supabase → **Connect** → *Session pooler* URI, with the database password filled in. Not needed if the Supabase ↔ Vercel integration already added `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING`, which are picked up automatically |
 
+### ERP assistant
+
+| Variable | What it's for | Where to get the value |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Powers the ERP assistant (`/admin/assistant`, ⌘K → Ask). Without it the page says it isn't configured and everything else works. **Secret** | https://console.anthropic.com → API keys (a workspace owned by the company) |
+
 ### Scheduled jobs
 
 | Variable | What it's for | Value |

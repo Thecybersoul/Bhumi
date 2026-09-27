@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assertAdmin } from '@/lib/auth'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
-import { trashDriveFile } from '@/lib/google'
+import { moveDriveFile, trashDriveFile } from '@/lib/google'
 import { logActivity } from '@/lib/activity'
-import { DOCUMENTS_BUCKET, type DocumentRow } from '@/lib/documents'
+import { DOCUMENT_ENTITY_TYPES, DOCUMENTS_BUCKET, DRIVE_SECTION, type DocumentEntityType, type DocumentRow } from '@/lib/documents'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,18 +32,49 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   return NextResponse.json({ url: data.signedUrl, storage: 'supabase' })
 }
 
-// PATCH /api/documents/:id — rename or recategorise
+// PATCH /api/documents/:id — rename, recategorise, or file it on a
+// different record ({ entity_type, entity_id, entity_label }). A file
+// this app put in Drive moves to that record's folder too; a linked
+// file is only re-pointed, never moved.
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const denied = await assertAdmin()
   if (denied) return denied
   const body = await req.json().catch(() => ({}))
-  const patch: Record<string, string> = {}
+  const patch: Record<string, string | null> = {}
   if (typeof body.name === 'string' && body.name.trim()) patch.name = body.name.trim().slice(0, 200)
   if (typeof body.category === 'string' && body.category.trim()) patch.category = body.category.trim().slice(0, 60)
+  const refile = DOCUMENT_ENTITY_TYPES.includes(body.entity_type as DocumentEntityType)
+  if (refile) {
+    patch.entity_type = body.entity_type
+    patch.entity_id = body.entity_id ? String(body.entity_id).slice(0, 80) : null
+    patch.entity_label = String(body.entity_label ?? '').slice(0, 160)
+  }
   if (!Object.keys(patch).length) return NextResponse.json({ error: 'Nothing to change' }, { status: 400 })
 
-  const { data, error } = await createServiceClient().from('documents').update(patch).eq('id', (await params).id).select().single()
+  const id = (await params).id
+  const before = refile ? await find(id) : null
+  const { data, error } = await createServiceClient().from('documents').update(patch).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (refile && before) {
+    const doc = data as DocumentRow
+    if (doc.storage === 'drive' && doc.drive_file_id && doc.path !== 'link') {
+      await moveDriveFile(doc.drive_file_id, {
+        section: DRIVE_SECTION[doc.entity_type],
+        entityType: doc.entity_type,
+        entityId: doc.entity_id,
+        label: doc.entity_label,
+        category: doc.category,
+      }).catch(() => null)
+    }
+    await logActivity({
+      action: 'link',
+      entity_type: doc.entity_type,
+      entity_id: doc.entity_id,
+      entity_label: doc.entity_label,
+      summary: `Filed ${doc.name}${doc.category && !['Other', 'Attachment'].includes(doc.category) ? ` (${doc.category})` : ''} here`,
+    })
+  }
   return NextResponse.json({ ok: true, data })
 }
 

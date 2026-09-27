@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { FileText, MapPin, Plus, Search } from 'lucide-react'
+import { FileText, Import, MapPin, Plus, Search } from 'lucide-react'
 import { api, type Audited } from './lib'
 import { Avatar, Banner, Empty, Loading, Pill } from './ui'
 
@@ -37,8 +37,9 @@ export default function ListingsView() {
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<'All' | 'Draft' | 'Live' | 'Reserved' | 'Sold'>('All')
   const [error, setError] = useState<string | null>(null)
+  const [register, setRegister] = useState<{ pending: number; busy: boolean; note: string | null }>({ pending: 0, busy: false, note: null })
 
-  useEffect(() => {
+  const load = () =>
     Promise.all([
       api.get<{ data: Listing[]; source: 'live' | 'fallback' }>('/api/properties?admin=1'),
       api.get<{ data: { entity_id: string | null }[] }>('/api/documents?entity_type=property').catch(() => ({ data: [] })),
@@ -54,7 +55,27 @@ export default function ListingsView() {
         setError((e as Error).message)
         setItems([])
       })
+
+  useEffect(() => {
+    load()
+    // How many Property Register entries aren't listings yet.
+    api
+      .get<{ live: boolean; data: { listing_id: string | null }[] }>('/api/properties/register')
+      .then((r) => r.live && setRegister((x) => ({ ...x, pending: r.data.filter((d) => !d.listing_id).length })))
+      .catch(() => null)
   }, [])
+
+  async function importRegister() {
+    if (!confirm(`Import ${register.pending} properties from the Property Register as Draft listings? Existing listings are never changed.`)) return
+    setRegister((x) => ({ ...x, busy: true, note: null }))
+    try {
+      const r = await api.post<{ created: unknown[]; failed: { code: string; error: string }[] }>('/api/properties/register', {})
+      setRegister({ pending: 0, busy: false, note: `Imported ${r.created.length} as Draft${r.failed.length ? `; ${r.failed.length} failed: ${r.failed[0].error}` : ''}.` })
+      load()
+    } catch (e) {
+      setRegister((x) => ({ ...x, busy: false, note: (e as Error).message }))
+    }
+  }
 
   const shown = useMemo(() => {
     const n = q.trim().toLowerCase()
@@ -68,11 +89,19 @@ export default function ListingsView() {
           <h1>Listings</h1>
           <p>What’s on the marketplace, its documents, and who changed it last.</p>
         </div>
-        <Link href="/admin/properties/new" className="erpBtn primary">
-          <Plus size={16} /> New listing
-        </Link>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {register.pending > 0 && (
+            <button type="button" className="erpBtn ghost" onClick={importRegister} disabled={register.busy}>
+              <Import size={16} /> {register.busy ? 'Importing…' : `Import ${register.pending} from Property Register`}
+            </button>
+          )}
+          <Link href="/admin/properties/new" className="erpBtn primary">
+            <Plus size={16} /> New listing
+          </Link>
+        </div>
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
+      {register.note ? <Banner tone="ok">{register.note}</Banner> : null}
       {source === 'fallback' ? <Banner>Showing the built-in listings. Editing one saves them all to the live database.</Banner> : null}
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>

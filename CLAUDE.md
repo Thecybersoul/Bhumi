@@ -193,6 +193,31 @@ the table appears. The web lead and contact pages are `/admin/deals/leads/[id]` 
 New records can take files before they have an id (`PendingDocs` on web, `PendingFiles` in the app). The
 files upload straight after the save.
 
+### The ERP assistant (`/admin/assistant`)
+
+A chat that runs the ERP from plain language: add listings, leads, deals, contacts and agents, link people with
+commission terms, log tasks, notes and meetings, read and file documents, and answer questions from the data.
+`app/api/assistant/route.ts` is a manual, streaming tool loop on `claude-opus-5` with adaptive thinking and
+`fallbacks: 'default'` (beta `server-side-fallback-2026-07-01`), sending server-sent events to the page. The
+tools (`lib/assistant/tools.ts`) **only call the ERP's own `/api/*` routes**, with the signed-in person's cookie
+or bearer token forwarded. So the assistant can't do anything that person couldn't, and every write gets the
+same validation, Drive folders, Calendar events and activity trail. Add a capability by adding a route first,
+then a tool that calls it. Tool inputs stream eagerly, so `validateInput()` checks each one against its schema
+before it runs. Deletes need `confirmed: true`, which the prompt reserves for an explicit request.
+
+The browser keeps the conversation (localStorage) and sends it whole each turn. Files the user attaches are
+uploaded through the normal two-step document upload as `general`. `read_document` uploads a copy to
+Anthropic's Files API (seven-day expiry), so the history carries a `file_id`, not bytes (Vercel caps request
+bodies at 4.5 MB). `attach_document` refiles the document with `PATCH /api/documents/:id`, and a Drive file
+moves to the record's folder. It needs `ANTHROPIC_API_KEY`; without it the page reports that and nothing else
+breaks. The system prompt is `lib/assistant/prompt.ts`. It is cached, and the date and user go in a second,
+uncached block.
+
+**Property Register.** `lib/data/property-register.ts` holds the team's six owner-stated properties
+(P001–P006). `lib/register.ts` maps each one to a listing, and `/api/properties/register` previews them or
+imports them. Imports are always `Draft` and never overwrite an existing code. They can be run from the
+Listings page button or from the assistant.
+
 ### Documents never pass through the server
 
 `/api/documents` is a two-step upload. `action: 'start'` returns a destination. With Google Drive connected

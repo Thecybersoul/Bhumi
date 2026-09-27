@@ -453,3 +453,34 @@ export async function trashDriveFile(fileId: string): Promise<void> {
   const drive = google.drive({ version: 'v3', auth })
   await drive.files.update({ fileId, requestBody: { trashed: true } }).catch(() => {})
 }
+
+/** A Drive file's bytes, for the assistant to read. Capped so a huge
+    scan can't exhaust the function's memory. */
+export async function downloadDriveFile(fileId: string, maxBytes = 20 * 1024 * 1024): Promise<{ data: Buffer; mime: string } | null> {
+  const auth = await getClient()
+  if (!auth) return null
+  const drive = google.drive({ version: 'v3', auth })
+  const { data: meta } = await drive.files.get({ fileId, fields: 'mimeType,size' })
+  if (meta.size && Number(meta.size) > maxBytes) return null
+  const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'arraybuffer' })
+  return { data: Buffer.from(res.data as ArrayBuffer), mime: meta.mimeType ?? 'application/octet-stream' }
+}
+
+/** Refiles a file this app uploaded into another record's folder (the
+    same place startDriveUpload would have put it). */
+export async function moveDriveFile(
+  fileId: string,
+  opts: { section: string; entityType: string; entityId?: string | null; label: string; category?: string }
+): Promise<void> {
+  const auth = await getClient()
+  if (!auth) return
+  const drive = google.drive({ version: 'v3', auth })
+  const folder = await destinationFolder(drive, opts)
+  const { data } = await drive.files.get({ fileId, fields: 'parents' })
+  await drive.files.update({
+    fileId,
+    addParents: folder,
+    removeParents: (data.parents ?? []).filter((p) => p !== folder).join(',') || undefined,
+    requestBody: { appProperties: { bhumiEntity: `${opts.entityType}:${opts.entityId ?? ''}`.slice(0, 120) } },
+  })
+}
