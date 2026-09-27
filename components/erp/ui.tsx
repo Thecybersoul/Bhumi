@@ -14,6 +14,7 @@ import {
   Settings,
   SquareCheck,
   User,
+  UserRound,
   Users,
   Video,
   type LucideIcon,
@@ -97,6 +98,7 @@ export function Card({
   onAction,
   children,
   style,
+  id,
 }: {
   title?: React.ReactNode
   icon?: LucideIcon
@@ -105,9 +107,10 @@ export function Card({
   onAction?: () => void
   children: React.ReactNode
   style?: React.CSSProperties
+  id?: string
 }) {
   return (
-    <section className="erpCard" style={style}>
+    <section className="erpCard" style={{ scrollMarginTop: 16, ...style }} id={id}>
       {title ? (
         <div className="erpCard__head">
           <div className="erpCard__title">
@@ -159,6 +162,16 @@ const TONES: Record<string, [string, string]> = {
   new: ['var(--pending)', 'var(--pending-bg)'],
   pending: ['var(--pending)', 'var(--pending-bg)'],
   cancelled: ['var(--muted)', 'var(--line-2)'],
+  converted: ['var(--verified)', 'var(--verified-bg)'],
+  interested: ['var(--verified)', 'var(--verified-bg)'],
+  'offer made': ['var(--verified)', 'var(--verified-bg)'],
+  'not interested': ['var(--flagged)', 'var(--flagged-bg)'],
+  hot: ['var(--flagged)', 'var(--flagged-bg)'],
+  warm: ['var(--gold-deep)', 'var(--gold-tint)'],
+  cold: ['var(--progress)', 'var(--progress-bg)'],
+  nurture: ['var(--muted)', 'var(--line-2)'],
+  negotiation: ['var(--gold-deep)', 'var(--gold-tint)'],
+  shortlisted: ['var(--pending)', 'var(--pending-bg)'],
 }
 
 export function Pill({ label, tone }: { label: string; tone?: string }) {
@@ -205,6 +218,7 @@ export const LINK_ICON: Record<string, LucideIcon> = {
   transaction: Briefcase,
   task: SquareCheck,
   lead: User,
+  contact: UserRound,
   meeting: Users,
   verification: CircleCheck,
   general: LinkIcon,
@@ -216,7 +230,8 @@ export function linkHref(type?: string | null, id?: string | null): string | nul
   if (type === 'transaction') return `/admin/deals/${id}`
   if (type === 'meeting') return `/admin/meetings/${id}`
   if (type === 'task' || type === 'note') return '/admin/notes-tasks'
-  if (type === 'lead') return '/admin/deals?tab=leads'
+  if (type === 'lead') return `/admin/deals/leads/${id}`
+  if (type === 'contact') return `/admin/deals/contacts/${id}`
   return null
 }
 

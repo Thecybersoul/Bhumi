@@ -6,6 +6,7 @@ import { CalendarDays, Check, ChevronDown, ChevronUp, CircleAlert, Clock, Paperc
 import { api, fromLocalInput, toLocalInput, type Audited, type Doc } from './lib'
 import { Avatar, Banner, ByLine, Chips, Empty, Field, Loading, Pill, RecordLink } from './ui'
 import { EntityPicker, NO_LINK, type LinkValue } from './records'
+import { PeoplePanel } from './contacts'
 import { DocRow, DocumentsPanel, uploadDocument } from './documents'
 
 type Priority = 'Low' | 'Normal' | 'High'
@@ -46,6 +47,9 @@ export default function TasksView() {
   const [tasks, setTasks] = useState<Task[] | null>(null)
   const [notes, setNotes] = useState<Note[]>([])
   const [noteDocs, setNoteDocs] = useState<Record<string, Doc[]>>({})
+  const [taskDocs, setTaskDocs] = useState<Record<string, Doc[]>>({})
+  const [taskFiles, setTaskFiles] = useState<File[]>([])
+  const taskFileInput = useRef<HTMLInputElement>(null)
   const [google, setGoogle] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [adding, setAdding] = useState(params.get('new') === '1')
@@ -64,11 +68,12 @@ export default function TasksView() {
 
   const load = useCallback(async () => {
     try {
-      const [t, n, g, d] = await Promise.all([
+      const [t, n, g, d, td] = await Promise.all([
         api.get<{ data: Task[]; source: string }>('/api/tasks'),
         api.get<{ data: Note[]; source: string }>('/api/notes'),
         api.get<{ connected: boolean }>('/api/admin/google/status').catch(() => ({ connected: false })),
         api.get<{ data: Doc[] }>('/api/documents?entity_type=note').catch(() => ({ data: [] as Doc[] })),
+        api.get<{ data: Doc[] }>('/api/documents?entity_type=task').catch(() => ({ data: [] as Doc[] })),
       ])
       setTasks(t.source === 'live' ? t.data : [])
       setNotes(n.source === 'live' ? n.data : [])
@@ -76,6 +81,9 @@ export default function TasksView() {
       const by: Record<string, Doc[]> = {}
       for (const x of d.data) if (x.entity_id) (by[x.entity_id] ??= []).push(x)
       setNoteDocs(by)
+      const byTask: Record<string, Doc[]> = {}
+      for (const x of td.data) if (x.entity_id) (byTask[x.entity_id] ??= []).push(x)
+      setTaskDocs(byTask)
     } catch (e) {
       setError((e as Error).message)
       setTasks([])
@@ -103,7 +111,11 @@ export default function TasksView() {
   const addTask = () =>
     title.trim() &&
     run('add', async () => {
-      await api.post('/api/tasks', { title: title.trim(), due_at: due || undefined, priority, ...forTask(related) })
+      const out = await api.post<{ id?: string }>('/api/tasks', { title: title.trim(), due_at: due || undefined, priority, ...forTask(related) })
+      if (taskFiles.length && out.id) {
+        for (const f of taskFiles) await uploadDocument(f, { entity_type: 'task', entity_id: out.id, entity_label: title.trim().slice(0, 60), category: 'Attachment' })
+      }
+      setTaskFiles([])
       setTitle('')
       setDue('')
       setPriority('Normal')
@@ -190,11 +202,13 @@ export default function TasksView() {
                     <RecordLink type={n.entity_type} id={n.entity_id} label={n.entity_label} />
                     {!expanded && docs.length ? docs.slice(0, 3).map((d) => <DocRow key={d.id} d={d} />) : null}
                     <button className="erpCard__action" style={{ marginTop: 8 }} onClick={() => setOpenNote(expanded ? null : n.id)}>
-                      <Paperclip size={13} /> {docs.length ? `${docs.length} attachment${docs.length > 1 ? 's' : ''}` : 'Attach files'} {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                      <Paperclip size={13} /> {docs.length ? `${docs.length} attachment${docs.length > 1 ? 's' : ''} · people` : 'Attach files · tag people'} {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                     </button>
                     {expanded ? (
                       <div style={{ marginTop: 10 }}>
                         <DocumentsPanel compact entityType="note" entityId={n.id} entityLabel={(n.entity_label || n.body).slice(0, 60)} onChange={load} />
+                        <div className="erpSub">People mentioned</div>
+                        <PeoplePanel entityType="note" entityId={n.id} entityLabel={n.body.slice(0, 80)} roles={['Mentioned', 'Client', 'Owner', 'Broker', 'Lawyer']} emptyText="Tag the people this note is about." />
                       </div>
                     ) : null}
                   </div>
@@ -207,7 +221,7 @@ export default function TasksView() {
               <div className="erpCard__title" style={{ marginBottom: 12 }}>New note</div>
               <div className="erpForm">
                 <textarea className="erpInput" value={noteBody} onChange={(e) => setNoteBody(e.target.value)} placeholder="What was said, what to remember…" style={{ minHeight: 130 }} />
-                <EntityPicker value={noteRel} onChange={setNoteRel} types={['property', 'transaction', 'lead']} label="Related to (optional)" />
+                <EntityPicker value={noteRel} onChange={setNoteRel} types={['property', 'transaction', 'lead', 'contact']} label="Related to (optional)" />
                 {noteFiles.map((f, i) => (
                   <div key={i} className="erpBanner ok" style={{ marginBottom: 0 }}>
                     <Paperclip size={15} /> <span style={{ flex: 1 }}>{f.name}</span>
@@ -241,12 +255,24 @@ export default function TasksView() {
                     <Chips options={PRIORITIES} value={priority} onChange={setPriority} />
                   </Field>
                   <div className="erpField full">
-                    <EntityPicker value={related} onChange={setRelated} types={['property', 'transaction', 'lead']} label="Related to (optional)" />
+                    <EntityPicker value={related} onChange={setRelated} types={['property', 'transaction', 'lead', 'contact']} label="Related to (optional)" />
+                  </div>
+                  <div className="erpField full">
+                    {taskFiles.map((f, i) => (
+                      <div key={i} className="erpBanner ok" style={{ marginBottom: 6 }}>
+                        <Paperclip size={15} /> <span style={{ flex: 1 }}>{f.name}</span>
+                        <X size={15} style={{ cursor: 'pointer' }} onClick={() => setTaskFiles((p) => p.filter((_, j) => j !== i))} />
+                      </div>
+                    ))}
+                    <button type="button" className="erpBtn ghost" style={{ borderStyle: 'dashed' }} onClick={() => taskFileInput.current?.click()}>
+                      <Paperclip size={15} /> Attach files
+                    </button>
+                    <input ref={taskFileInput} type="file" multiple hidden onChange={(e) => e.target.files && setTaskFiles((p) => [...p, ...Array.from(e.target.files!)])} />
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                   <button className="erpBtn primary" onClick={addTask} disabled={busy === 'add'}>
-                    Add task
+                    {taskFiles.length ? `Add task + ${taskFiles.length} file${taskFiles.length > 1 ? 's' : ''}` : 'Add task'}
                   </button>
                   <button className="erpBtn ghost" onClick={() => setAdding(false)}>
                     Cancel
@@ -287,6 +313,11 @@ export default function TasksView() {
                       <RecordLink type={t.entity_type} id={t.entity_id} label={t.entity_label} />
                       <ByLine record={t} createdAt={t.created_at} compact />
                     </div>
+                    {taskDocs[t.id]?.length ? (
+                      <span className="erpPill" style={{ color: 'var(--gold-deep)', background: 'var(--gold-tint)' }} title="Attachments">
+                        <Paperclip size={11} /> {taskDocs[t.id].length}
+                      </span>
+                    ) : null}
                     {t.priority === 'High' ? <Pill label="High" /> : null}
                     <button className="erpBtn ghost sm" onClick={() => setOpenTask(expanded ? null : t.id)}>
                       {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -322,6 +353,10 @@ export default function TasksView() {
                           <Trash2 size={13} /> Delete
                         </button>
                       </div>
+                      <div className="erpSub">Attachments</div>
+                      <DocumentsPanel compact entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 60)} onChange={load} />
+                      <div className="erpSub">People</div>
+                      <PeoplePanel entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 80)} roles={['Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who this is about or who is involved." />
                     </div>
                   ) : null}
                 </div>

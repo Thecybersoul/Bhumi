@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Check, MessageCircle, Phone, Plus, X } from 'lucide-react'
-import { api, timeAgo, type Audited } from './lib'
+import { Check, Columns3, List, Plus, Search, UserPlus, X } from 'lucide-react'
+import { api, timeAgo, type Audited, type Contact, type Lead } from './lib'
 import { Avatar, Banner, ByLine, Empty, Loading, Pill } from './ui'
-import { EmailButton, MeetNowButton } from './google'
+import { LeadsBoard } from './LeadsBoard'
+import { ContactActions } from './contacts'
 
 type Row = Record<string, unknown> & Audited
 interface Deal extends Row {
@@ -19,19 +20,6 @@ interface Deal extends Row {
   buyer_name?: string
   seller_name?: string
   opened_at: string
-}
-interface Lead extends Row {
-  id: string
-  name: string
-  kind: string
-  channel: string
-  stage: string
-  company?: string
-  phone?: string
-  email?: string
-  notes?: string
-  property_code?: string
-  created_at: string
 }
 interface DocRequest extends Row {
   id: string
@@ -48,32 +36,39 @@ interface DocRequest extends Row {
 }
 
 const STAGES = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
-const LEAD_STAGES = ['New', 'Contacted', 'Qualified', 'Visit', 'Closed']
-const digits = (p: string) => p.replace(/[^\d+]/g, '')
 const cr = (n?: number | null) => (n == null ? 'Value TBD' : `₹${n >= 10 ? Math.round(n) : n.toFixed(1)} Cr`)
 
 export default function DealsView() {
   const params = useSearchParams()
-  const [tab, setTab] = useState<'pipeline' | 'leads' | 'docs'>(
-    params.get('tab') === 'leads' ? 'leads' : params.get('tab') === 'documents' || params.get('tab') === 'docs' ? 'docs' : 'pipeline'
-  )
+  const [tab, setTab] = useState<'pipeline' | 'leads' | 'contacts' | 'docs'>(() => {
+    const t = params.get('tab')
+    return t === 'leads' ? 'leads' : t === 'contacts' ? 'contacts' : t === 'documents' || t === 'docs' ? 'docs' : 'pipeline'
+  })
   const [deals, setDeals] = useState<Deal[] | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
   const [docs, setDocs] = useState<DocRequest[]>([])
+  const [contacts, setContacts] = useState<Contact[] | null>(null)
+  const [contactsReady, setContactsReady] = useState(true)
+  const [cq, setCq] = useState('')
+  const [role, setRole] = useState('All')
+  const [leadView, setLeadView] = useState<'board' | 'list'>('board')
   const [filter, setFilter] = useState<'In progress' | 'Closed' | 'Lost' | 'All'>('In progress')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const [t, l, d] = await Promise.all([
+      const [t, l, d, c] = await Promise.all([
         api.get<{ data: Deal[]; source: string }>('/api/transactions'),
         api.get<{ data: Lead[]; source: string }>('/api/leads'),
         api.get<{ data: DocRequest[]; source: string }>('/api/data-room'),
+        api.get<{ data: Contact[]; ready: boolean }>('/api/contacts').catch(() => ({ data: [] as Contact[], ready: false })),
       ])
       setDeals(t.source === 'live' ? t.data : [])
       setLeads(l.source === 'live' ? l.data : [])
       setDocs(d.source === 'live' ? d.data : [])
+      setContacts(c.data)
+      setContactsReady(c.ready)
     } catch (e) {
       setError((e as Error).message)
       setDeals([])
@@ -81,15 +76,26 @@ export default function DealsView() {
   }, [])
   useEffect(() => {
     load()
+    try {
+      if (localStorage.getItem('bhumi.leadView') === 'list') setLeadView('list')
+    } catch {}
   }, [load])
+
+  function switchLeadView(v: 'board' | 'list') {
+    setLeadView(v)
+    try {
+      localStorage.setItem('bhumi.leadView', v)
+    } catch {}
+  }
 
   async function advance(l: Lead, stage: string) {
     setBusy(l.id)
+    setLeads((p) => p.map((x) => (x.id === l.id ? { ...x, stage: stage as Lead['stage'] } : x)))
     try {
       await api.patch(`/api/leads?id=${encodeURIComponent(l.id)}&stage=${stage}`)
-      await load()
     } catch (e) {
       setError((e as Error).message)
+      load()
     } finally {
       setBusy(null)
     }
@@ -114,20 +120,28 @@ export default function DealsView() {
       <div className="erpHead">
         <div>
           <h1>Deals</h1>
-          <p>The pipeline, the leads that feed it, and document requests from serious buyers.</p>
+          <p>Leads, the deals they become, the people behind both, and document requests from serious buyers.</p>
         </div>
-        <Link href="/admin/deals/new" className="erpBtn primary">
-          <Plus size={16} /> New deal
-        </Link>
+        <div className="erpHead__actions">
+          <Link href="/admin/deals/leads/new" className="erpBtn soft">
+            <UserPlus size={16} /> New lead
+          </Link>
+          <Link href="/admin/deals/new" className="erpBtn primary">
+            <Plus size={16} /> New deal
+          </Link>
+        </div>
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
 
       <div className="erpSeg">
-        <button className={tab === 'pipeline' ? 'is-on' : ''} onClick={() => setTab('pipeline')}>
-          Pipeline · {(deals ?? []).filter((d) => d.outcome === 'In progress').length}
-        </button>
         <button className={tab === 'leads' ? 'is-on' : ''} onClick={() => setTab('leads')}>
-          Leads · {leads.length}
+          Leads · {leads.filter((l) => !['Converted', 'Lost', 'Closed'].includes(l.stage)).length}
+        </button>
+        <button className={tab === 'pipeline' ? 'is-on' : ''} onClick={() => setTab('pipeline')}>
+          Deals · {(deals ?? []).filter((d) => d.outcome === 'In progress').length}
+        </button>
+        <button className={tab === 'contacts' ? 'is-on' : ''} onClick={() => setTab('contacts')}>
+          Contacts · {contacts?.length ?? 0}
         </button>
         <button className={tab === 'docs' ? 'is-on' : ''} onClick={() => setTab('docs')}>
           Document requests · {docs.filter((d) => d.status === 'Pending').length}
@@ -176,67 +190,79 @@ export default function DealsView() {
           )}
         </>
       ) : tab === 'leads' ? (
-        leads.length === 0 ? (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 10 }}>
+            <button className={`erpBtn ${leadView === 'board' ? 'soft' : 'ghost'} sm`} onClick={() => switchLeadView('board')}>
+              <Columns3 size={14} /> Board
+            </button>
+            <button className={`erpBtn ${leadView === 'list' ? 'soft' : 'ghost'} sm`} onClick={() => switchLeadView('list')}>
+              <List size={14} /> List
+            </button>
+          </div>
+          <LeadsBoard leads={leads} view={leadView} busy={busy} onAdvance={advance} />
+        </>
+      ) : tab === 'contacts' ? (
+        !contactsReady ? (
           <div className="erpCard">
-            <Empty>No leads yet. Enquiries from the website land here.</Empty>
+            <Empty>The contact book needs database migration 015. Open Setup in the sidebar to apply it.</Empty>
           </div>
         ) : (
-          <div className="erpListings">
-            {leads.map((l) => {
-              const next = LEAD_STAGES[LEAD_STAGES.indexOf(l.stage) + 1]
-              return (
-                <div key={l.id} className="erpCard">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <div className="erpListing__title" style={{ marginTop: 0 }}>{l.name}</div>
-                    <Pill label={l.stage} tone={l.stage === 'New' ? 'pending' : l.stage === 'Closed' ? 'verified' : 'progress'} />
-                  </div>
-                  <div className="erpListing__meta">
-                    {l.kind} · {l.channel} · {timeAgo(l.created_at)}
-                    {l.property_code ? ` · ${l.property_code}` : ''}
-                  </div>
-                  {l.company || l.phone || l.email ? <div className="erpListing__meta">{[l.company, l.phone, l.email].filter(Boolean).join(' · ')}</div> : null}
-                  {l.notes ? <p style={{ fontSize: 'var(--text-sm)', color: 'var(--ink-2)', marginTop: 8 }}>{l.notes}</p> : null}
-                  {l.updated_by && l.updated_by !== 'Website' ? <ByLine record={{ updated_by: l.updated_by, updated_at: l.updated_at }} /> : null}
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
-                    {l.phone ? (
-                      <>
-                        <a className="erpBtn ghost sm" href={`tel:${digits(l.phone)}`}>
-                          <Phone size={13} /> Call
-                        </a>
-                        <a className="erpBtn ghost sm" href={`https://wa.me/${digits(l.phone).replace('+', '')}`} target="_blank" rel="noreferrer">
-                          <MessageCircle size={13} /> WhatsApp
-                        </a>
-                      </>
-                    ) : null}
-                    {l.email ? (
-                      <EmailButton
-                        label="Email"
-                        draft={{
-                          to: l.email,
-                          subject: `Your enquiry${l.property_code ? ` about ${l.property_code}` : ''} | Bhumi Estates`,
-                          body: [
-                            `Dear ${l.name.split(' ')[0]},`,
-                            `Thank you for reaching out to Bhumi Estates${l.property_code ? ` about ${l.property_code}` : ''}. I'd be glad to help.`,
-                            'Could you share a convenient time for a quick call or a site visit?',
-                            'Warm regards,',
-                          ].join('\n\n'),
-                          entity_type: 'lead',
-                          entity_id: l.id,
-                          entity_label: l.name,
-                        }}
-                      />
-                    ) : null}
-                    <MeetNowButton entityType="lead" entityId={l.id} entityLabel={l.name} title={`Call with ${l.name}`} label="Meet" />
-                    {next ? (
-                      <button className="erpBtn primary sm" disabled={busy === l.id} onClick={() => advance(l, next)}>
-                        → {next}
-                      </button>
-                    ) : null}
-                  </div>
+          <>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ position: 'relative', flex: '1 1 260px' }}>
+                <Search size={15} style={{ position: 'absolute', left: 10, top: 12, color: 'var(--muted)' }} />
+                <input className="erpInput" style={{ paddingLeft: 32 }} placeholder="Search name, phone, company" value={cq} onChange={(e) => setCq(e.target.value)} />
+              </div>
+              <Link href="/admin/deals/contacts/new" className="erpBtn primary">
+                <UserPlus size={16} /> New contact
+              </Link>
+            </div>
+            <div className="erpChips" style={{ marginBottom: 12 }}>
+              {['All', 'Buyer', 'Seller', 'Landowner', 'Investor', 'Broker', 'Lawyer'].map((r) => (
+                <button key={r} className={`erpChip ${role === r ? 'is-on' : ''}`} onClick={() => setRole(r)}>
+                  {r}
+                </button>
+              ))}
+            </div>
+            {(() => {
+              const n = cq.trim().toLowerCase()
+              const d = n.replace(/\D/g, '')
+              const list = (contacts ?? []).filter(
+                (c) =>
+                  (role === 'All' || c.roles?.includes(role)) &&
+                  (!n || `${c.name} ${c.company ?? ''} ${c.email} ${c.city ?? ''}`.toLowerCase().includes(n) || (d.length >= 3 && c.phone.replace(/\D/g, '').includes(d)))
+              )
+              return list.length === 0 ? (
+                <div className="erpCard">
+                  <Empty>{contacts?.length ? 'Nobody matches.' : 'No contacts yet. Leads and deal parties are added here automatically.'}</Empty>
+                </div>
+              ) : (
+                <div className="erpListings">
+                  {list.map((c) => (
+                    <div key={c.id} className="erpCard">
+                      <Link href={`/admin/deals/contacts/${c.id}`} style={{ display: 'block', color: 'inherit' }}>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                          <Avatar name={c.name} size={34} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className="erpListing__title" style={{ marginTop: 0 }}>{c.name}</div>
+                            <div className="erpListing__meta">{[c.roles?.join(', '), c.company, c.city].filter(Boolean).join(' · ') || 'No role yet'}</div>
+                          </div>
+                        </div>
+                        <div className="erpListing__meta" style={{ marginTop: 8 }}>
+                          {[c.phone, c.email].filter(Boolean).join(' · ')}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
+                          {c.open_leads ? <Pill label={`${c.open_leads} open lead${c.open_leads > 1 ? 's' : ''}`} tone="new" /> : null}
+                          {c.deal_count ? <Pill label={`${c.deal_count} deal${c.deal_count > 1 ? 's' : ''}`} tone="progress" /> : null}
+                        </div>
+                      </Link>
+                      <ContactActions name={c.name} phone={c.phone} />
+                    </div>
+                  ))}
                 </div>
               )
-            })}
-          </div>
+            })()}
+          </>
         )
       ) : docs.length === 0 ? (
         <div className="erpCard">

@@ -21,6 +21,7 @@ const NOUN: Record<string, string> = {
   google: 'Google Workspace',
   account: 'account',
   sheets: 'Google Sheets register',
+  contact: 'contact',
 }
 
 const VERB: Record<string, string> = {
@@ -34,6 +35,7 @@ const VERB: Record<string, string> = {
   login: 'signed in',
   email: 'emailed about',
   sync: 'synced',
+  tag: 'tagged',
 }
 
 export function activityHeadline(a: Activity) {
@@ -46,6 +48,8 @@ export function openActivity(a: Activity) {
   if (a.entity_type === 'property') router.push({ pathname: '/property/[id]', params: { id: a.entity_id } })
   else if (a.entity_type === 'transaction') router.push({ pathname: '/transaction/[id]', params: { id: a.entity_id } })
   else if (a.entity_type === 'meeting') router.push({ pathname: '/meeting/[id]', params: { id: a.entity_id } })
+  else if (a.entity_type === 'lead') router.push({ pathname: '/lead/[id]', params: { id: a.entity_id } })
+  else if (a.entity_type === 'contact') router.push({ pathname: '/contact/[id]', params: { id: a.entity_id } })
   else if (a.entity_type === 'task' || a.entity_type === 'note') router.push('/notes-tasks')
 }
 

@@ -2,7 +2,13 @@ import { useCallback, useMemo } from 'react'
 import { API_URL } from './config'
 import { useSession } from './auth'
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  /** The HTTP status and parsed body, for callers that act on them —
+      e.g. a 409 naming the contact who already has that number. */
+  constructor(message: string, public status = 0, public body: Record<string, unknown> = {}) {
+    super(message)
+  }
+}
 
 async function request<T>(token: string | null, path: string, init?: RequestInit, onExpired?: () => void): Promise<T> {
   const isForm = typeof FormData !== 'undefined' && init?.body instanceof FormData
@@ -19,7 +25,7 @@ async function request<T>(token: string | null, path: string, init?: RequestInit
   // A rejected token means the session is over: back to sign-in,
   // instead of every screen showing "Not authorised".
   if (res.status === 401 && token) onExpired?.()
-  if (!res.ok) throw new ApiError(body.error ?? `Request failed (${res.status})`)
+  if (!res.ok) throw new ApiError(body.error ?? `Request failed (${res.status})`, res.status, body)
   return body as T
 }
 

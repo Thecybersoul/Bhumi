@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
@@ -10,6 +10,9 @@ import { ActivityFeed } from '@/components/activity'
 import { ByLine } from '@/components/people'
 import { RelatedMeetings } from '@/components/relatedMeetings'
 import { EmailButton, EmailLog, MeetNowButton } from '@/components/google'
+import { ContactPickerSheet, PeoplePanel } from '@/components/contacts'
+import { PendingFiles, RelatedTasks } from '@/components/leadPanels'
+import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { ApiResult, CommissionType, PropertyTransaction, Representing, TransactionStage } from '@/lib/types'
 
 const STAGES: TransactionStage[] = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
@@ -59,6 +62,10 @@ export default function TransactionScreen() {
 
   const [losing, setLosing] = useState(false)
   const [lostReason, setLostReason] = useState('')
+  const [party, setParty] = useState<{ buyer: string | null; seller: string | null }>({ buyer: null, seller: null })
+  const [picking, setPicking] = useState<'buyer' | 'seller' | null>(null)
+  const [files, setFiles] = useState<PickedFile[]>([])
+  const [fileCat, setFileCat] = useState('Agreement')
 
 
   const hydrate = useCallback((x: PropertyTransaction) => {
@@ -76,6 +83,7 @@ export default function TransactionScreen() {
     setCvalue(x.commission_value != null ? String(x.commission_value) : '')
     setAdvisor(x.advisor ?? '')
     setNotes(x.notes ?? '')
+    setParty({ buyer: x.buyer_contact_id ?? null, seller: x.seller_contact_id ?? null })
   }, [])
 
   useEffect(() => {
@@ -123,10 +131,19 @@ export default function TransactionScreen() {
       commission_value: cvalue.trim() === '' ? null : Number(cvalue),
       advisor: advisor.trim(),
       notes: notes.trim(),
+      // Picked from contacts: sent as-is. Typed: matched by phone on the server.
+      ...(party.buyer ? { buyer_contact_id: party.buyer } : {}),
+      ...(party.seller ? { seller_contact_id: party.seller } : {}),
     }
     try {
       if (isNew) {
-        await api.post('/api/transactions', body)
+        const r = await api.post<{ id?: string; reference?: string }>('/api/transactions', body)
+        if (r.id) {
+          for (const f of files) await uploadDocument(api, f, { entity_type: 'transaction', entity_id: r.id, entity_label: `${r.reference ?? ''} · ${label.trim()}`, category: fileCat })
+          // Straight into the new deal, where its documents and people live.
+          router.replace({ pathname: '/transaction/[id]', params: { id: r.id } })
+          return
+        }
       } else if (t) {
         await api.put(`/api/transactions/${t.id}`, body)
       }
@@ -195,6 +212,19 @@ export default function TransactionScreen() {
           </Card>
         )}
 
+        {t?.lead_id ? (
+          <TouchableOpacity style={s.fromLead} onPress={() => router.push({ pathname: '/lead/[id]', params: { id: t.lead_id! } })}>
+            <Text style={s.fromLeadText}>Came from a lead — open it and the listings shown →</Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {t && (
+          <Card>
+            <SectionTitle>Documents</SectionTitle>
+            <DocumentsPanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
+          </Card>
+        )}
+
         <Card>
           <SectionTitle>Deal</SectionTitle>
           <TextField label="Property / deal label" value={label} onChange={setLabel} placeholder="e.g. 3 BHK, JP Nagar" />
@@ -205,11 +235,13 @@ export default function TransactionScreen() {
 
         <Card>
           <SectionTitle>Parties</SectionTitle>
-          <TextField label="Buyer" value={buyer} onChange={setBuyer} />
-          <TextField label="Buyer phone" value={buyerPhone} onChange={setBuyerPhone} keyboard="phone-pad" />
+          <PartyLink side="buyer" id={party.buyer} onPick={() => setPicking('buyer')} />
+          <TextField label="Buyer" value={buyer} onChange={(v) => (setBuyer(v), setParty((p) => ({ ...p, buyer: null })))} />
+          <TextField label="Buyer phone" value={buyerPhone} onChange={(v) => (setBuyerPhone(v), setParty((p) => ({ ...p, buyer: null })))} keyboard="phone-pad" />
           <TextField label="Buyer email" value={buyerEmail} onChange={setBuyerEmail} keyboard="email-address" />
-          <TextField label="Seller" value={seller} onChange={setSeller} />
-          <TextField label="Seller phone" value={sellerPhone} onChange={setSellerPhone} keyboard="phone-pad" />
+          <PartyLink side="seller" id={party.seller} onPick={() => setPicking('seller')} />
+          <TextField label="Seller" value={seller} onChange={(v) => (setSeller(v), setParty((p) => ({ ...p, seller: null })))} />
+          <TextField label="Seller phone" value={sellerPhone} onChange={(v) => (setSellerPhone(v), setParty((p) => ({ ...p, seller: null })))} keyboard="phone-pad" />
           <TextField label="Seller email" value={sellerEmail} onChange={setSellerEmail} keyboard="email-address" />
         </Card>
 
@@ -225,7 +257,14 @@ export default function TransactionScreen() {
           <TextField label="" value={notes} onChange={setNotes} multiline />
         </Card>
 
-        <Button label={isNew ? 'Create transaction' : 'Save changes'} onPress={save} busy={busy} />
+        {isNew ? (
+          <Card>
+            <SectionTitle>Documents</SectionTitle>
+            <PendingFiles files={files} onChange={setFiles} entityType="transaction" category={fileCat} onCategory={setFileCat} />
+          </Card>
+        ) : null}
+
+        <Button label={isNew ? (files.length ? `Create deal + ${files.length} file${files.length > 1 ? 's' : ''}` : 'Create deal') : 'Save changes'} onPress={save} busy={busy} />
 
         {t && (
           <Card style={{ marginTop: space.lg }}>
@@ -252,8 +291,15 @@ export default function TransactionScreen() {
 
         {t && (
           <Card>
-            <SectionTitle>Documents</SectionTitle>
-            <DocumentsPanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
+            <SectionTitle>Follow-ups</SectionTitle>
+            <RelatedTasks entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
+          </Card>
+        )}
+
+        {t && (
+          <Card>
+            <SectionTitle>Also involved</SectionTitle>
+            <PeoplePanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} roles={['Lawyer', 'Broker', 'Landowner', 'Surveyor', 'Investor', 'Other']} emptyText="Tag the lawyers, brokers or co-owners on this deal." />
           </Card>
         )}
 
@@ -270,11 +316,52 @@ export default function TransactionScreen() {
           </View>
         )}
       </ScrollView>
+      <ContactPickerSheet
+        visible={picking !== null}
+        onClose={() => setPicking(null)}
+        defaultRole={picking === 'seller' ? 'Seller' : 'Buyer'}
+        title={picking === 'seller' ? 'Who is selling?' : 'Who is buying?'}
+        onPick={(c) => {
+          if (picking === 'seller') {
+            setSeller(c.name)
+            setSellerPhone(c.phone ?? '')
+            setSellerEmail(c.email ?? '')
+            setParty((p) => ({ ...p, seller: c.id }))
+          } else {
+            setBuyer(c.name)
+            setBuyerPhone(c.phone ?? '')
+            setBuyerEmail(c.email ?? '')
+            setParty((p) => ({ ...p, buyer: c.id }))
+          }
+        }}
+      />
     </Screen>
   )
 }
 
+function PartyLink({ side, id, onPick }: { side: 'buyer' | 'seller'; id: string | null; onPick: () => void }) {
+  return (
+    <View style={s.party}>
+      {id ? (
+        <TouchableOpacity onPress={() => router.push({ pathname: '/contact/[id]', params: { id } })}>
+          <Text style={s.partyLink}>{side === 'buyer' ? 'Buyer' : 'Seller'}’s contact card →</Text>
+        </TouchableOpacity>
+      ) : (
+        <View />
+      )}
+      <TouchableOpacity onPress={onPick}>
+        <Text style={s.partyPick}>{id ? 'Change' : `Pick ${side} from contacts`}</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
 const s = StyleSheet.create({
+  fromLead: { backgroundColor: colors.verifiedBg, borderRadius: 12, padding: space.md, marginBottom: space.md },
+  fromLeadText: { color: colors.verified, fontWeight: '800', fontSize: text.sm },
+  party: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  partyLink: { color: colors.goldDeep, fontWeight: '800', fontSize: text.sm },
+  partyPick: { color: colors.navy, fontWeight: '800', fontSize: text.sm },
   ref: { fontSize: text.sm, color: colors.muted, fontWeight: '600' },
   lost: { color: colors.flagged, fontSize: text.base, fontWeight: '600', marginVertical: space.sm },
   muted: { fontSize: text.sm, color: colors.muted },

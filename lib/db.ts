@@ -21,6 +21,8 @@ import type {
   Note,
   Task,
   Meeting,
+  Contact,
+  LeadProperty,
 } from './types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -174,6 +176,27 @@ export async function getLeads(): Promise<Result<Lead[]>> {
   return read<Lead[]>('leads', seedLeads, (q) =>
     q.select('*').order('created_at', { ascending: false })
   )
+}
+
+export async function getLead(id: string): Promise<Lead | null> {
+  const res = await getLeads()
+  return res.data.find((l) => l.id === id) ?? null
+}
+
+/* ─── Contacts & listings shown (migration 015) ─────────────── */
+
+export async function getContacts(): Promise<Result<Contact[]>> {
+  return read<Contact[]>('contacts', [], (q) => q.select('*').order('name', { ascending: true }).limit(5000))
+}
+
+/** Listings shown to leads — for one lead, one listing, or all. */
+export async function getLeadProperties(filter: { lead_id?: string; property_id?: string } = {}): Promise<Result<LeadProperty[]>> {
+  return read<LeadProperty[]>('lead_properties', [], (q) => {
+    let b = q.select('*').order('created_at', { ascending: false })
+    if (filter.lead_id) b = b.eq('lead_id', filter.lead_id)
+    if (filter.property_id) b = b.eq('property_id', filter.property_id)
+    return b
+  })
 }
 
 export async function getDataRoomRequests(): Promise<Result<DataRoomRequest[]>> {

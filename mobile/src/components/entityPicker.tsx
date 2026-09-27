@@ -4,9 +4,9 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useApi } from '@/lib/api'
 import { colors, radius, space, text } from '@/lib/theme'
-import type { ApiResult, Lead, Property, PropertyTransaction, Task } from '@/lib/types'
+import type { ApiResult, Contact, Lead, Property, PropertyTransaction, Task } from '@/lib/types'
 
-export type LinkType = 'property' | 'transaction' | 'task' | 'lead'
+export type LinkType = 'property' | 'transaction' | 'task' | 'lead' | 'contact'
 export interface LinkValue {
   entity_type: LinkType | 'general'
   entity_id: string | null
@@ -18,6 +18,7 @@ const TABS: { type: LinkType; label: string; icon: keyof typeof Ionicons.glyphMa
   { type: 'transaction', label: 'Deal', icon: 'briefcase-outline' },
   { type: 'task', label: 'Task', icon: 'checkbox-outline' },
   { type: 'lead', label: 'Lead', icon: 'person-outline' },
+  { type: 'contact', label: 'Contact', icon: 'person-circle-outline' },
 ]
 
 export const LINK_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -25,6 +26,7 @@ export const LINK_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   transaction: 'briefcase-outline',
   task: 'checkbox-outline',
   lead: 'person-outline',
+  contact: 'person-circle-outline',
   meeting: 'people-outline',
   verification: 'shield-checkmark-outline',
   general: 'link-outline',
@@ -42,7 +44,7 @@ interface Option {
 export function EntityPicker({
   value,
   onChange,
-  types = ['property', 'transaction', 'task', 'lead'],
+  types = ['property', 'transaction', 'task', 'lead', 'contact'],
   label = 'Related to',
 }: {
   value: LinkValue
@@ -74,8 +76,12 @@ export function EntityPicker({
         const r = await api.get<ApiResult<Task[]>>('/api/tasks')
         return r.source === 'live' ? r.data.filter((t) => t.status === 'Open').map((t) => ({ id: t.id, label: t.title, sub: t.entity_label || t.priority })) : []
       }
+      if (tab === 'contact') {
+        const r = await api.get<{ data: Contact[] }>('/api/contacts')
+        return r.data.map((c) => ({ id: c.id, label: c.name, sub: [c.roles?.join(', '), c.phone].filter(Boolean).join(' · ') }))
+      }
       const r = await api.get<ApiResult<Lead[]>>('/api/leads')
-      return r.source === 'live' ? r.data.map((l) => ({ id: l.id, label: l.name, sub: `${l.kind} · ${l.stage}` })) : []
+      return r.source === 'live' ? r.data.map((l) => ({ id: l.id, label: l.name, sub: `${l.intent ?? l.kind} · ${l.stage === 'Visit' ? 'Site visit' : l.stage}` })) : []
     }
     load()
       .then((o) => setOptions((p) => ({ ...p, [tab]: o })))
@@ -95,7 +101,7 @@ export function EntityPicker({
       <TouchableOpacity style={s.trigger} onPress={() => setOpen(true)}>
         <Ionicons name={LINK_ICON[value.entity_type] ?? 'link-outline'} size={17} color={linked ? colors.navy : colors.muted} />
         <Text style={[s.triggerText, !linked && { color: colors.muted }]} numberOfLines={1}>
-          {linked ? value.entity_label : 'Link a listing, deal, task or lead'}
+          {linked ? value.entity_label : 'Link a listing, deal, lead or contact'}
         </Text>
         {linked ? (
           <TouchableOpacity hitSlop={10} onPress={() => onChange({ entity_type: 'general', entity_id: null, entity_label: '' })}>

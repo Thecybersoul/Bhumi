@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTasks, insertReturningId } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
+import { schemaHint } from '@/lib/contacts'
 import type { LinkedEntityType, TaskPriority } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'general']
+const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'contact', 'general']
 const PRIORITIES: TaskPriority[] = ['Low', 'Normal', 'High']
 
 // GET /api/tasks — admin only, internal follow-ups
@@ -49,6 +50,6 @@ export async function POST(req: NextRequest) {
     created_at: new Date().toISOString(),
   })
 
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
+  if (!result.ok) return NextResponse.json({ error: schemaHint(result.error) }, { status: 502 })
   return NextResponse.json({ ok: true, persisted: result.persisted, id: result.id }, { status: 201 })
 }

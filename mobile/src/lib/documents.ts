@@ -6,7 +6,7 @@ import type { useApi } from './api'
    the bytes straight there, then record the result against the
    listing, note or deal it belongs to. */
 
-export type DocEntity = 'property' | 'note' | 'transaction' | 'lead' | 'verification' | 'meeting' | 'task' | 'general'
+export type DocEntity = 'property' | 'note' | 'transaction' | 'lead' | 'verification' | 'meeting' | 'task' | 'contact' | 'general'
 
 export interface Doc {
   id: string
@@ -82,7 +82,8 @@ export const CATEGORIES: Record<DocEntity, string[]> = {
   property: ['Title deed', 'EC', 'RTC / Pahani', 'Khata', 'Conversion order', 'Survey sketch', 'Mutation', 'Tax receipt', 'Layout plan', 'Photos', 'Other'],
   transaction: ['Agreement', 'Sale deed', 'Token receipt', 'KYC', 'Invoice', 'Other'],
   verification: ['Title deed', 'EC', 'RTC / Pahani', 'Survey sketch', 'Legal opinion', 'Report', 'Other'],
-  lead: ['KYC', 'Requirement', 'Other'],
+  lead: ['KYC', 'Requirement', 'Brochure', 'Other'],
+  contact: ['KYC', 'PAN', 'Aadhaar', 'Agreement', 'Other'],
   note: ['Attachment'],
   meeting: ['Minutes', 'Photos', 'Other'],
   task: ['Attachment'],

@@ -9,6 +9,7 @@ import { Button, SectionTitle, TextField, ToggleRow } from '@/components/form'
 import { WhenField } from '@/components/when'
 import { EntityPicker, type LinkValue } from '@/components/entityPicker'
 import { DocumentsPanel } from '@/components/documents'
+import { PeoplePanel } from '@/components/contacts'
 import { ActivityFeed } from '@/components/activity'
 import { ByLine } from '@/components/people'
 import { syncReminders } from '@/lib/notify'
@@ -332,6 +333,10 @@ export default function MeetingScreen() {
               </Card>
             ) : null}
 
+            <Card>
+              <SectionTitle>People</SectionTitle>
+              <PeoplePanel entityType="meeting" entityId={m.id} entityLabel={m.title} roles={['Attendee', 'Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who was there from your contacts." />
+            </Card>
             <Card>
               <SectionTitle>Documents & photos</SectionTitle>
               <DocumentsPanel compact entityType="meeting" entityId={m.id} entityLabel={m.title} />

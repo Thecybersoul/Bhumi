@@ -12,6 +12,8 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { DocRow, DocumentsPanel, pickFiles, takePhoto } from '@/components/documents'
 import { uploadDocument, type Doc, type PickedFile } from '@/lib/documents'
 import { syncReminders } from '@/lib/notify'
+import { PeoplePanel } from '@/components/contacts'
+import { PendingFiles } from '@/components/leadPanels'
 import type { ApiResult, Note, Task, TaskPriority } from '@/lib/types'
 
 const PRIORITIES: TaskPriority[] = ['Low', 'Normal', 'High']
@@ -52,21 +54,27 @@ export default function NotesTasksScreen() {
   }, [params.new, params.view])
   const [noteFiles, setNoteFiles] = useState<PickedFile[]>([])
   const [noteDocs, setNoteDocs] = useState<Record<string, Doc[]>>({})
+  const [taskDocs, setTaskDocs] = useState<Record<string, Doc[]>>({})
+  const [taskFiles, setTaskFiles] = useState<PickedFile[]>([])
   const [openNote, setOpenNote] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const [t, n, g, d] = await Promise.all([
+      const [t, n, g, d, td] = await Promise.all([
         api.get<ApiResult<Task[]>>('/api/tasks'),
         api.get<ApiResult<Note[]>>('/api/notes'),
         api.get<{ connected: boolean }>('/api/admin/google/status').catch(() => ({ connected: false })),
         api.get<{ data: Doc[] }>('/api/documents?entity_type=note').catch(() => ({ data: [] as Doc[] })),
+        api.get<{ data: Doc[] }>('/api/documents?entity_type=task').catch(() => ({ data: [] as Doc[] })),
       ])
       setTasks(t.data)
       setNotes(n.data)
       const byNote: Record<string, Doc[]> = {}
       for (const doc of d.data) if (doc.entity_id) (byNote[doc.entity_id] ??= []).push(doc)
       setNoteDocs(byNote)
+      const byTask: Record<string, Doc[]> = {}
+      for (const doc of td.data) if (doc.entity_id) (byTask[doc.entity_id] ??= []).push(doc)
+      setTaskDocs(byTask)
       setGoogle(g.connected)
       setError(null)
     } catch (e) {
@@ -90,7 +98,11 @@ export default function NotesTasksScreen() {
     if (!title.trim()) return
     setBusy('add')
     try {
-      await api.post('/api/tasks', { title: title.trim(), due_at: due || undefined, priority, ...linkForTask(related) })
+      const out = await api.post<{ id?: string }>('/api/tasks', { title: title.trim(), due_at: due || undefined, priority, ...linkForTask(related) })
+      if (out.id) {
+        for (const f of taskFiles) await uploadDocument(api, f, { entity_type: 'task', entity_id: out.id, entity_label: title.trim().slice(0, 60), category: 'Attachment' })
+      }
+      setTaskFiles([])
       setTitle('')
       setDue('')
       setRelated(NO_LINK)
@@ -240,6 +252,12 @@ export default function NotesTasksScreen() {
             ) : null}
             <ByLine record={t} createdAt={t.created_at} compact />
           </TouchableOpacity>
+          {taskDocs[t.id]?.length ? (
+            <View style={s.clip}>
+              <Ionicons name="attach" size={15} color={colors.goldDeep} />
+              <Text style={[s.clipText, { color: colors.goldDeep }]}>{taskDocs[t.id].length}</Text>
+            </View>
+          ) : null}
           {t.priority === 'High' ? <Badge label="High" tone="flagged" /> : null}
           <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.muted} />
         </View>
@@ -270,7 +288,11 @@ export default function NotesTasksScreen() {
                 </View>
               ) : null}
             </View>
-            <View style={{ marginTop: 8 }}>
+            <Text style={s.sub}>Attachments</Text>
+            <DocumentsPanel compact entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 60)} onCount={() => load()} />
+            <Text style={s.sub}>People</Text>
+            <PeoplePanel entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 80)} roles={['Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who this is about or who is involved." />
+            <View style={{ marginTop: space.md }}>
               <Button label="Delete task" tone="danger" onPress={() => removeTask(t)} />
             </View>
           </View>
@@ -303,7 +325,7 @@ export default function NotesTasksScreen() {
           ListHeaderComponent={
             <View style={s.card}>
               <TextField label="New note" value={noteBody} onChange={setNoteBody} multiline placeholder="What was said, what to remember…" />
-              <EntityPicker value={noteRel} onChange={setNoteRel} types={['property', 'transaction', 'lead']} label="Related to (optional)" />
+              <EntityPicker value={noteRel} onChange={setNoteRel} types={['property', 'transaction', 'lead', 'contact']} label="Related to (optional)" />
               {noteFiles.map((f, i) => (
                 <View key={f.uri} style={s.pending}>
                   <Ionicons name="attach" size={16} color={colors.navy} />
@@ -372,6 +394,8 @@ export default function NotesTasksScreen() {
                 {expanded ? (
                   <View style={{ marginTop: space.sm }}>
                     <DocumentsPanel compact entityType="note" entityId={n.id} entityLabel={(n.entity_label || n.body).slice(0, 60)} onCount={() => load()} />
+                    <Text style={s.sub}>People mentioned</Text>
+                    <PeoplePanel entityType="note" entityId={n.id} entityLabel={n.body.slice(0, 80)} roles={['Mentioned', 'Client', 'Owner', 'Broker', 'Lawyer']} emptyText="Tag the people this note is about." />
                   </View>
                 ) : null}
               </View>
@@ -393,8 +417,9 @@ export default function NotesTasksScreen() {
                     <TextField label="Task" value={title} onChange={setTitle} placeholder="Call back the Devanahalli enquiry" />
                     <WhenField label="Due" value={due} onChange={setDue} />
                     <Chips label="Priority" options={PRIORITIES} value={priority} onChange={setPriority} />
-                    <EntityPicker value={related} onChange={setRelated} types={['property', 'transaction', 'lead']} label="Related to (optional)" />
-                    <Button label="Add task" onPress={addTask} busy={busy === 'add'} />
+                    <EntityPicker value={related} onChange={setRelated} types={['property', 'transaction', 'lead', 'contact']} label="Related to (optional)" />
+                    <PendingFiles files={taskFiles} onChange={setTaskFiles} entityType="task" category="Attachment" onCategory={() => {}} />
+                    <Button label={taskFiles.length ? `Add task + ${taskFiles.length} file${taskFiles.length > 1 ? 's' : ''}` : 'Add task'} onPress={addTask} busy={busy === 'add'} />
                   </View>
                 ) : null}
               </View>
@@ -440,4 +465,5 @@ const s = StyleSheet.create({
   attachRow: { flexDirection: 'row', gap: 8, marginBottom: space.md },
   attachBtn: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: colors.line, borderStyle: 'dashed' },
   attachText: { fontSize: text.sm, fontWeight: '700', color: colors.navy },
+  sub: { fontSize: text['2xs'], fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase', color: colors.muted, marginTop: space.md, marginBottom: 6 },
 })

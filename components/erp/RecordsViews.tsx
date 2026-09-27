@@ -49,12 +49,15 @@ export function ActivityView() {
 
 /* ─── Documents hub ─────────────────────────────────────── */
 
-const SECTION: Record<string, string> = { property: 'Listings', transaction: 'Deals', verification: 'Verification', lead: 'Leads', note: 'Notes', meeting: 'Meetings', task: 'Tasks', general: 'General' }
+const SECTION: Record<string, string> = { property: 'Listings', transaction: 'Deals', verification: 'Verification', lead: 'Leads', contact: 'Contacts', note: 'Notes', meeting: 'Meetings', task: 'Tasks', general: 'General' }
 const HREF: Record<string, (id: string) => string> = {
   property: (id) => `/admin/properties/${id}`,
   transaction: (id) => `/admin/deals/${id}`,
   meeting: (id) => `/admin/meetings/${id}`,
   note: () => '/admin/notes-tasks?view=notes',
+  task: () => '/admin/notes-tasks',
+  lead: (id) => `/admin/deals/leads/${id}`,
+  contact: (id) => `/admin/deals/contacts/${id}`,
 }
 
 export function DocumentsView() {
@@ -93,7 +96,7 @@ export function DocumentsView() {
           <input className="erpInput" style={{ paddingLeft: 32 }} placeholder="Search name, category, record, uploader" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="erpChips">
-          {['all', 'property', 'transaction', 'meeting', 'note', 'verification'].map((f) => (
+          {['all', 'property', 'transaction', 'lead', 'contact', 'meeting', 'note', 'task', 'verification'].map((f) => (
             <button key={f} className={`erpChip ${filter === f ? 'is-on' : ''}`} onClick={() => setFilter(f)}>
               {f === 'all' ? 'All' : SECTION[f]}
             </button>

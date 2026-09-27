@@ -134,10 +134,53 @@ const TABS: Tab[] = [
       ['Kind', (r) => str(r.kind)],
       ['Channel', (r) => str(r.channel)],
       ['Stage', (r) => str(r.stage)],
+      ['Intent', (r) => str(r.intent)],
+      ['Priority', (r) => str(r.priority)],
+      ['Type wanted', (r) => str(r.property_type)],
+      ['Areas', (r) => str(r.locations || r.corridor)],
+      ['Budget from (₹ Cr)', (r) => str(r.budget_min_cr)],
+      ['Budget to (₹ Cr)', (r) => str(r.budget_max_cr)],
+      ['Size', (r) => str(r.size_requirement)],
+      ['Owner', (r) => str(r.assigned_to)],
+      ['Next follow-up', (r) => ist(r.next_follow_up_at)],
       ['Listing', (r) => str(r.property_code)],
       ['Source', (r) => str(r.source)],
       ['Notes', (r) => str(r.notes)],
+      ['Lost reason', (r) => str(r.lost_reason)],
       ['Last handled by', (r) => str(r.updated_by)],
+    ],
+  },
+  {
+    title: 'Contacts',
+    table: 'contacts',
+    order: 'created_at',
+    columns: [
+      ['Name', (r) => str(r.name)],
+      ['Roles', (r) => (Array.isArray(r.roles) ? (r.roles as string[]).join(', ') : '')],
+      ['Phone', (r) => str(r.phone)],
+      ['Other phone', (r) => str(r.alt_phone)],
+      ['Email', (r) => str(r.email)],
+      ['Company', (r) => str(r.company)],
+      ['City', (r) => str(r.city)],
+      ['Source', (r) => str(r.source)],
+      ['Notes', (r) => str(r.notes)],
+      ['Added', (r) => ist(r.created_at)],
+      ['Added by', (r) => str(r.created_by)],
+    ],
+  },
+  {
+    title: 'Shown to clients',
+    table: 'lead_properties',
+    order: 'created_at',
+    columns: [
+      ['Listing', (r) => str(r.property_label)],
+      ['Status', (r) => str(r.status)],
+      ['Feedback', (r) => str(r.feedback)],
+      ['Shared', (r) => ist(r.shared_at)],
+      ['Visited', (r) => ist(r.visited_at)],
+      ['Added', (r) => ist(r.created_at)],
+      ['By', (r) => str(r.updated_by || r.created_by)],
+      ['Lead id', (r) => str(r.lead_id)],
     ],
   },
   {
@@ -235,6 +278,32 @@ async function ensureSpreadsheet(sheets: sheets_v4.Sheets, drive: ReturnType<typ
   return { id, url: data.spreadsheetUrl ?? `https://docs.google.com/spreadsheets/d/${id}` }
 }
 
+/** A register created before a tab was added to TABS gets that tab
+    (header styled like the rest) instead of failing the whole sync. */
+async function ensureTabs(sheets: sheets_v4.Sheets, id: string) {
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: id, fields: 'sheets(properties(title))' })
+  const have = new Set((meta.data.sheets ?? []).map((s) => s.properties?.title))
+  const missing = TABS.filter((t) => !have.has(t.title))
+  if (!missing.length) return
+  const added = await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: id,
+    requestBody: { requests: missing.map((t) => ({ addSheet: { properties: { title: t.title, gridProperties: { frozenRowCount: 1 } } } })) },
+  })
+  const ids = (added.data.replies ?? []).map((r) => r.addSheet?.properties?.sheetId).filter((x): x is number => x != null)
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: id,
+    requestBody: {
+      requests: ids.map((sheetId) => ({
+        repeatCell: {
+          range: { sheetId, startRowIndex: 0, endRowIndex: 1 },
+          cell: { userEnteredFormat: { backgroundColor: NAVY, textFormat: { bold: true, foregroundColor: WHITE } } },
+          fields: 'userEnteredFormat(backgroundColor,textFormat)',
+        },
+      })),
+    },
+  })
+}
+
 /** Rewrite every tab from the database. Returns the sheet's URL. */
 export async function syncRegister(syncedBy: string): Promise<State> {
   if (!(await hasService('sheets'))) throw new Error('Google Drive/Sheets is not connected')
@@ -246,6 +315,7 @@ export async function syncRegister(syncedBy: string): Promise<State> {
   try {
     const state = await getState()
     const { id, url } = await ensureSpreadsheet(sheets, drive, state)
+    await ensureTabs(sheets, id)
 
     const tabs = await Promise.all(
       TABS.map(async (t) => {

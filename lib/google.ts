@@ -336,9 +336,10 @@ const MONTH = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')} ${d.toLocaleString('en-IN', { month: 'long' })}`
 }
 
-/* Listings, deals and verification cases are case files and get a
-   folder each; notes, meetings, tasks and leads are filed by month. */
-const PER_RECORD = new Set(['property', 'transaction', 'verification'])
+/* Listings, deals, verification cases, leads and contacts are case
+   files and get a folder each (a client's KYC belongs together);
+   notes, meetings and tasks are filed by month. */
+const PER_RECORD = new Set(['property', 'transaction', 'verification', 'lead', 'contact'])
 
 async function destinationFolder(
   drive: Drive,

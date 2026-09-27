@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, FolderOpen, History, Image as ImageIcon, LandPlot, Mail, Map, Ruler, Scale, Trash2, Users } from 'lucide-react'
+import { ArrowLeft, FolderOpen, History, Image as ImageIcon, LandPlot, ListChecks, Mail, Map, Ruler, Scale, Tag, Trash2, UserSearch, Users } from 'lucide-react'
 import MediaPicker from '@/components/admin/MediaPicker'
 import { api, type Audited } from './lib'
 import { Banner, ByLine, Card, Chips, Field, Loading } from './ui'
 import { ActivityFeed, RelatedMeetings } from './records'
-import { DocumentsPanel } from './documents'
+import { DocsJump, DocumentsPanel, PendingDocs, uploadAll } from './documents'
+import { PeoplePanel } from './contacts'
+import { ListingBuyers, RelatedTasks } from './leadPanels'
 import { EmailButton, EmailLog } from './google'
 
 const TYPES = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels'] as const
@@ -66,6 +68,8 @@ export default function ListingEditor({ id }: { id: string }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [files, setFiles] = useState<File[]>([])
+  const [fileCat, setFileCat] = useState('Title deed')
 
   function hydrate(p: P) {
     setOrig(p)
@@ -112,6 +116,7 @@ export default function ListingEditor({ id }: { id: string }) {
     try {
       if (isNew) {
         const r = await api.post<{ id?: string }>('/api/properties', { ...payload(), use_cases: [], amenities: '', risk: 'Low', img_url: f.img_url || '/img/p1.jpg' })
+        if (r.id && files.length) await uploadAll(files, { entity_type: 'property', entity_id: r.id, entity_label: `${f.code.trim()} · ${f.title.trim()}`, category: fileCat })
         router.push(r.id ? `/admin/properties/${r.id}` : '/admin/properties')
         return
       }
@@ -182,6 +187,11 @@ export default function ListingEditor({ id }: { id: string }) {
             </>
           ) : null}
         </div>
+        {live ? (
+          <div className="erpHead__actions">
+            <DocsJump entityType="property" entityId={orig!.id} />
+          </div>
+        ) : null}
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
       {saved ? <Banner tone="ok">Saved. The marketplace shows the change straight away.</Banner> : null}
@@ -254,9 +264,15 @@ export default function ListingEditor({ id }: { id: string }) {
             </div>
           </Card>
 
+          {isNew ? (
+            <Card title="Documents" icon={FolderOpen}>
+              <PendingDocs files={files} onChange={setFiles} entityType="property" category={fileCat} onCategory={setFileCat} />
+            </Card>
+          ) : null}
+
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="erpBtn primary" style={{ flex: 1 }} onClick={save} disabled={busy}>
-              {busy ? 'Saving…' : isNew ? 'Publish listing' : 'Save changes'}
+              {busy ? 'Saving…' : isNew ? (files.length ? `Publish listing + ${files.length} file${files.length > 1 ? 's' : ''}` : 'Publish listing') : 'Save changes'}
             </button>
             {orig ? (
               <button className="erpBtn danger" onClick={remove}>
@@ -267,17 +283,32 @@ export default function ListingEditor({ id }: { id: string }) {
         </div>
 
         <div className="erpCol">
-          <Card title="Documents" icon={FolderOpen}>
+          <Card title="Documents" icon={FolderOpen} id="documents">
             {live ? (
               <DocumentsPanel entityType="property" entityId={orig!.id} entityLabel={label} />
             ) : (
               <p className="erpEmpty">
-                {isNew ? 'Publish the listing first, then attach its title deed, EC, RTC, khata and sketches here.' : 'Save this built-in listing once to start attaching documents.'}
+                {isNew ? 'Add the title deed, EC, RTC, khata and sketches in the Documents box on the left — they upload when you publish.' : 'Save this built-in listing once to start attaching documents.'}
               </p>
             )}
           </Card>
           {live ? (
             <>
+              <Card title="Clients" icon={UserSearch}>
+                <ListingBuyers propertyId={orig!.id} />
+              </Card>
+              <Card title="Owner & people" icon={Tag}>
+                <PeoplePanel
+                  entityType="property"
+                  entityId={orig!.id}
+                  entityLabel={label}
+                  roles={['Landowner', 'Seller', 'Developer', 'Broker', 'Lawyer', 'Other']}
+                  emptyText="Tag the landowner, developer or broker behind this listing."
+                />
+              </Card>
+              <Card title="Follow-ups" icon={ListChecks}>
+                <RelatedTasks entityType="property" entityId={orig!.id} entityLabel={label} />
+              </Card>
               <Card title="Share with a client" icon={Mail}>
                 <EmailButton block label="Email this listing" draft={listingEmail(orig!)} />
                 <div style={{ marginTop: 10 }}>

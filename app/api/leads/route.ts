@@ -1,20 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { insert, getLeads, update } from '@/lib/db'
-import { assertAdmin } from '@/lib/auth'
-import type { LeadKind } from '@/lib/types'
+import { insertReturningId, getLeads, update } from '@/lib/db'
+import { assertAdmin, currentUser } from '@/lib/auth'
+import { contactsReady, ensureContact, schemaHint } from '@/lib/contacts'
+import { LEAD_CHANNELS, LEAD_KINDS, isStage, leadFields, stageEffects } from '@/lib/leads'
+import { createServiceClient } from '@/lib/supabase'
+import type { LeadChannel, LeadKind } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
-
-const KINDS: LeadKind[] = [
-  'Enquiry',
-  'Site visit',
-  'Verification review',
-  'Data room',
-  'Checklist download',
-  'Tool result',
-  'Listing request',
-  'Advisor call',
-]
 
 /** Confirmation copy per conversion path — the acknowledgement
     should tell the visitor what actually happens next, not just
@@ -27,6 +19,12 @@ const ACK: Partial<Record<LeadKind, string>> = {
   'Site visit': 'We will call to confirm a time, usually within one working day.',
 }
 
+/* POST /api/leads — two callers:
+   · the website's forms (public): name + phone/email + what they asked about;
+   · an advisor adding a lead by hand (signed in): the same, plus the
+     requirement, owner and follow-up fields from migration 015.
+   Either way the person is found or created in contacts, so a repeat
+   enquirer is recognised. */
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try {
@@ -35,18 +33,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
+  const me = await currentUser()
   const name = String(body.name ?? '').trim()
   const phone = String(body.phone ?? '').trim()
   const email = String(body.email ?? '').trim()
 
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-  if (!phone && !email) {
+  // An advisor may add a lead from a contact already on file.
+  if (!phone && !email && !(me && body.contact_id)) {
     return NextResponse.json({ error: 'A phone number or an email address is required' }, { status: 400 })
   }
 
-  const kind = KINDS.includes(body.kind as LeadKind) ? (body.kind as LeadKind) : 'Enquiry'
-
-  const record = {
+  const kind = LEAD_KINDS.includes(body.kind as LeadKind) ? (body.kind as LeadKind) : 'Enquiry'
+  const record: Record<string, unknown> = {
     kind,
     name: name.slice(0, 160),
     company: String(body.company ?? '').slice(0, 160),
@@ -56,23 +55,50 @@ export async function POST(req: NextRequest) {
     property_type: String(body.property_type ?? '').slice(0, 40),
     corridor: String(body.corridor ?? '').slice(0, 60),
     source: String(body.source ?? '').slice(0, 120),
-    channel: ['WhatsApp', 'Form', 'Call', 'Landing page'].includes(String(body.channel))
-      ? String(body.channel)
-      : 'Form',
+    channel: LEAD_CHANNELS.slice(0, 4).includes(body.channel as LeadChannel) ? String(body.channel) : 'Form',
     stage: 'New',
     payload: typeof body.payload === 'object' && body.payload ? body.payload : {},
     notes: String(body.notes ?? '').slice(0, 2000),
   }
 
-  const result = await insert('leads', record)
+  if (me) {
+    const extra = leadFields(body)
+    delete extra.stage
+    Object.assign(record, extra)
+    if (!record.source) record.source = `Added by ${me.name}`
+    if (!('assigned_to' in extra)) record.assigned_to = me.name
+  }
+
+  // Known person? Link them; new person? Start their contact card.
+  if (await contactsReady()) {
+    if (!record.contact_id) {
+      record.contact_id = await ensureContact({
+        name,
+        phone,
+        email,
+        company: String(record.company ?? ''),
+        role: ['Sell', 'Rent out'].includes(String(record.intent)) || kind === 'Listing request' ? 'Seller' : 'Buyer',
+        source: `Lead · ${kind}`,
+      }).catch(() => null)
+    }
+    if (kind === 'Listing request' && !record.intent) record.intent = 'Sell'
+  } else if (!me) {
+    delete record.contact_id
+  }
+
+  const result = await insertReturningId('leads', record)
   if (!result.ok) {
-    return NextResponse.json({ error: 'Could not record the enquiry. Please use WhatsApp.' }, { status: 502 })
+    return NextResponse.json(
+      { error: me ? schemaHint(result.error) : 'Could not record the enquiry. Please use WhatsApp.' },
+      { status: 502 }
+    )
   }
 
   return NextResponse.json(
     {
       ok: true,
       persisted: result.persisted,
+      id: me ? result.id : undefined,
       message: ACK[kind] ?? 'An advisor will be in touch shortly.',
     },
     { status: 201 }
@@ -88,7 +114,9 @@ export async function GET() {
   return NextResponse.json({ data, source })
 }
 
-/** Admin: advance a lead's pipeline stage. */
+/** Admin: advance a lead's pipeline stage — the one-tap "→ next" on a
+    lead card. Kept as a query-string PATCH because app builds already
+    installed on phones call it this way. */
 export async function PATCH(req: NextRequest) {
   const denied = await assertAdmin()
   if (denied) return denied
@@ -96,12 +124,16 @@ export async function PATCH(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   const stage = searchParams.get('stage')
-  const STAGES = ['New', 'Contacted', 'Qualified', 'Visit', 'Closed']
 
   if (!id || !stage) return NextResponse.json({ error: 'Missing id or stage' }, { status: 400 })
-  if (!STAGES.includes(stage)) return NextResponse.json({ error: 'Unknown stage' }, { status: 400 })
+  if (!isStage(stage)) return NextResponse.json({ error: 'Unknown stage' }, { status: 400 })
 
-  const result = await update('leads', id, { stage })
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
+  let patch: Record<string, unknown> = { stage }
+  if (await contactsReady()) {
+    const before = (await createServiceClient().from('leads').select('stage, last_contacted_at').eq('id', id).maybeSingle()).data
+    patch = { ...patch, ...stageEffects(stage, before ?? undefined) }
+  }
+  const result = await update('leads', id, patch)
+  if (!result.ok) return NextResponse.json({ error: schemaHint(result.error) }, { status: 502 })
   return NextResponse.json({ ok: true, persisted: result.persisted })
 }

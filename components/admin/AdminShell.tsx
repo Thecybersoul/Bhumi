@@ -38,7 +38,7 @@ const nav: { group: string; items: Item[] }[] = [
     group: 'Workspace',
     items: [
       { href: '/admin/dashboard', label: 'Home', icon: House },
-      { href: '/admin/deals', label: 'Deals', icon: Briefcase, hint: 'Pipeline, leads & document requests', match: '/admin/deals' },
+      { href: '/admin/deals', label: 'Deals', icon: Briefcase, hint: 'Leads, deals, contacts & document requests', match: '/admin/deals' },
       { href: '/admin/properties', label: 'Listings', icon: Map, hint: 'Marketplace & verification', match: '/admin/properties' },
       { href: '/admin/meetings', label: 'Meetings', icon: Users, hint: 'Visits, calls & discussions', match: '/admin/meetings' },
       { href: '/admin/notes-tasks', label: 'Tasks & notes', icon: CircleCheck },

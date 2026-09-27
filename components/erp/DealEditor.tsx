@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Briefcase, FolderOpen, History, Mail, Trash2, Users, Wallet } from 'lucide-react'
-import { api, type Audited } from './lib'
+import { ArrowLeft, Briefcase, FolderOpen, History, ListChecks, Mail, Tag, Target, Trash2, UserRound, Users, Wallet } from 'lucide-react'
+import { api, type Audited, type Contact } from './lib'
 import { Banner, ByLine, Card, Chips, Field, Loading, Pill } from './ui'
 import { ActivityFeed, EntityPicker, RelatedMeetings, NO_LINK, type LinkValue } from './records'
-import { DocumentsPanel } from './documents'
+import { DocsJump, DocumentsPanel, PendingDocs, uploadAll } from './documents'
+import { ContactPicker, PeoplePanel } from './contacts'
+import { RelatedTasks } from './leadPanels'
 import { EmailButton, EmailLog, MeetNowButton } from './google'
 
 const STAGES = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed'] as const
@@ -36,6 +38,9 @@ interface Deal extends Audited {
   notes?: string
   lost_reason?: string
   opened_at: string
+  lead_id?: string | null
+  buyer_contact_id?: string | null
+  seller_contact_id?: string | null
 }
 
 function dealEmail(t: Deal, who: 'buyer' | 'seller') {
@@ -77,7 +82,17 @@ export default function DealEditor({ id }: { id: string }) {
   const [representing, setRepresenting] = useState<Deal['representing']>('Both')
   const [ctype, setCtype] = useState<Deal['commission_type']>('Percentage')
   const [listing, setListing] = useState<LinkValue>(NO_LINK)
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((p) => ({ ...p, [k]: e.target.value }))
+  const [party, setParty] = useState<{ buyer: string | null; seller: string | null }>({ buyer: null, seller: null })
+  const [picking, setPicking] = useState<'buyer' | 'seller' | null>(null)
+  const [files, setFiles] = useState<File[]>([])
+  const [fileCat, setFileCat] = useState('Agreement')
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setF((p) => ({ ...p, [k]: e.target.value }))
+    // Retyping a party's name or phone detaches the picked contact; the
+    // server then matches (or creates) them again from what was typed.
+    if (k === 'buyer_name' || k === 'buyer_phone') setParty((p) => ({ ...p, buyer: null }))
+    if (k === 'seller_name' || k === 'seller_phone') setParty((p) => ({ ...p, seller: null }))
+  }
 
   const hydrate = useCallback((x: Deal) => {
     setT(x)
@@ -97,7 +112,14 @@ export default function DealEditor({ id }: { id: string }) {
     setRepresenting(x.representing)
     setCtype(x.commission_type)
     setListing(x.property_id ? { entity_type: 'property', entity_id: x.property_id, entity_label: x.property_label } : NO_LINK)
+    setParty({ buyer: x.buyer_contact_id ?? null, seller: x.seller_contact_id ?? null })
   }, [])
+
+  function pickParty(side: 'buyer' | 'seller', c: Contact) {
+    setF((p) => ({ ...p, [`${side}_name`]: c.name, [`${side}_phone`]: c.phone ?? '', [`${side}_email`]: c.email ?? '' }))
+    setParty((p) => ({ ...p, [side]: c.id }))
+    setPicking(null)
+  }
 
   const reload = useCallback(async () => {
     const r = await api.get<{ data: Deal[] }>('/api/transactions')
@@ -136,10 +158,15 @@ export default function DealEditor({ id }: { id: string }) {
       commission_type: ctype,
       deal_value_cr: f.deal_value_cr.trim() === '' ? null : Number(f.deal_value_cr),
       commission_value: f.commission_value.trim() === '' ? null : Number(f.commission_value),
+      // A party picked from contacts is sent as-is; one typed by hand is
+      // matched or created by phone on the server.
+      ...(party.buyer ? { buyer_contact_id: party.buyer } : {}),
+      ...(party.seller ? { seller_contact_id: party.seller } : {}),
     }
     try {
       if (isNew) {
-        const r = await api.post<{ id?: string }>('/api/transactions', body)
+        const r = await api.post<{ id?: string; reference?: string }>('/api/transactions', body)
+        if (r.id && files.length) await uploadAll(files, { entity_type: 'transaction', entity_id: r.id, entity_label: `${r.reference ?? ''} · ${f.property_label.trim()}`, category: fileCat })
         router.push(r.id ? `/admin/deals/${r.id}` : '/admin/deals')
       } else {
         await api.put(`/api/transactions/${id}`, body)
@@ -179,9 +206,22 @@ export default function DealEditor({ id }: { id: string }) {
             </>
           ) : null}
         </div>
+        {t ? (
+          <div className="erpHead__actions">
+            <DocsJump entityType="transaction" entityId={t.id} />
+          </div>
+        ) : null}
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
       {saved ? <Banner tone="ok">Saved.</Banner> : null}
+      {t?.lead_id ? (
+        <Banner tone="ok">
+          <Target size={15} /> Came from a lead —{' '}
+          <Link href={`/admin/deals/leads/${t.lead_id}`} style={{ fontWeight: 700 }}>
+            open the lead and the listings shown
+          </Link>
+        </Banner>
+      ) : null}
 
       <div className="erpGrid main">
         <div className="erpCol">
@@ -254,6 +294,25 @@ export default function DealEditor({ id }: { id: string }) {
           </Card>
 
           <Card title="Parties" icon={Users}>
+            <div className="erpForm two" style={{ marginBottom: 12 }}>
+              {(['buyer', 'seller'] as const).map((side) => (
+                <div key={side}>
+                  {party[side] ? (
+                    <Link href={`/admin/deals/contacts/${party[side]}`} className="erpLink">
+                      <UserRound size={12} /> <span>{side === 'buyer' ? 'Buyer' : 'Seller'}’s contact card</span>
+                    </Link>
+                  ) : null}
+                  <button type="button" className="erpBtn ghost sm" style={{ marginTop: 4 }} onClick={() => setPicking(picking === side ? null : side)}>
+                    <Users size={13} /> {party[side] ? 'Change' : 'Pick'} {side} from contacts
+                  </button>
+                </div>
+              ))}
+            </div>
+            {picking ? (
+              <div style={{ marginBottom: 12 }}>
+                <ContactPicker defaultRole={picking === 'buyer' ? 'Buyer' : 'Seller'} autoFocus onPick={(c) => pickParty(picking, c)} />
+              </div>
+            ) : null}
             <div className="erpForm two">
               <Field label="Buyer">
                 <input className="erpInput" value={f.buyer_name} onChange={set('buyer_name')} />
@@ -297,9 +356,15 @@ export default function DealEditor({ id }: { id: string }) {
             <textarea className="erpInput" value={f.notes} onChange={set('notes')} />
           </Card>
 
+          {isNew ? (
+            <Card title="Documents" icon={FolderOpen}>
+              <PendingDocs files={files} onChange={setFiles} entityType="transaction" category={fileCat} onCategory={setFileCat} />
+            </Card>
+          ) : null}
+
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="erpBtn primary" style={{ flex: 1 }} onClick={save} disabled={busy}>
-              {busy ? 'Saving…' : isNew ? 'Create deal' : 'Save changes'}
+              {busy ? 'Saving…' : isNew ? (files.length ? `Create deal + ${files.length} file${files.length > 1 ? 's' : ''}` : 'Create deal') : 'Save changes'}
             </button>
             {t ? (
               <button className="erpBtn danger" onClick={remove}>
@@ -311,6 +376,9 @@ export default function DealEditor({ id }: { id: string }) {
 
         {t ? (
           <div className="erpCol">
+            <Card title="Documents" icon={FolderOpen} id="documents">
+              <DocumentsPanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
+            </Card>
             <Card title="Contact" icon={Mail}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <EmailButton block label={t.buyer_name ? `Email ${t.buyer_name.split(' ')[0]}` : 'Email buyer'} draft={dealEmail(t, 'buyer')} />
@@ -323,11 +391,20 @@ export default function DealEditor({ id }: { id: string }) {
                 <EmailLog entityType="transaction" entityId={t.id} />
               </div>
             </Card>
+            <Card title="Follow-ups" icon={ListChecks}>
+              <RelatedTasks entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
+            </Card>
+            <Card title="Also involved" icon={Tag}>
+              <PeoplePanel
+                entityType="transaction"
+                entityId={t.id}
+                entityLabel={`${t.reference} · ${t.property_label}`}
+                roles={['Lawyer', 'Broker', 'Landowner', 'Surveyor', 'Investor', 'Other']}
+                emptyText="Tag the lawyers, brokers or co-owners on this deal."
+              />
+            </Card>
             <Card title="Meetings & calls" icon={Users}>
               <RelatedMeetings entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
-            </Card>
-            <Card title="Documents" icon={FolderOpen}>
-              <DocumentsPanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
             </Card>
             <Card title="History" icon={History}>
               <ActivityFeed entityType="transaction" entityId={t.id} emptyText="No changes recorded yet." />

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { router, useFocusEffect } from 'expo-router'
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { followUpDue, whenShort } from '@/lib/leads'
 import { useApi, ApiError } from '@/lib/api'
 import { useSession } from '@/lib/auth'
 import { API_URL } from '@/lib/config'
@@ -130,8 +131,10 @@ export default function HomeScreen() {
       .sort((a, b) => (b.updated_at ?? b.created_at).localeCompare(a.updated_at ?? a.created_at))
       .slice(0, 3)
     const newLeads = data.leads.filter((l) => l.stage === 'New')
+    // Leads whose follow-up is today or overdue, soonest first.
+    const followUps = data.leads.filter(followUpDue).sort((a, b) => (a.next_follow_up_at ?? '').localeCompare(b.next_follow_up_at ?? ''))
     const owed = live.filter(needsOutcome)
-    return { overdue, dueToday, meetingsToday, agenda, upcoming, activeDeals, nextMeetingFor, byStatus, recentListings, newLeads, owed, open }
+    return { overdue, dueToday, meetingsToday, agenda, upcoming, activeDeals, nextMeetingFor, byStatus, recentListings, newLeads, followUps, owed, open }
   }, [data])
 
   if (!data && !error) return <LoadingScreen />
@@ -177,6 +180,7 @@ export default function HomeScreen() {
             <Quick icon="checkbox-outline" label="Task" onPress={() => router.push({ pathname: '/notes-tasks', params: { new: '1' } })} />
             <Quick icon="create-outline" label="Note" onPress={() => router.push({ pathname: '/notes-tasks', params: { view: 'notes' } })} />
             <Quick icon="people-outline" label="Meeting" onPress={() => router.push({ pathname: '/meeting/[id]', params: { id: 'new' } })} />
+            <Quick icon="person-add-outline" label="Lead" onPress={() => router.push({ pathname: '/lead/[id]', params: { id: 'new' } })} />
             <Quick icon="briefcase-outline" label="Deal" onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: 'new' } })} />
             <Quick icon="map-outline" label="Listing" onPress={() => router.push({ pathname: '/property/[id]', params: { id: 'new' } })} />
           </View>
@@ -271,10 +275,31 @@ export default function HomeScreen() {
                 })}
               </Section>
 
+              {view.followUps.length ? (
+                <Section title="Follow-ups due" icon="alarm-outline" action="Leads" onAction={() => router.push({ pathname: '/deals', params: { view: 'leads' } })}>
+                  {view.followUps.slice(0, 5).map((l) => {
+                    const late = new Date(l.next_follow_up_at!).getTime() < Date.now()
+                    return (
+                      <TouchableOpacity key={l.id} style={s.line} onPress={() => router.push({ pathname: '/lead/[id]', params: { id: l.id } })}>
+                        <View style={[s.leadDot, late && { backgroundColor: colors.flagged }]} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.lineTitle} numberOfLines={1}>{l.name}</Text>
+                          <Text style={[s.lineSub, late && { color: colors.flagged }]} numberOfLines={1}>
+                            {late ? 'Overdue · ' : ''}
+                            {whenShort(l.next_follow_up_at!)}
+                            {l.locations ? ` · ${l.locations}` : ''}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    )
+                  })}
+                </Section>
+              ) : null}
+
               {view.newLeads.length ? (
-                <Section title="New leads to contact" icon="person-add-outline" action="Leads" onAction={() => router.push('/deals')}>
+                <Section title="New leads to contact" icon="person-add-outline" action="Leads" onAction={() => router.push({ pathname: '/deals', params: { view: 'leads' } })}>
                   {view.newLeads.slice(0, 4).map((l) => (
-                    <View key={l.id} style={s.line}>
+                    <TouchableOpacity key={l.id} style={s.line} onPress={() => router.push({ pathname: '/lead/[id]', params: { id: l.id } })}>
                       <View style={s.leadDot} />
                       <View style={{ flex: 1 }}>
                         <Text style={s.lineTitle} numberOfLines={1}>{l.name}</Text>
@@ -283,7 +308,7 @@ export default function HomeScreen() {
                           {l.property_code ? ` · ${l.property_code}` : ''} · {timeAgo(l.created_at)}
                         </Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </Section>
               ) : null}

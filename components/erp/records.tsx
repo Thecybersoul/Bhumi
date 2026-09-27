@@ -24,6 +24,7 @@ const NOUN: Record<string, string> = {
   google: 'Google Workspace',
   account: 'account',
   sheets: 'Google Sheets register',
+  contact: 'contact',
 }
 const VERB: Record<string, string> = {
   create: 'added',
@@ -36,6 +37,7 @@ const VERB: Record<string, string> = {
   login: 'signed in',
   email: 'emailed about',
   sync: 'synced',
+  tag: 'tagged',
 }
 
 export function activityHeadline(a: Activity) {
@@ -106,7 +108,7 @@ export function ActivityFeed({
 
 /* ─── Record picker ("Related to") ───────────────────────── */
 
-export type LinkType = 'property' | 'transaction' | 'task' | 'lead'
+export type LinkType = 'property' | 'transaction' | 'task' | 'lead' | 'contact'
 export interface LinkValue {
   entity_type: LinkType | 'general'
   entity_id: string | null
@@ -119,6 +121,7 @@ const TABS: { type: LinkType; label: string }[] = [
   { type: 'transaction', label: 'Deal' },
   { type: 'task', label: 'Task' },
   { type: 'lead', label: 'Lead' },
+  { type: 'contact', label: 'Contact' },
 ]
 
 interface Option {
@@ -131,20 +134,22 @@ type Row = Record<string, unknown>
 const s = (v: unknown) => (v == null ? '' : String(v))
 
 async function loadOptions(type: LinkType): Promise<Option[]> {
-  const path = { property: '/api/properties?admin=1', transaction: '/api/transactions', task: '/api/tasks', lead: '/api/leads' }[type]
+  const path = { property: '/api/properties?admin=1', transaction: '/api/transactions', task: '/api/tasks', lead: '/api/leads', contact: '/api/contacts' }[type]
   const r = await api.get<{ data: Row[]; source: string }>(path)
   if (r.source !== 'live') return []
   if (type === 'property') return r.data.map((p) => ({ id: s(p.id), label: `${s(p.code)} · ${s(p.title)}`, sub: `${s(p.location)} · ${s(p.status)}` }))
   if (type === 'transaction')
     return r.data.map((t) => ({ id: s(t.id), label: `${s(t.reference)} · ${s(t.property_label)}`, sub: `${s(t.stage)} · ${[t.buyer_name, t.seller_name].filter(Boolean).join(' / ')}` }))
   if (type === 'task') return r.data.filter((t) => t.status === 'Open').map((t) => ({ id: s(t.id), label: s(t.title), sub: s(t.entity_label) || s(t.priority) }))
-  return r.data.map((l) => ({ id: s(l.id), label: s(l.name), sub: `${s(l.kind)} · ${s(l.stage)}` }))
+  if (type === 'contact')
+    return r.data.map((c) => ({ id: s(c.id), label: s(c.name), sub: [Array.isArray(c.roles) ? c.roles.join(', ') : '', s(c.phone)].filter(Boolean).join(' · ') }))
+  return r.data.map((l) => ({ id: s(l.id), label: s(l.name), sub: `${s(l.intent) || s(l.kind)} · ${s(l.stage) === 'Visit' ? 'Site visit' : s(l.stage)}` }))
 }
 
 export function EntityPicker({
   value,
   onChange,
-  types = ['property', 'transaction', 'task', 'lead'],
+  types = ['property', 'transaction', 'task', 'lead', 'contact'],
   label = 'Related to',
 }: {
   value: LinkValue
@@ -189,7 +194,7 @@ export function EntityPicker({
         <button type="button" className="erpInput" style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left', cursor: 'pointer' }} onClick={() => setOpen((o) => !o)}>
           <Icon size={16} color={linked ? 'var(--navy)' : 'var(--muted)'} />
           <span style={{ flex: 1, color: linked ? 'var(--ink)' : 'var(--muted)', fontWeight: linked ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {linked ? value.entity_label : 'Link a listing, deal, task or lead'}
+            {linked ? value.entity_label : 'Link a listing, deal, lead or contact'}
           </span>
           {linked ? (
             <X

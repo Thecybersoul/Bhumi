@@ -69,6 +69,8 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="transaction/[id]" options={{ title: 'Transaction' }} />
         <Stack.Screen name="property/[id]" options={{ title: 'Listing' }} />
+        <Stack.Screen name="lead/[id]" options={{ title: 'Lead' }} />
+        <Stack.Screen name="contact/[id]" options={{ title: 'Contact' }} />
         <Stack.Screen name="content/index" options={{ title: 'Website content' }} />
         <Stack.Screen name="content/[key]" options={{ title: 'Edit content' }} />
         <Stack.Screen name="media" options={{ title: 'Media library' }} />

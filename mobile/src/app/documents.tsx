@@ -13,12 +13,13 @@ const SECTION: Record<DocEntity, string> = {
   transaction: 'Deals',
   verification: 'Verification',
   lead: 'Leads',
+  contact: 'Contacts',
   note: 'Notes',
   meeting: 'Meetings',
   task: 'Tasks',
   general: 'General',
 }
-const FILTERS: (DocEntity | 'all')[] = ['all', 'property', 'transaction', 'meeting', 'note']
+const FILTERS: (DocEntity | 'all')[] = ['all', 'property', 'transaction', 'lead', 'contact', 'meeting', 'note', 'task']
 
 /* Every document in the ERP in one searchable place — for the moment
    someone asks for "the EC on the Devanahalli parcel" and you don't

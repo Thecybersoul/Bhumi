@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, CalendarDays, CircleCheck, FolderOpen, History, Mail, SquareCheck, Trash2, Users, Video } from 'lucide-react'
+import { ArrowLeft, CalendarDays, CircleCheck, FolderOpen, History, Mail, SquareCheck, Tag, Trash2, Users, Video } from 'lucide-react'
 import { api, fromLocalInput, fmtDateTime, toLocalInput, MEETING_KINDS, KIND_TINT, type GoogleStatus, type Meeting, type MeetingKind, type MeetingStatus } from './lib'
 import { Banner, ByLine, Card, Chips, Field, KIND_ICON, Loading } from './ui'
 import { ActivityFeed, EntityPicker, type LinkValue } from './records'
 import { DocumentsPanel } from './documents'
+import { PeoplePanel } from './contacts'
 import { EmailButton, EmailLog, MeetAttendance } from './google'
 
 const DURATIONS = [15, 30, 45, 60, 90, 120]
@@ -303,6 +304,9 @@ export default function MeetingEditor({ id }: { id: string }) {
               </Card>
             ) : null}
 
+            <Card title="People" icon={Tag}>
+              <PeoplePanel entityType="meeting" entityId={m.id} entityLabel={m.title} roles={['Attendee', 'Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who was there from your contacts." />
+            </Card>
             <Card title="Documents & photos" icon={FolderOpen}>
               <DocumentsPanel compact entityType="meeting" entityId={m.id} entityLabel={m.title} />
             </Card>

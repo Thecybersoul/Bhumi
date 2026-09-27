@@ -51,7 +51,12 @@ const paths = (type: string, id: string | null): [string | null, string | null] 
     case 'task':
     case 'note':
       return ['/notes-tasks', '/admin/notes-tasks']
+    // The app path stays the Deals tab: builds installed before the lead
+    // page existed can still open it.
     case 'lead':
+      return ['/deals', id ? `/admin/deals/leads/${id}` : '/admin/deals?tab=leads']
+    case 'contact':
+      return ['/deals', id ? `/admin/deals/contacts/${id}` : '/admin/deals?tab=contacts']
     case 'data_room':
       return ['/deals', '/admin/deals?tab=leads']
     default:
@@ -69,6 +74,8 @@ function toNotification(r: Row): NotificationItem | null {
 
   if (r.entity_type === 'lead' && r.action === 'create')
     return { ...base, kind: 'lead', title: `New lead: ${label || 'website enquiry'}`, body: who === 'Website' ? 'Came in through the website. Reach out while it’s warm.' : `Added by ${who}` }
+  if (r.entity_type === 'lead' && r.action === 'update' && /Converted to a deal/.test(summary))
+    return { ...base, kind: 'deal', title: `${who} converted a lead`, body: `${label} is now a deal` }
   if (r.entity_type === 'data_room' && r.action === 'create')
     return { ...base, kind: 'document_request', title: 'Document request', body: `${label} is asking for the data room. Approve or decline in Deals.` }
   if (r.entity_type === 'transaction') {

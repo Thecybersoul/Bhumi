@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FileImage, FileSpreadsheet, FileText, FolderOpen, Link as LinkIcon, Paperclip, Trash2, Upload, Video } from 'lucide-react'
+import { FileImage, FileSpreadsheet, FileText, FolderOpen, Link as LinkIcon, Paperclip, Trash2, Upload, Video, X } from 'lucide-react'
 import { api, DOC_CATEGORIES, formatBytes, type Doc, type DocEntity } from './lib'
 import { Banner, Empty, Loading } from './ui'
 
@@ -245,5 +245,92 @@ export function DocumentsPanel({
         {docs === null ? <Loading /> : docs.length === 0 ? <Empty>No documents yet.</Empty> : docs.map((d) => <DocRow key={d.id} d={d} onRemove={() => remove(d)} />)}
       </div>
     </div>
+  )
+}
+
+/* ─── Attaching before the record exists ─────────────────── */
+
+/** Files picked on a "new" form. They are held here and uploaded by
+    uploadAll() the moment the record is saved and has an id, so
+    nobody has to save first and come back to attach the deed. */
+export function PendingDocs({
+  files,
+  onChange,
+  entityType,
+  category,
+  onCategory,
+}: {
+  files: File[]
+  onChange: (f: File[]) => void
+  entityType: DocEntity
+  category: string
+  onCategory: (c: string) => void
+}) {
+  const input = useRef<HTMLInputElement>(null)
+  const [over, setOver] = useState(false)
+  const cats = DOC_CATEGORIES[entityType]
+  return (
+    <div>
+      {cats.length > 1 ? (
+        <div className="erpChips" style={{ marginBottom: 10 }}>
+          {cats.map((c) => (
+            <button type="button" key={c} className={`erpChip ${category === c ? 'is-gold' : ''}`} onClick={() => onCategory(c)}>
+              {c}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div
+        className={`erpDrop ${over ? 'is-over' : ''}`}
+        onClick={() => input.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setOver(true)
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setOver(false)
+          onChange([...files, ...Array.from(e.dataTransfer.files)])
+        }}
+      >
+        <Upload size={18} style={{ verticalAlign: -4, marginRight: 6 }} />
+        Drop files here or <b>browse</b> · uploaded when you save
+        <input ref={input} type="file" multiple hidden onChange={(e) => e.target.files && onChange([...files, ...Array.from(e.target.files)])} />
+      </div>
+      {files.map((f, i) => (
+        <div key={`${f.name}${i}`} className="erpBanner ok" style={{ marginTop: 8, marginBottom: 0 }}>
+          <Paperclip size={15} /> <span style={{ flex: 1 }}>{f.name}</span>
+          <span style={{ fontSize: 'var(--text-2xs)' }}>{formatBytes(f.size)}</span>
+          <X size={15} style={{ cursor: 'pointer' }} onClick={() => onChange(files.filter((_, j) => j !== i))} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Upload files held by PendingDocs against the record just created. */
+export async function uploadAll(files: File[], target: { entity_type: DocEntity; entity_id: string; entity_label: string; category: string }) {
+  for (const f of files) await uploadDocument(f, target)
+}
+
+/** "Documents · 3" in a record's header — jumps to its Documents card,
+    which on a phone-width screen is far below the fold. */
+export function DocsJump({ entityType, entityId }: { entityType: DocEntity; entityId: string }) {
+  const [n, setN] = useState<number | null>(null)
+  useEffect(() => {
+    api
+      .get<{ data: Doc[] }>(`/api/documents?entity_type=${entityType}&entity_id=${encodeURIComponent(entityId)}`)
+      .then((r) => setN(r.data.length))
+      .catch(() => setN(null))
+  }, [entityType, entityId])
+  return (
+    <button
+      type="button"
+      className="erpBtn soft"
+      onClick={() => document.getElementById('documents')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+    >
+      <Paperclip size={15} /> {n ? `Documents · ${n}` : 'Attach documents'}
+    </button>
   )
 }

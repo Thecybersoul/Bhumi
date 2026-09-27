@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { update, remove } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
+import { schemaHint } from '@/lib/contacts'
+import { partyContacts } from '@/lib/transactions'
 import type { TransactionStage } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -67,8 +69,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     delete patch.reopen
   }
 
+  // Editing a party's details keeps their contact card in step.
+  if ('buyer_name' in body || 'seller_name' in body) Object.assign(patch, await partyContacts(body))
+
   const result = await update('transactions', id, patch)
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
+  if (!result.ok) return NextResponse.json({ error: schemaHint(result.error) }, { status: 502 })
   return NextResponse.json({ ok: true, persisted: result.persisted })
 }
 

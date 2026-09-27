@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
+  AlarmClock,
   Briefcase,
   CalendarDays,
   CircleAlert,
@@ -55,6 +56,10 @@ interface Lead extends Row {
   stage: string
   property_code?: string
   created_at: string
+  intent?: string
+  next_follow_up_at?: string | null
+  locations?: string
+  phone?: string
 }
 
 const STAGES = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
@@ -151,6 +156,10 @@ export default function HomeView({ firstName }: { firstName: string }) {
       byStatus,
       recentListings,
       newLeads: data.leads.filter((l) => l.stage === 'New'),
+      // Leads whose follow-up is today or overdue, soonest first.
+      followUps: data.leads
+        .filter((l) => l.next_follow_up_at && !['Converted', 'Lost', 'Closed'].includes(l.stage) && new Date(l.next_follow_up_at).getTime() < new Date().setHours(23, 59, 59, 999))
+        .sort((a, b) => (a.next_follow_up_at ?? '').localeCompare(b.next_follow_up_at ?? '')),
       owed: live.filter(needsOutcome),
     }
   }, [data])
@@ -175,6 +184,7 @@ export default function HomeView({ firstName }: { firstName: string }) {
         <Quick href="/admin/notes-tasks?new=1" icon={SquareCheck} label="Task" />
         <Quick href="/admin/notes-tasks?view=notes" icon={NotebookPen} label="Note" />
         <Quick href="/admin/meetings/new" icon={Users} label="Meeting" />
+        <Quick href="/admin/deals/leads/new" icon={UserPlus} label="Lead" />
         <Quick href="/admin/deals/new" icon={Briefcase} label="Deal" />
         <Quick href="/admin/properties/new" icon={Map} label="Listing" />
       </div>
@@ -265,10 +275,31 @@ export default function HomeView({ firstName }: { firstName: string }) {
               ))}
             </Card>
 
+            {v.followUps.length ? (
+              <Card title="Follow-ups due" icon={AlarmClock} action="Leads" actionHref="/admin/deals?tab=leads">
+                {v.followUps.slice(0, 6).map((l) => {
+                  const late = new Date(l.next_follow_up_at!).getTime() < Date.now()
+                  return (
+                    <Link key={l.id} href={`/admin/deals/leads/${l.id}`} className="erpRow">
+                      <span style={{ width: 8, height: 8, borderRadius: 4, background: late ? 'var(--flagged)' : 'var(--gold)', margin: '0 8px' }} />
+                      <div className="erpRow__body">
+                        <div className="erpRow__title">{l.name}</div>
+                        <div className="erpRow__sub" style={{ color: late ? 'var(--flagged)' : undefined }}>
+                          {late ? 'Overdue · ' : ''}
+                          {new Date(l.next_follow_up_at!).toLocaleString('en-IN', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
+                          {l.locations ? ` · ${l.locations}` : ''}
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </Card>
+            ) : null}
+
             {v.newLeads.length ? (
               <Card title="New leads to contact" icon={UserPlus} action="Leads" actionHref="/admin/deals?tab=leads">
                 {v.newLeads.slice(0, 5).map((l) => (
-                  <Link key={l.id} href="/admin/deals?tab=leads" className="erpRow">
+                  <Link key={l.id} href={`/admin/deals/leads/${l.id}`} className="erpRow">
                     <span style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--gold)', margin: '0 8px' }} />
                     <div className="erpRow__body">
                       <div className="erpRow__title">{l.name}</div>

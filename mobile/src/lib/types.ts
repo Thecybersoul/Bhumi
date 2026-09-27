@@ -81,7 +81,8 @@ export type LeadKind =
   | 'Listing request'
   | 'Advisor call'
 
-export type LeadStage = 'New' | 'Contacted' | 'Qualified' | 'Visit' | 'Closed'
+/* 'Visit' is the site visit; 'Closed' predates migration 015 and is only read. */
+export type LeadStage = 'New' | 'Contacted' | 'Qualified' | 'Visit' | 'Negotiation' | 'Converted' | 'Lost' | 'Nurture' | 'Closed'
 
 export interface Lead extends Audited {
   id: string
@@ -90,13 +91,70 @@ export interface Lead extends Audited {
   company: string
   phone: string
   email: string
+  property_id?: string | null
   property_code?: string
+  property_type?: string
+  corridor?: string
   source: string
-  channel: 'WhatsApp' | 'Form' | 'Call' | 'Landing page'
+  channel: string
   stage: LeadStage
   payload?: Record<string, string | number | boolean>
   notes: string
   created_at: string
+  /* Migration 015. */
+  contact_id?: string | null
+  intent?: string
+  budget_min_cr?: number | null
+  budget_max_cr?: number | null
+  size_requirement?: string
+  locations?: string
+  timeline?: string
+  priority?: string
+  assigned_to?: string
+  next_follow_up_at?: string | null
+  last_contacted_at?: string | null
+  lost_reason?: string
+  transaction_id?: string | null
+  converted_at?: string | null
+}
+
+export interface Contact extends Audited {
+  id: string
+  name: string
+  phone: string
+  alt_phone?: string
+  email: string
+  company?: string
+  roles: string[]
+  city?: string
+  address?: string
+  source?: string
+  notes?: string
+  created_at: string
+  lead_count?: number
+  open_leads?: number
+  deal_count?: number
+}
+
+export type ShownStatus = 'Shortlisted' | 'Shared' | 'Visit planned' | 'Visited' | 'Interested' | 'Not interested' | 'Offer made'
+export interface Shown extends Audited {
+  id: string
+  lead_id: string
+  property_id: string
+  property_label: string
+  status: ShownStatus
+  feedback?: string
+  shared_at?: string | null
+  visited_at?: string | null
+  created_at: string
+}
+
+export interface MatchItem<T> {
+  item: T
+  score: number
+  reasons: string[]
+  concerns: string[]
+  shown?: boolean
 }
 
 export interface DataRoomRequest extends Audited {
@@ -160,9 +218,12 @@ export interface PropertyTransaction extends Audited {
   opened_at: string
   closed_at?: string | null
   lost_reason?: string
+  lead_id?: string | null
+  buyer_contact_id?: string | null
+  seller_contact_id?: string | null
 }
 
-export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'general'
+export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'contact' | 'general'
 
 export interface Note extends Audited {
   id: string
@@ -201,7 +262,7 @@ export interface ApiResult<T> {
 }
 
 export type MeetingKind = 'In person' | 'Site visit' | 'Call' | 'Video call' | 'Discussion'
-export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'general'
+export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'contact' | 'general'
 
 /** A physical meeting, call, site visit or discussion, optionally
     tied to the listing, deal, task or lead it was about. */

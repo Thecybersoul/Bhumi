@@ -10,6 +10,9 @@ import { ActivityFeed } from '@/components/activity'
 import { ByLine } from '@/components/people'
 import { RelatedMeetings } from '@/components/relatedMeetings'
 import { EmailButton, EmailLog } from '@/components/google'
+import { PeoplePanel } from '@/components/contacts'
+import { ListingBuyers, PendingFiles, RelatedTasks } from '@/components/leadPanels'
+import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { ApiResult, Property, PropertyStatus, PropertyTypeSlug, PriceType, Zone } from '@/lib/types'
 
 const TYPES: PropertyTypeSlug[] = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels']
@@ -73,6 +76,8 @@ export default function PropertyScreen() {
   const [zone, setZone] = useState<Zone>('North')
   const [featured, setFeatured] = useState(false)
   const [loading, setLoading] = useState(!isNew)
+  const [files, setFiles] = useState<PickedFile[]>([])
+  const [fileCat, setFileCat] = useState('Title deed')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -121,8 +126,11 @@ export default function PropertyScreen() {
     try {
       if (isNew) {
         const out = await api.post<{ id?: string }>('/api/properties', { ...payload(), use_cases: [], amenities: '', risk: 'Low', img_url: f.img_url || '/img/p1.jpg' })
-        // Straight into the saved listing, where its documents can be attached.
-        if (out.id) return router.replace({ pathname: '/property/[id]', params: { id: out.id } })
+        // Files picked while filling it in go up now; then straight into the saved listing.
+        if (out.id) {
+          for (const file of files) await uploadDocument(api, file, { entity_type: 'property', entity_id: out.id, entity_label: `${f.code.trim()} · ${f.title.trim()}`, category: fileCat })
+          return router.replace({ pathname: '/property/[id]', params: { id: out.id } })
+        }
       } else if (source === 'fallback') {
         // The built-in listings only exist in code. Save them all to the
         // database first (reads switch to the database the moment it has
@@ -191,6 +199,8 @@ export default function PropertyScreen() {
           <SectionTitle>Documents</SectionTitle>
           {orig && source === 'live' ? (
             <DocumentsPanel entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} />
+          ) : isNew ? (
+            <PendingFiles files={files} onChange={setFiles} entityType="property" category={fileCat} onCategory={setFileCat} />
           ) : (
             <Text style={{ color: colors.muted, fontSize: text.sm }}>
               {isNew ? 'Publish the listing first, then attach its title deed, EC, RTC, khata and sketches here.' : 'Save this built-in listing once to start attaching documents.'}
@@ -239,10 +249,22 @@ export default function PropertyScreen() {
         </Card>
 
 
-        <Button label={isNew ? 'Publish listing' : 'Save changes'} onPress={save} busy={busy} />
+        <Button label={isNew ? (files.length ? `Publish listing + ${files.length} file${files.length > 1 ? 's' : ''}` : 'Publish listing') : 'Save changes'} onPress={save} busy={busy} />
         {orig && source === 'live' ? (
           <>
             <Card style={{ marginTop: space.lg }}>
+              <SectionTitle>Clients</SectionTitle>
+              <ListingBuyers propertyId={orig.id} />
+            </Card>
+            <Card>
+              <SectionTitle>Owner & people</SectionTitle>
+              <PeoplePanel entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} roles={['Landowner', 'Seller', 'Developer', 'Broker', 'Lawyer', 'Other']} emptyText="Tag the landowner, developer or broker behind this listing." />
+            </Card>
+            <Card>
+              <SectionTitle>Follow-ups</SectionTitle>
+              <RelatedTasks entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} />
+            </Card>
+            <Card>
               <SectionTitle>Share with a client</SectionTitle>
               <EmailButton label="Email this listing" draft={listingEmail(orig)} />
               <View style={{ marginTop: space.sm }}>

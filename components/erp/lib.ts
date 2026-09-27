@@ -76,7 +76,7 @@ export interface Meeting extends Audited {
   created_at: string
 }
 
-export type DocEntity = 'property' | 'note' | 'transaction' | 'lead' | 'verification' | 'meeting' | 'task' | 'general'
+export type DocEntity = 'property' | 'note' | 'transaction' | 'lead' | 'verification' | 'meeting' | 'task' | 'contact' | 'general'
 export interface Doc {
   id: string
   entity_type: DocEntity
@@ -157,7 +157,8 @@ export const DOC_CATEGORIES: Record<DocEntity, string[]> = {
   property: ['Title deed', 'EC', 'RTC / Pahani', 'Khata', 'Conversion order', 'Survey sketch', 'Mutation', 'Tax receipt', 'Layout plan', 'Photos', 'Other'],
   transaction: ['Agreement', 'Sale deed', 'Token receipt', 'KYC', 'Invoice', 'Other'],
   verification: ['Title deed', 'EC', 'RTC / Pahani', 'Survey sketch', 'Legal opinion', 'Report', 'Other'],
-  lead: ['KYC', 'Requirement', 'Other'],
+  lead: ['KYC', 'Requirement', 'Brochure', 'Other'],
+  contact: ['KYC', 'PAN', 'Aadhaar', 'Agreement', 'Other'],
   note: ['Attachment'],
   meeting: ['Minutes', 'Photos', 'Other'],
   task: ['Attachment'],
@@ -174,3 +175,126 @@ export const KIND_TINT: Record<MeetingKind, string> = {
 }
 
 export const assetUrl = (u?: string | null) => (u ? u : '')
+
+/* ─── Leads, contacts, listings shown (migration 015) ────── */
+
+export type LeadStage = 'New' | 'Contacted' | 'Qualified' | 'Visit' | 'Negotiation' | 'Converted' | 'Lost' | 'Nurture' | 'Closed'
+/** The working pipeline, in order. Converted, Lost and Nurture sit to one side. */
+export const LEAD_PIPELINE: LeadStage[] = ['New', 'Contacted', 'Qualified', 'Visit', 'Negotiation']
+export const LEAD_OUTCOMES: LeadStage[] = ['Converted', 'Lost', 'Nurture']
+export const stageLabel = (s: string) => (s === 'Visit' ? 'Site visit' : s)
+export const leadIsOpen = (s: string) => !['Converted', 'Lost', 'Closed'].includes(s)
+export const LEAD_INTENTS = ['Buy', 'Sell', 'Lease', 'Rent out', 'Invest', 'Other'] as const
+export const LEAD_PRIORITIES = ['Hot', 'Warm', 'Cold'] as const
+export const LEAD_CHANNELS = ['Call', 'WhatsApp', 'Walk-in', 'Referral', 'Broker', 'Portal', 'Social media', 'Email', 'Form', 'Landing page', 'Other'] as const
+export const LEAD_TIMELINES = ['Immediate', '1–3 months', '3–6 months', '6+ months', 'Just exploring'] as const
+export const PROPERTY_TYPES = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels'] as const
+export const TYPE_LABEL: Record<string, string> = {
+  'land-parcels': 'Land',
+  residential: 'Residential',
+  villas: 'Villa',
+  commercial: 'Commercial',
+  warehouses: 'Warehouse',
+  'large-land-parcels': 'Large land',
+}
+export const isSelling = (intent?: string | null) => intent === 'Sell' || intent === 'Rent out'
+
+export interface Lead extends Audited {
+  id: string
+  name: string
+  kind: string
+  channel: string
+  stage: LeadStage
+  company?: string
+  phone?: string
+  email?: string
+  notes?: string
+  source?: string
+  property_id?: string | null
+  property_code?: string
+  property_type?: string
+  corridor?: string
+  created_at: string
+  contact_id?: string | null
+  intent?: string
+  budget_min_cr?: number | null
+  budget_max_cr?: number | null
+  size_requirement?: string
+  locations?: string
+  timeline?: string
+  priority?: string
+  assigned_to?: string
+  next_follow_up_at?: string | null
+  last_contacted_at?: string | null
+  lost_reason?: string
+  transaction_id?: string | null
+  converted_at?: string | null
+}
+
+export const CONTACT_ROLES = ['Buyer', 'Seller', 'Landowner', 'Investor', 'Developer', 'Tenant', 'Broker', 'Lawyer', 'Surveyor', 'Other'] as const
+export interface Contact extends Audited {
+  id: string
+  name: string
+  phone: string
+  alt_phone?: string
+  email: string
+  company?: string
+  roles: string[]
+  city?: string
+  address?: string
+  source?: string
+  notes?: string
+  created_at: string
+  lead_count?: number
+  open_leads?: number
+  deal_count?: number
+}
+
+export const SHOWN_STATUSES = ['Shortlisted', 'Shared', 'Visit planned', 'Visited', 'Interested', 'Not interested', 'Offer made'] as const
+export interface Shown extends Audited {
+  id: string
+  lead_id: string
+  property_id: string
+  property_label: string
+  status: (typeof SHOWN_STATUSES)[number]
+  feedback?: string
+  shared_at?: string | null
+  visited_at?: string | null
+  created_at: string
+}
+
+export interface MatchItem<T> {
+  item: T
+  score: number
+  reasons: string[]
+  concerns: string[]
+  shown?: boolean
+}
+
+/** ₹ crore, the way people say it: 85 L, 2.4 Cr, 18 Cr. */
+export function cr(n?: number | null) {
+  if (n == null || !Number.isFinite(n)) return ''
+  if (n < 1) return `₹${Math.round(n * 100)} L`
+  return n >= 10 ? `₹${Math.round(n)} Cr` : `₹${Number(n.toFixed(2))} Cr`
+}
+export function budget(min?: number | null, max?: number | null) {
+  if (min != null && max != null) return min === max ? cr(min) : `${cr(min)} – ${cr(max).replace('₹', '')}`
+  if (max != null) return `up to ${cr(max)}`
+  if (min != null) return `from ${cr(min)}`
+  return ''
+}
+
+/* Phone links. Numbers are stored as typed; these add +91 to a bare
+   ten-digit Indian mobile so tel: and WhatsApp both work. */
+export function phoneE164(p?: string | null) {
+  const d = String(p ?? '').replace(/\D/g, '')
+  if (d.length === 10) return `91${d}`
+  if (d.length === 11 && d.startsWith('0')) return `91${d.slice(1)}`
+  return d
+}
+export const telHref = (p?: string | null) => `tel:+${phoneE164(p)}`
+export const waHref = (p?: string | null, text?: string) => `https://wa.me/${phoneE164(p)}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+
+/** A follow-up that is due today or already late. */
+export const followUpDue = (l: Pick<Lead, 'next_follow_up_at' | 'stage'>) =>
+  !!l.next_follow_up_at && leadIsOpen(l.stage) && new Date(l.next_follow_up_at).getTime() < new Date().setHours(23, 59, 59, 999)

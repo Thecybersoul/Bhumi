@@ -78,7 +78,7 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`013`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`015`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
@@ -86,7 +86,8 @@ have optional `entity_type`/`entity_id`/`entity_label` columns so a note or task
 lead, transaction, property or verification case, but the shipped UI (`/admin/notes-tasks`) only writes
 `entity_type: 'general'` for now — per-record linking is future work, not yet built. **009** adds Google
 Calendar sync, **010** the extra listing fields, and **011 creates `documents`**, the files attached to a
-listing, note, transaction, lead or verification case. `schema.sql` itself
+listing, note, transaction, lead or verification case. **014** adds notification prefs, and **015 creates
+`contacts`, `contact_links` and `lead_properties`** and gives leads their pipeline fields (see below). `schema.sql` itself
 carries no seed data by design — a listing represents real land, so demo rows belong only in
 `lib/data/seed.ts`, the in-code fallback. The service-role key reaches PostgREST and Storage but *cannot*
 execute DDL; that is why `npm run migrate` needs `SUPABASE_DB_URL` (a real Postgres connection string)
@@ -156,6 +157,36 @@ ones. A connection made before a scope was added needs a reconnect. What each se
   one tab per record type, written RAW. It re-syncs after a change if it's more than 10 minutes stale
   (via `after()` in `logActivity`), on demand (`POST /api/sheets`), and daily from Vercel Cron
   (`/api/cron/sheets`, which needs `CRON_SECRET`). It needs no scope beyond `drive.file`.
+
+### Leads, contacts and matching (migration 015)
+
+**A lead is a person's requirement; a contact is the person.** `contacts` holds everyone (buyers, sellers,
+landowners, brokers, lawyers), deduplicated by `phone_norm`: digits with the 91 prefix, computed by
+`normPhone()` in `lib/contacts.ts` and by the `bhumi_phone_norm()` SQL function, which must agree.
+`ensureContact()` finds or creates a person by phone, then email, then an exact name when neither is given.
+Website enquiries, advisor-added leads and deal parties (`partyContacts()` in `lib/transactions.ts`) all go
+through it, so one person keeps one card. `leads.contact_id` is the lead's person, and
+`transactions.buyer_/seller_contact_id` are a deal's. `contact_links` tags a contact on any other record
+with a role. Editing a contact's name, phone or email mirrors onto their leads and open deals.
+
+**Lead stages:** New → Contacted → Qualified → Visit (shown as "Site visit") → Negotiation, then Converted /
+Lost / Nurture. `Closed` is a pre-015 value that is read but never written. `PATCH /api/leads?id&stage` is
+kept in that exact shape because installed app builds call it. `POST /api/leads/:id/convert` opens a deal
+through `createTransaction()`, the same function `POST /api/transactions` uses. It can take a second lead
+(e.g. the seller lead for a buyer) and marks both Converted. `lead_properties` records which listings were
+shown to which lead, with status and feedback. Every change to it is logged on the lead.
+
+**Matching** (`lib/matching.ts`, `GET /api/matches`) is a transparent score over three things: type, place
+words and price vs budget. Each point carries a reason string the UI shows, so keep it explainable rather
+than clever. Only live rows are matched, never the seed fallback.
+
+Before 015 is applied the app still works. Pre-015 features are unaffected, and new writes fail with
+`schemaHint()`'s "apply migration 015" message. `contactsReady()` probes once per process and retries until
+the table appears. The web lead and contact pages are `/admin/deals/leads/[id]` and
+`/admin/deals/contacts/[id]`, and the app has `lead/[id]` and `contact/[id]`. The shared panels are in
+`components/erp/leadPanels.tsx` and `contacts.tsx`, and in `mobile/src/components/` under the same names.
+New records can take files before they have an id (`PendingDocs` on web, `PendingFiles` in the app). The
+files upload straight after the save.
 
 ### Documents never pass through the server
 

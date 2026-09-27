@@ -134,6 +134,9 @@ const EXPECTED = [
   'meetings',
   'emails',
   'app_settings',
+  'contacts',
+  'contact_links',
+  'lead_properties',
 ]
 
 export const MEDIA_BUCKET = 'media'

@@ -3,7 +3,7 @@ import { update, remove } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
 import type { LinkedEntityType, TaskPriority } from '@/lib/types'
 
-const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'general']
+const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'contact', 'general']
 const PRIORITIES: TaskPriority[] = ['Low', 'Normal', 'High']
 
 export const dynamic = 'force-dynamic'

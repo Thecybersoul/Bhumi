@@ -158,7 +158,23 @@ export type LeadKind =
   | 'Listing request'
   | 'Advisor call'
 
-export type LeadStage = 'New' | 'Contacted' | 'Qualified' | 'Visit' | 'Closed'
+/* The pipeline a lead moves through. 'Visit' is the site visit;
+   'Closed' predates migration 015 and is only ever read, never written. */
+export type LeadStage = 'New' | 'Contacted' | 'Qualified' | 'Visit' | 'Negotiation' | 'Converted' | 'Lost' | 'Nurture' | 'Closed'
+export type LeadIntent = 'Buy' | 'Sell' | 'Lease' | 'Rent out' | 'Invest' | 'Other'
+export type LeadPriority = 'Hot' | 'Warm' | 'Cold'
+export type LeadChannel =
+  | 'WhatsApp'
+  | 'Form'
+  | 'Call'
+  | 'Landing page'
+  | 'Walk-in'
+  | 'Referral'
+  | 'Broker'
+  | 'Portal'
+  | 'Social media'
+  | 'Email'
+  | 'Other'
 
 export interface Lead {
   id: string
@@ -169,13 +185,77 @@ export interface Lead {
   email: string
   property_id?: string | null
   property_code?: string
-  property_type?: PropertyTypeSlug
+  property_type?: PropertyTypeSlug | ''
   corridor?: string
   source: string
-  channel: 'WhatsApp' | 'Form' | 'Call' | 'Landing page'
+  channel: LeadChannel
   stage: LeadStage
   payload?: Record<string, string | number | boolean>
   notes: string
+  created_at: string
+
+  /* Migration 015 — what an advisor needs to work the lead. */
+  contact_id?: string | null
+  intent?: LeadIntent
+  budget_min_cr?: number | null
+  budget_max_cr?: number | null
+  size_requirement?: string
+  locations?: string
+  timeline?: string
+  priority?: LeadPriority
+  assigned_to?: string
+  next_follow_up_at?: string | null
+  last_contacted_at?: string | null
+  lost_reason?: string
+  transaction_id?: string | null
+  converted_at?: string | null
+}
+
+/* ─── Contacts (migration 015) ───────────────────────────── */
+export type ContactRole = 'Buyer' | 'Seller' | 'Landowner' | 'Investor' | 'Developer' | 'Tenant' | 'Broker' | 'Lawyer' | 'Surveyor' | 'Other'
+
+export interface Contact {
+  id: string
+  name: string
+  phone: string
+  phone_norm?: string
+  alt_phone?: string
+  email: string
+  company?: string
+  roles: ContactRole[]
+  city?: string
+  address?: string
+  source?: string
+  notes?: string
+  created_at: string
+}
+
+export type ContactLinkEntity = 'lead' | 'transaction' | 'property' | 'task' | 'note' | 'meeting' | 'verification'
+export interface ContactLink {
+  id: string
+  contact_id: string
+  entity_type: ContactLinkEntity
+  entity_id: string
+  entity_label: string
+  role: string
+  created_by?: string
+  created_at: string
+}
+
+/* ─── Listings shown to a lead (migration 015) ───────────── */
+export type ShownStatus = 'Shortlisted' | 'Shared' | 'Visit planned' | 'Visited' | 'Interested' | 'Not interested' | 'Offer made'
+export interface LeadProperty {
+  id: string
+  lead_id: string
+  property_id: string
+  property_label: string
+  status: ShownStatus
+  shared_at?: string | null
+  visited_at?: string | null
+  feedback?: string
+  created_by?: string
+  updated_by?: string
+  updated_at?: string | null
   created_at: string
 }
 
@@ -296,6 +376,10 @@ export interface PropertyTransaction {
   opened_at: string
   closed_at?: string | null
   lost_reason?: string
+  /* Migration 015. */
+  lead_id?: string | null
+  buyer_contact_id?: string | null
+  seller_contact_id?: string | null
 }
 
 /* ─── Transparency dashboard (Plan §3A) ──────────────────── */
@@ -324,7 +408,7 @@ export interface TransparencyStats {
    what something is about. Both are optional: a note or task with
    no entity is simply general — a reminder, not a record about
    anything in particular. */
-export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'general'
+export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'contact' | 'general'
 
 export interface Note {
   id: string
@@ -360,7 +444,7 @@ export interface Task {
 /* ─── Meetings (migration 012) ───────────────────────────── */
 
 export type MeetingKind = 'In person' | 'Site visit' | 'Call' | 'Video call' | 'Discussion'
-export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'general'
+export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'contact' | 'general'
 
 /** A meeting, call, site visit or discussion, optionally tied to the
     listing, deal, task or lead it was about. */

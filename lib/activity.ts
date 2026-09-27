@@ -40,6 +40,7 @@ export const AUDITED: Record<string, string> = {
   data_room_requests: 'data_room',
   meetings: 'meeting',
   documents: 'document',
+  contacts: 'contact',
 }
 
 /** A human name for any record, from whichever fields it has. */
@@ -58,6 +59,7 @@ export function labelFor(table: string, row: Record<string, unknown> | null | un
     case 'notes':
       return s('body').slice(0, 80)
     case 'leads':
+    case 'contacts':
       return s('name')
     default:
       return s('title') || s('name') || s('label')
@@ -121,7 +123,7 @@ export async function logActivity(entry: ActivityEntry, actor?: Actor | AdminUse
 }
 
 /* Fields that are bookkeeping, not something a person changed. */
-const QUIET = new Set(['updated_at', 'updated_by', 'created_by', 'created_at', 'id'])
+const QUIET = new Set(['updated_at', 'updated_by', 'created_by', 'created_at', 'id', 'phone_norm'])
 
 const LABELS: Record<string, string> = {
   price_per_acre_cr: 'price per acre',
@@ -135,6 +137,16 @@ const LABELS: Record<string, string> = {
   due_at: 'due date',
   scheduled_at: 'time',
   property_label: 'deal label',
+  budget_min_cr: 'budget from',
+  budget_max_cr: 'budget up to',
+  next_follow_up_at: 'next follow-up',
+  last_contacted_at: 'last contacted',
+  assigned_to: 'owner',
+  size_requirement: 'size',
+  contact_id: 'contact',
+  buyer_contact_id: 'buyer contact',
+  seller_contact_id: 'seller contact',
+  phone_norm: 'phone',
 }
 
 export const fieldLabel = (k: string) => LABELS[k] ?? k.replace(/_/g, ' ')
@@ -169,6 +181,8 @@ export function describe(table: string, changes: Record<string, [unknown, unknow
   const keys = Object.keys(changes)
   if (table === 'tasks' && changes.status) return changes.status[1] === 'Done' ? 'Marked done' : 'Reopened'
   if (table === 'transactions' && changes.outcome?.[1] === 'Lost') return 'Marked lost'
+  if (table === 'leads' && changes.stage?.[1] === 'Converted') return 'Converted to a deal'
+  if (table === 'leads' && changes.stage?.[1] === 'Lost') return `Marked lost${changes.lost_reason?.[1] ? `: ${short(changes.lost_reason[1])}` : ''}`
   const parts = keys.slice(0, 3).map((k) => {
     const [a, b] = changes[k]
     if (k === 'description' || k === 'notes' || k === 'body' || k === 'outcome' || k === 'agenda') return `edited ${fieldLabel(k)}`
