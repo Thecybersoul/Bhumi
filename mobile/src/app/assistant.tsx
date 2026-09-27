@@ -13,6 +13,7 @@ import { pickFiles, takePhoto } from '@/components/documents'
 import { useVoice } from '@/lib/voice'
 import { canPaste, readClipboard } from '@/lib/clipboard'
 import { forwardedPrompt, takeShared } from '@/lib/shared'
+import { WhatsAppImport } from '@/components/whatsappImport'
 
 /* The ERP assistant in the app — the twin of /admin/assistant on the
    web, over the same /api/assistant. Say what happened or what you
@@ -41,6 +42,7 @@ interface Step {
 interface Attachment {
   id: string
   name: string
+  mime?: string
 }
 interface Turn {
   role: 'user' | 'assistant'
@@ -48,6 +50,8 @@ interface Turn {
   steps?: Step[]
   files?: Attachment[]
   error?: string
+  /** Free mode: a post read without AI, shown as a review card. */
+  capture?: { source: string; photos: Attachment[] }
 }
 
 const STORE = 'bhumi.assistant.v1'
@@ -155,10 +159,29 @@ export default function AssistantScreen() {
       return copy
     })
 
+  /* Is the AI assistant switched on (ANTHROPIC_API_KEY on the server)?
+     If not, the same screen is a free quick-capture tool: whatever is
+     pasted, shared, said or typed is read by the WhatsApp reader and
+     shown as a review card to save. null while checking. */
+  const [ai, setAi] = useState<boolean | null>(null)
+  useEffect(() => {
+    api
+      .get<{ configured: boolean }>('/api/assistant')
+      .then((r) => setAi(r.configured))
+      .catch(() => setAi(false))
+  }, [api])
+
+  function capture(shown: string, source: string, photos: Attachment[] = []) {
+    setTurns((all) => [...all, { role: 'user', text: shown, files: photos }, { role: 'assistant', text: '', capture: { source, photos } }])
+    setInput('')
+    setFiles([])
+  }
+
   const send = useCallback(
     (words: string, attached: Attachment[] = [], opts: { voice?: boolean; shown?: string } = {}) => {
       const said = words.trim()
       if ((!said && !attached.length) || busy) return
+      if (ai === false) return capture(opts.shown ?? (opts.voice ? `🎙 ${said}` : said), said, attached)
       const note = attached.length
         ? `\n\n[Attached files — document ids for read_document / attach_document]\n${attached.map((f) => `- ${f.name}: ${f.id}`).join('\n')}`
         : ''
@@ -247,7 +270,8 @@ export default function AssistantScreen() {
       }
       r.send(JSON.stringify({ messages: history }))
     },
-    [busy, messages, token]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [busy, messages, token, ai]
   )
 
   const voice = useVoice((heard) => send(heard, files, { voice: true }))
@@ -258,7 +282,7 @@ export default function AssistantScreen() {
     for (const f of picked) {
       try {
         const d = await uploadDocument(api, f, { entity_type: 'general', entity_id: '', entity_label: 'Assistant upload', category: 'Other' })
-        out.push({ id: d.id, name: d.name })
+        out.push({ id: d.id, name: d.name, mime: d.mime })
       } catch (e) {
         setTurns((all) => [...all, { role: 'assistant', text: '', error: `${f.name}: ${(e as Error).message}` }])
       } finally {
@@ -274,6 +298,7 @@ export default function AssistantScreen() {
     if (!text && !photos.length) return
     const attached = photos.length ? await uploadAll(photos) : []
     const shown = `📲 Forwarded from WhatsApp${text ? `\n${text.length > 600 ? `${text.slice(0, 600)}…` : text}` : ''}`
+    if (ai === false) return capture(shown, text, attached)
     send(forwardedPrompt(text, attached.length), attached, { shown })
   }
 
@@ -364,7 +389,16 @@ export default function AssistantScreen() {
         <ScrollView ref={scroller} contentContainerStyle={{ padding: space.lg, paddingBottom: space.xl, gap: 14 }} keyboardShouldPersistTaps="handled">
           {turns.length === 0 ? (
             <View>
-              <Text style={s.intro}>
+              {ai === false ? (
+                <View style={s.freeNote}>
+                  <Ionicons name="flash-outline" size={16} color={colors.navy} />
+                  <Text style={s.freeText}>
+                    Quick capture. Paste or share a WhatsApp property post, or say or type the details (“2 acres at Budigere, 3 crore an acre, owner Ravi
+                    98450 12345”). It fills in a draft listing or a lead for you to check and save.
+                  </Text>
+                </View>
+              ) : null}
+              <Text style={[s.intro, ai !== true && { display: 'none' }]}>
                 Tell it what happened or what you need. It adds listings, leads, deals, contacts and agents, links people with their share, books visits, and files
                 documents — as you, in the activity trail.
               </Text>
@@ -382,7 +416,7 @@ export default function AssistantScreen() {
                   <Text style={s.suggestSub}>Tap the mic, say what happened, then send.</Text>
                 </View>
               </TouchableOpacity>
-              {SUGGESTIONS.map((x) => (
+              {(ai === true ? SUGGESTIONS : []).map((x) => (
                 <TouchableOpacity key={x} style={s.suggest} onPress={() => send(x)}>
                   <Ionicons name="sparkles-outline" size={15} color={colors.goldDeep} />
                   <Text style={s.suggestText}>{x}</Text>
@@ -417,7 +451,8 @@ export default function AssistantScreen() {
                       ))}
                     </View>
                   ) : null}
-                  {t.text ? <Rich value={t.text} /> : busy && i === turns.length - 1 && !t.error ? <Text style={s.thinking}>Thinking…</Text> : null}
+                  {t.capture ? <WhatsAppImport source={t.capture.source} photos={t.capture.photos.map((p) => ({ id: p.id, name: p.name, mime: p.mime ?? '' }))} /> : null}
+                  {t.text ? <Rich value={t.text} /> : t.capture ? null : busy && i === turns.length - 1 && !t.error ? <Text style={s.thinking}>Thinking…</Text> : null}
                   {t.error ? <Text style={s.error}>{t.error}</Text> : null}
                 </View>
               )
@@ -511,6 +546,8 @@ const s = StyleSheet.create({
   intro: { fontSize: text.base, color: colors.ink2, lineHeight: 22, marginBottom: space.md },
   suggest: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 13, borderRadius: radius.base, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, marginBottom: 8 },
   suggestText: { flex: 1, fontSize: text.sm, color: colors.navy, fontWeight: '600' },
+  freeNote: { flexDirection: 'row', gap: 8, backgroundColor: colors.navyTint, borderRadius: radius.base, padding: 12, marginBottom: space.md },
+  freeText: { flex: 1, fontSize: text.sm, color: colors.navy, lineHeight: 20, fontWeight: '600' },
   suggestSub: { fontSize: text.xs, color: colors.muted, marginTop: 2, lineHeight: 16 },
   suggestWa: { borderColor: colors.verifiedBg, backgroundColor: colors.verifiedBg },
   listening: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 6, paddingBottom: 8 },

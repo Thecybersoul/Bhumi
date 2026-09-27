@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { ArrowUp, CircleAlert, CircleCheck, ClipboardPaste, FileText, Loader2, Mic, MicOff, Paperclip, RotateCcw, Square, X } from 'lucide-react'
+import { ArrowUp, CircleAlert, CircleCheck, ClipboardPaste, FileText, Loader2, Mic, MicOff, Paperclip, RotateCcw, Square, X, Zap } from 'lucide-react'
 import { uploadDocument } from './documents'
+import { WhatsAppImport } from './WhatsAppImport'
 
 /* The ERP assistant. Type (or say) what happened or what you need:
    "Add a lead: Priya, 98450 12345, wants 2–4 acres near Devanahalli
@@ -35,6 +36,8 @@ interface Turn {
   steps?: Step[]
   files?: Attachment[]
   error?: string
+  /** Free mode: a post read without AI, shown as a review card. */
+  capture?: { source: string; photos: Attachment[] }
 }
 
 const STORE = 'bhumi.assistant.v1'
@@ -144,6 +147,16 @@ export default function AssistantView() {
   const [uploading, setUploading] = useState(0)
   const [busy, setBusy] = useState(false)
   const [notConfigured, setNotConfigured] = useState<string | null>(null)
+  /* Without an Anthropic key on the server this page is a free quick-capture
+     tool: pasted or typed posts are read by the WhatsApp reader and shown
+     as a review card (WhatsAppImport). null while checking. */
+  const [ai, setAi] = useState<boolean | null>(null)
+  useEffect(() => {
+    fetch('/api/assistant')
+      .then((r) => r.json())
+      .then((j: { configured?: boolean }) => setAi(Boolean(j.configured)))
+      .catch(() => setAi(false))
+  }, [])
   const [listening, setListening] = useState(false)
   const abort = useRef<AbortController | null>(null)
   const rec = useRef<SpeechRec | null>(null)
@@ -165,11 +178,17 @@ export default function AssistantView() {
   }, [turns])
 
   const send = useCallback(
-    async (text: string, attached: Attachment[] = [], opts: { shown?: string } = {}) => {
+    async (text: string, attached: Attachment[] = [], opts: { shown?: string; source?: string } = {}) => {
       const words = text.trim()
       if ((!words && !attached.length) || busy) return
       const voice = dictated.current && !opts.shown
       dictated.current = false
+      if (ai === false) {
+        setTurns((all) => [...all, { role: 'user', text: opts.shown ?? words, files: attached }, { role: 'assistant', text: '', capture: { source: opts.source ?? words, photos: attached } }])
+        setInput('')
+        setFiles([])
+        return
+      }
       const note = attached.length
         ? `\n\n[Attached files — document ids for read_document / attach_document]\n${attached.map((f) => `- ${f.name} (${f.mime || 'file'}): ${f.id}`).join('\n')}`
         : ''
@@ -256,7 +275,7 @@ export default function AssistantView() {
         })
       }
     },
-    [busy, messages, turns]
+    [busy, messages, turns, ai]
   )
 
   // ⌘K → "Ask the assistant" arrives as ?q=
@@ -301,7 +320,7 @@ export default function AssistantView() {
       ? `File this in the ERP. The ${files.length === 1 ? 'file attached came' : `${files.length} files attached came`} with the message.`
       : 'File this in the ERP.'
     const shown = `📲 Forwarded from WhatsApp\n${text.length > 600 ? `${text.slice(0, 600)}…` : text}`
-    send(['[Forwarded from WhatsApp]', text, '', ask].join('\n'), files, { shown })
+    send(['[Forwarded from WhatsApp]', text, '', ask].join('\n'), files, { shown, source: text })
   }
 
   function toggleMic() {
@@ -363,12 +382,19 @@ export default function AssistantView() {
       <div className="erpChat__log" aria-live="polite">
         {empty ? (
           <div className="erpChat__welcome">
-            <p>Try one of these, or type your own. You can attach deeds, RTCs, brochures or photos, and it will read them, fill in the listing and file each document.</p>
+            {ai === false ? (
+              <div className="erpChat__free">
+                <Zap size={16} /> Quick capture. Paste a WhatsApp property post, or type or dictate the details (“2 acres at Budigere, 3 crore an acre, owner Ravi 98450
+                12345”). It fills in a draft listing or a lead for you to check and save. Attach photos first and they go on the listing.
+              </div>
+            ) : ai === true ? (
+              <p>Try one of these, or type your own. You can attach deeds, RTCs, brochures or photos, and it will read them, fill in the listing and file each document.</p>
+            ) : null}
             <div className="erpChat__suggest">
               <button type="button" className="is-wa" onClick={pasteWhatsApp}>
                 <ClipboardPaste size={15} /> <b>Paste a WhatsApp message.</b> Copy a property post, then click here to file it as a draft listing or a lead.
               </button>
-              {SUGGESTIONS.map((s) => (
+              {(ai === true ? SUGGESTIONS : []).map((s) => (
                 <button key={s} type="button" onClick={() => send(s)}>
                   {s}
                 </button>
@@ -393,6 +419,7 @@ export default function AssistantView() {
                 </div>
               ) : (
                 <div className="erpChat__reply">
+                  {t.capture && <WhatsAppImport source={t.capture.source} photos={t.capture.photos} />}
                   {t.steps?.length ? (
                     <div className="erpChat__steps">
                       {t.steps.map((s) => {
@@ -414,7 +441,7 @@ export default function AssistantView() {
                     <div className="erpChat__text">
                       <Rich text={t.text} />
                     </div>
-                  ) : busy && i === turns.length - 1 && !t.error ? (
+                  ) : busy && i === turns.length - 1 && !t.error && !t.capture ? (
                     <div className="erpChat__thinking">
                       <Loader2 size={14} className="spin" /> Thinking…
                     </div>

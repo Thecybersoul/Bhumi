@@ -13,6 +13,7 @@ import { Screen } from '@/components/ui'
 import { Avatar, timeAgo } from '@/components/people'
 import { ActivityFeed } from '@/components/activity'
 import { NotifySettings } from '@/components/notifySettings'
+import { ClaudeConnector } from '@/components/claudeConnector'
 
 type IconName = keyof typeof Ionicons.glyphMap
 
@@ -266,6 +267,11 @@ export default function ProfileScreen() {
           <Text style={s.group}>Notifications & reminders</Text>
           <View style={[s.block, { paddingHorizontal: space.md, paddingVertical: space.sm }]}>
             <NotifySettings />
+          </View>
+
+          <Text style={s.group}>Claude connector</Text>
+          <View style={[s.block, { paddingHorizontal: space.md, paddingVertical: space.md }]}>
+            <ClaudeConnector />
           </View>
 
           <Text style={s.group}>Team</Text>

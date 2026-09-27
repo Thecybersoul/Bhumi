@@ -239,6 +239,26 @@ APKs off from updates: the runtime version follows it. On the web export, voice 
 A WhatsApp message shared into the app, pasted, or dictated reaches the assistant marked `[Forwarded from
 WhatsApp]` or `[Voice]`; `lib/assistant/prompt.ts` tells it how to handle each.
 
+### Free mode and the Claude connector (migration 019)
+
+The in-app AI assistant needs `ANTHROPIC_API_KEY` on Vercel (API billing, separate from any Claude
+subscription). `GET /api/assistant` reports `{ configured }` and `/api/health` reports `assistant.configured`.
+Without the key, the assistant screen on the app and the web **becomes quick capture**. Pasted, shared, typed
+or dictated text goes to `lib/whatsapp/parse.ts`, a dependency-free reader of Bengaluru broker shorthand
+(acres/guntas, rates per acre/gunta/sq ft, crore/lakh/full rupees, khata, conversion, approvals, facing, road,
+survey no., localities → zone/corridor, sender and phone, buyer requirements → leads, multi-property posts).
+`/api/whatsapp` parses (with suggested `BLR-<P|R|V|C|W>-<yy><nn>` codes, look-alike listings and any existing
+contact) and saves through the ERP's own routes via `lib/erp-call.ts`. The review cards are
+`mobile/src/components/whatsappImport.tsx` and `components/erp/WhatsAppImport.tsx`. **Run
+`npx tsx scripts/test-whatsapp-parser.ts` after touching the parser, and add a case for any post it misreads.**
+
+**Claude connector** (`app/api/mcp/[token]`, `lib/connector.ts`): a stateless Streamable-HTTP MCP server, so each
+person's own Claude app (their subscription) can use the ERP as a custom connector. Profile → Claude connector
+issues a per-person secret link (only its SHA-256 is stored; revocable). It exposes the assistant's own tools
+(`lib/assistant/tools.ts`) and runs them as that person through the ERP routes, with a 15-minute session.
+`read_document` returns file bytes inline (no Files API). Hand-rolled JSON-RPC (initialize, tools/list,
+tools/call, ping), deliberately with no MCP SDK dependency.
+
 ### Documents never pass through the server
 
 `/api/documents` is a two-step upload. `action: 'start'` returns a destination. With Google Drive connected

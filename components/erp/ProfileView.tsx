@@ -1,5 +1,6 @@
 'use client'
 
+import { ClaudeConnectorCard } from './ClaudeConnectorCard'
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Activity as ActivityIcon, Bell, FolderOpen, KeyRound, RefreshCw, ShieldCheck, Sheet, Users } from 'lucide-react'
@@ -207,6 +208,7 @@ export default function ProfileView({ googleResult, googleMessage }: { googleRes
             </p>
           </Card>
 
+          <ClaudeConnectorCard />
           <Card title="Team" icon={Users}>
             {me.team.map((t) => (
               <div key={t.id} className="erpRow">
