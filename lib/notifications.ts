@@ -17,7 +17,7 @@ import { createServiceClient, hasSupabase } from './supabase'
 
 export interface NotificationItem {
   id: string
-  kind: 'lead' | 'document_request' | 'deal' | 'meeting' | 'task' | 'listing' | 'document' | 'google'
+  kind: 'lead' | 'document_request' | 'deal' | 'meeting' | 'task' | 'listing' | 'document' | 'google' | 'app'
   title: string
   body: string
   actor: string
@@ -96,6 +96,9 @@ function toNotification(r: Row): NotificationItem | null {
     if (r.action === 'upload' || r.action === 'link') return { ...base, kind: 'document', title: `${who} added a document`, body: `${summary} · ${label}` }
     return null
   }
+  // An app release announcement: logged with no actor, so it reaches everyone.
+  if (r.entity_type === 'app' && r.action === 'update')
+    return { ...base, kind: 'app', title: label || 'The Bhumi app was updated', body: summary }
   if (r.entity_type === 'google' && (r.action === 'connect' || r.action === 'disconnect'))
     return { ...base, kind: 'google', title: r.action === 'connect' ? 'Google Workspace connected' : 'Google Workspace disconnected', body: `By ${who}` }
   return null

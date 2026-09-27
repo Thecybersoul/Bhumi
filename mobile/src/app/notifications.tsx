@@ -26,6 +26,7 @@ const ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   listing: 'map',
   document: 'document-attach',
   google: 'logo-google',
+  app: 'phone-portrait',
 }
 
 /* Everything the rest of the team did that you should know about,
