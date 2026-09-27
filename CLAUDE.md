@@ -213,4 +213,3 @@ wrong `--navy` value and stops at migration 005. Trust the tree over the README.
 
 `Bhumi LOGO/` and a WhatsApp chat export (it contains customer phone numbers) sit in the repo root. They are
 listed in `.gitignore` so they can't be committed by accident. Still, check what `git add` picks up before committing.
-picks up.
