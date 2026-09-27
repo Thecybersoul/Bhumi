@@ -39,6 +39,24 @@
         height: 100%;
         flex: 1;
       }
+      /* In the home-screen app on iPhone (black-translucent status bar,
+         viewport-fit=cover), height: 100% stops short of the bottom of the
+         screen by the home-indicator area, so a strip of the page background
+         showed under the tab bar. Pinned to all four edges, the app always
+         fills the display; the tab bar adds the safe-area padding itself. */
+      #root {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: auto;
+      }
+      /* Anything that ever peeks out at the bottom matches the tab bar. */
+      html,
+      body {
+        background: linear-gradient(#0E3B2E 50%, #FFFFFF 50%);
+      }
     </style>
   </head>
 
