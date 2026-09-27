@@ -211,6 +211,6 @@ none of which exist; the site was restructured down to `/`, `/property-consultan
 `/branding-advertising`, `/marketplace`, `/insights`, `/contact`, `/privacy`, `/terms`. It also gives the
 wrong `--navy` value and stops at migration 005. Trust the tree over the README.
 
-`Bhumi LOGO/*.png` and a WhatsApp chat export sit untracked in the repo root and are **not** covered by
-`.gitignore`. The export contains customer phone numbers — never `git add -A` here without checking what it
+`Bhumi LOGO/` and a WhatsApp chat export (it contains customer phone numbers) sit in the repo root. They are
+listed in `.gitignore` so they can't be committed by accident. Still, check what `git add` picks up before committing.
 picks up.
