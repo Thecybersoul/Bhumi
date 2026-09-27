@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ActivityIndicator, Image, Linking, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import { useApi } from '@/lib/api'
+import { API_URL } from '@/lib/config'
 import { colors, radius, space, text } from '@/lib/theme'
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -165,7 +166,7 @@ export function MediaField({
 
   return (
     <Field label={label}>
-      {value && kind === 'image' ? <Image source={{ uri: value.startsWith('/') ? undefined : value }} style={s.preview} /> : null}
+      {value && kind === 'image' ? <Image source={{ uri: value.startsWith('/') ? `${API_URL}${value}` : value }} style={s.preview} /> : null}
       <TextInput
         style={s.input}
         value={value}

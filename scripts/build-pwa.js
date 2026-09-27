@@ -37,7 +37,7 @@ async function main() {
     cwd: mobile,
     stdio: 'inherit',
     shell: process.platform === 'win32', // npx is npx.cmd on Windows
-    env: { ...process.env, NODE_ENV: 'production' },
+    env: { ...process.env, NODE_ENV: 'production', BHUMI_WEB_EXPORT: '1' },
   })
   console.log(`\nExported to ${path.relative(root, out)}/ — commit it to publish.`)
 }

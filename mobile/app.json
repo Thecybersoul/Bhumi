@@ -8,8 +8,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "experiments": {
-      "typedRoutes": true,
-      "baseUrl": "/app"
+      "typedRoutes": true
     },
     "ios": {
       "bundleIdentifier": "in.bhumiestates.admin",
