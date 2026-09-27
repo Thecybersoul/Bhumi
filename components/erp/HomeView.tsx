@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CircleAlert,
   Map,
+  NotebookPen,
   Pencil,
   Activity as ActivityIcon,
   Plus,
@@ -172,6 +173,7 @@ export default function HomeView({ firstName }: { firstName: string }) {
 
       <div className="erpQuick">
         <Quick href="/admin/notes-tasks?new=1" icon={SquareCheck} label="Task" />
+        <Quick href="/admin/notes-tasks?view=notes" icon={NotebookPen} label="Note" />
         <Quick href="/admin/meetings/new" icon={Users} label="Meeting" />
         <Quick href="/admin/deals/new" icon={Briefcase} label="Deal" />
         <Quick href="/admin/properties/new" icon={Map} label="Listing" />
