@@ -45,4 +45,4 @@ jobs:
         run: |
           MSG="${{ github.event.inputs.message }}"
           [ -z "$MSG" ] && MSG="$(git log -1 --pretty=%s)"
-          eas update --channel preview --platform android --message "$MSG" --non-interactive
+          eas update --channel preview --environment preview --platform android --message "$MSG" --non-interactive
