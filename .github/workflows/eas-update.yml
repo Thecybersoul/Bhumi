@@ -1,0 +1,48 @@
+# Publishes the mobile app's JavaScript to installed Android apps (EAS
+# over-the-air update, channel "preview") whenever app code reaches main,
+# or on demand from the Actions tab. Needs the EXPO_TOKEN repository
+# secret: expo.dev → Account settings → Access tokens.
+name: App OTA update
+
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**']
+  workflow_dispatch:
+    inputs:
+      message:
+        description: What changed (shown in the EAS dashboard)
+        required: false
+        default: ''
+
+concurrency:
+  group: eas-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Publish update
+        run: |
+          MSG="${{ github.event.inputs.message }}"
+          [ -z "$MSG" ] && MSG="$(git log -1 --pretty=%s)"
+          eas update --channel preview --platform android --message "$MSG" --non-interactive
