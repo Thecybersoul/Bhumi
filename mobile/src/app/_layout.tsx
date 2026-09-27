@@ -10,6 +10,12 @@ import { colors } from '@/lib/theme'
 
 configureNotifications()
 
+/* expo-notifications has no web implementation of this hook: calling it
+   throws and blanks the iPhone home-screen app. Platform.OS never changes
+   at runtime, so choosing the hook once here keeps hook order stable. */
+const useLastNotificationResponse: () => Notifications.NotificationResponse | null | undefined =
+  Platform.OS === 'web' ? () => null : Notifications.useLastNotificationResponse
+
 /* Reminders and team updates while someone is signed in. Refresh on
    sign-in and whenever the app comes back to the foreground (at most
    every two minutes). Background refresh covers the rest. Signing out
@@ -36,7 +42,7 @@ function useNotifications(token: string | null) {
   }, [token])
 
   // Tapping a notification opens what it's about.
-  const response = Notifications.useLastNotificationResponse()
+  const response = useLastNotificationResponse()
   useEffect(() => {
     const path = response?.notification.request.content.data?.path
     if (token && typeof path === 'string' && path) router.push(path as never)

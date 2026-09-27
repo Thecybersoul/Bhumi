@@ -178,6 +178,16 @@ purpose token, so the callback works from a phone browser that has no admin cook
 to `bhumiadmin://google`. Builds go through EAS (`preview` profile → APK). JS-only changes can ship as an
 OTA update with `eas update --channel preview`.
 
+**iPhone gets the same app as a home-screen web app, not an App Store build** (that needs a paid Apple
+Developer account). `node scripts/build-pwa.js` exports `mobile/` for the web into `public/app/`, which is
+**committed** and served at `/app` (SPA fallback rewrites in `next.config.js`); install is Safari → Share →
+Add to Home Screen. The export does not rebuild itself: after changing `mobile/`, re-run the script and
+commit `public/app/`, or iPhones keep the old version. On web the app calls the API on its own origin, and
+local notifications and background refresh are native-only. Anything native-only must be guarded with
+`Platform.OS`, including hooks: an unguarded `expo-notifications` call blanked the whole web app once.
+`public/app/assets/node_modules/` holds the icon font and is re-included in `.gitignore` on purpose.
+`mobile/app.json` also carries the iOS config (bundle id, usage strings) for a future `eas build -p ios`.
+
 ## Conventions
 
 Design tokens are in `app/globals.css`, component styles in `app/components.css`. Add new utilities to

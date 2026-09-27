@@ -65,6 +65,24 @@ const nextConfig = {
         ],
       },
       {
+        // The iPhone home-screen app (scripts/build-pwa.js). Its shell must
+        // revalidate so a new export reaches phones on the next launch; the
+        // bundle and assets are content-hashed, so they can be cached for good.
+        source: '/app/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      {
+        source: '/app/_expo/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/app/assets/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
         // Admin pages must never be cached by an intermediary.
         source: '/admin/:path*',
         headers: [
@@ -73,6 +91,18 @@ const nextConfig = {
         ],
       },
     ]
+  },
+
+  async rewrites() {
+    // The iPhone app is a single-page export in public/app. Real files there
+    // are served as they are; every other /app path is a screen, so it gets
+    // the app shell and Expo Router takes it from there.
+    return {
+      fallback: [
+        { source: '/app', destination: '/app/index.html' },
+        { source: '/app/:path*', destination: '/app/index.html' },
+      ],
+    }
   },
 
   async redirects() {

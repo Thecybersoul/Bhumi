@@ -87,7 +87,9 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.white,
           borderTopColor: colors.line,
-          height: 68 + insets.bottom,
+          // Web tab links carry 5px of padding the native tabs don't; without
+          // the extra room the labels get squeezed and lose their descenders.
+          height: 68 + insets.bottom + (Platform.OS === 'web' ? 6 : 0),
           paddingTop: 8,
           paddingBottom: insets.bottom + 8,
           ...Platform.select({ android: { elevation: 12 } }),

@@ -4,6 +4,16 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSession } from '@/lib/auth'
 import { colors, radius, space, text } from '@/lib/theme'
 
+/* On an iPhone in Safari, point at Share → Add to Home Screen: that is how
+   the web build installs, and nobody finds the menu on their own. Hidden
+   once it is running from the home screen, and everywhere else. */
+function installHint(): boolean {
+  if (Platform.OS !== 'web') return false
+  const nav = globalThis.navigator as (Navigator & { standalone?: boolean }) | undefined
+  if (!nav || nav.standalone) return false
+  return /iPhone|iPad|iPod/.test(nav.userAgent)
+}
+
 export default function LoginScreen() {
   const { signIn, error } = useSession()
   const [email, setEmail] = useState('')
@@ -72,6 +82,14 @@ export default function LoginScreen() {
         </TouchableOpacity>
       </View>
       <Text style={styles.foot}>Forgot your password? Ask another admin to reset it.</Text>
+      {installHint() ? (
+        <View style={styles.hint}>
+          <Ionicons name="share-outline" size={18} color={colors.goldSoft} />
+          <Text style={styles.hintText}>
+            To install, tap Share, then <Text style={styles.hintStrong}>Add to Home Screen</Text>.
+          </Text>
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   )
 }
@@ -101,4 +119,7 @@ const styles = StyleSheet.create({
   buttonBusy: { opacity: 0.7 },
   buttonText: { color: colors.white, fontSize: text.md, fontWeight: '800' },
   foot: { color: 'rgba(255,255,255,0.55)', fontSize: text.xs, marginTop: space.lg },
+  hint: { flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: 400, marginTop: space.lg, padding: space.md, borderRadius: radius.base, backgroundColor: 'rgba(255,255,255,0.08)' },
+  hintText: { color: colors.white, fontSize: text.sm, flexShrink: 1 },
+  hintStrong: { fontWeight: '800' },
 })

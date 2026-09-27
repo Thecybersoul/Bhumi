@@ -51,3 +51,9 @@ listing-social/
 
 # Claude Code worktrees: local scratch checkouts, not part of the project.
 .claude/worktrees/
+
+# The iPhone app's export (scripts/build-pwa.js) is committed, and it bundles
+# the icon font from a node_modules/.../build/ path that the rules above
+# would drop. Must stay last so it overrides them.
+!public/app/**/node_modules/
+!public/app/**/build/
