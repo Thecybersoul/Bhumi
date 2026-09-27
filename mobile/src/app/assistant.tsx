@@ -137,6 +137,12 @@ export default function AssistantScreen() {
   const [uploading, setUploading] = useState(0)
   const [busy, setBusy] = useState(false)
   const scroller = useRef<ScrollView>(null)
+  const box = useRef<TextInput>(null)
+  /* Builds without the clipboard or speech module (APKs from before they
+     were added) still get both: 'paste' waits for a long-press Paste into
+     the box, 'dictate' for the keyboard's own mic. The next send is then
+     marked as forwarded or spoken. */
+  const [mode, setMode] = useState<null | 'paste' | 'dictate'>(null)
   const xhr = useRef<XMLHttpRequest | null>(null)
   const started = useRef(false)
 
@@ -269,7 +275,31 @@ export default function AssistantScreen() {
     send(forwardedPrompt(text, attached.length), attached, { shown })
   }
 
+  function pasteByHand() {
+    setMode('paste')
+    setTimeout(() => box.current?.focus(), 50)
+  }
+
+  function startVoice() {
+    if (voice.available) return voice.start()
+    setMode('dictate')
+    setTimeout(() => box.current?.focus(), 50)
+  }
+
+  /** Send the box, as a forwarded message or a spoken one when in that mode. */
+  function submit() {
+    const was = mode
+    setMode(null)
+    if (was === 'paste') {
+      const text = input
+      setInput('')
+      return forward(text, [])
+    }
+    send(input, files, was === 'dictate' ? { voice: true } : {})
+  }
+
   async function paste() {
+    if (!canPaste()) return pasteByHand()
     try {
       const text = await readClipboard()
       if (!text.trim()) {
@@ -278,7 +308,7 @@ export default function AssistantScreen() {
       }
       forward(text)
     } catch {
-      setTurns((all) => [...all, { role: 'assistant', text: '', error: 'Couldn’t read what you copied. Long-press in the message box and choose Paste instead.' }])
+      pasteByHand()
     }
   }
 
@@ -336,24 +366,20 @@ export default function AssistantScreen() {
                 Tell it what happened or what you need. It adds listings, leads, deals, contacts and agents, links people with their share, books visits, and files
                 documents — as you, in the activity trail.
               </Text>
-              {canPaste() ? (
-                <TouchableOpacity style={[s.suggest, s.suggestWa]} onPress={paste}>
-                  <Ionicons name="logo-whatsapp" size={17} color={colors.verified} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.suggestText}>{PASTE}</Text>
-                    <Text style={s.suggestSub}>Copy a property post in WhatsApp, then tap here. It becomes a draft listing or a lead.</Text>
-                  </View>
-                </TouchableOpacity>
-              ) : null}
-              {voice.available ? (
-                <TouchableOpacity style={s.suggest} onPress={voice.start}>
-                  <Ionicons name="mic-outline" size={16} color={colors.goldDeep} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.suggestText}>Speak instead of typing</Text>
-                    <Text style={s.suggestSub}>Tap the mic, say what happened, then tap it again to send.</Text>
-                  </View>
-                </TouchableOpacity>
-              ) : null}
+              <TouchableOpacity style={[s.suggest, s.suggestWa]} onPress={paste}>
+                <Ionicons name="logo-whatsapp" size={17} color={colors.verified} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.suggestText}>{PASTE}</Text>
+                  <Text style={s.suggestSub}>Copy a property post in WhatsApp, then tap here. It becomes a draft listing or a lead.</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.suggest} onPress={startVoice}>
+                <Ionicons name="mic-outline" size={16} color={colors.goldDeep} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.suggestText}>Speak instead of typing</Text>
+                  <Text style={s.suggestSub}>Tap the mic, say what happened, then send.</Text>
+                </View>
+              </TouchableOpacity>
               {SUGGESTIONS.map((x) => (
                 <TouchableOpacity key={x} style={s.suggest} onPress={() => send(x)}>
                   <Ionicons name="sparkles-outline" size={15} color={colors.goldDeep} />
@@ -408,6 +434,19 @@ export default function AssistantScreen() {
               {uploading ? <Text style={s.pendingText}>Uploading {uploading}…</Text> : null}
             </View>
           ) : null}
+          {mode ? (
+            <View style={s.listening}>
+              <Ionicons name={mode === 'paste' ? 'logo-whatsapp' : 'mic'} size={16} color={mode === 'paste' ? colors.verified : colors.goldDeep} />
+              <Text style={s.listenText}>
+                {mode === 'paste'
+                  ? 'Long-press the box below and tap Paste, then send. It will be filed as a WhatsApp message.'
+                  : 'Tap the 🎤 on your keyboard and speak, then send.'}
+              </Text>
+              <TouchableOpacity onPress={() => setMode(null)} hitSlop={8}>
+                <Text style={s.listenCancel}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
           {voice.listening || voice.error ? (
             <View style={s.listening}>
               {voice.listening ? <View style={s.liveDot} /> : <Ionicons name="alert-circle" size={15} color={colors.flagged} />}
@@ -430,16 +469,15 @@ export default function AssistantScreen() {
                 <Ionicons name="camera-outline" size={21} color={colors.ink2} />
               </TouchableOpacity>
             ) : null}
-            {canPaste() ? (
-              <TouchableOpacity style={s.icon} onPress={paste} hitSlop={6} accessibilityLabel="Paste a WhatsApp message" disabled={busy}>
-                <Ionicons name="logo-whatsapp" size={20} color={colors.verified} />
-              </TouchableOpacity>
-            ) : null}
+            <TouchableOpacity style={s.icon} onPress={paste} hitSlop={6} accessibilityLabel="Paste a WhatsApp message" disabled={busy}>
+              <Ionicons name="logo-whatsapp" size={20} color={colors.verified} />
+            </TouchableOpacity>
             <TextInput
+              ref={box}
               style={s.input}
               value={input}
               onChangeText={setInput}
-              placeholder="Tell it what to do, or ask…"
+              placeholder={mode === 'paste' ? 'Paste the WhatsApp message here' : mode === 'dictate' ? 'Speak with your keyboard’s mic…' : 'Tell it what to do, or ask…'}
               placeholderTextColor={colors.muted}
               multiline
             />
@@ -447,16 +485,16 @@ export default function AssistantScreen() {
               <TouchableOpacity style={s.send} onPress={() => xhr.current?.abort()} accessibilityLabel="Stop">
                 <Ionicons name="stop" size={16} color={colors.white} />
               </TouchableOpacity>
-            ) : voice.available && !input.trim() && !uploading ? (
+            ) : !input.trim() && !files.length && !uploading && mode !== 'dictate' ? (
               <TouchableOpacity
                 style={[s.send, voice.listening && s.sendLive]}
-                onPress={voice.listening ? voice.stop : voice.start}
+                onPress={voice.listening ? voice.stop : startVoice}
                 accessibilityLabel={voice.listening ? 'Stop and send' : 'Speak'}
               >
                 <Ionicons name={voice.listening ? 'arrow-up' : 'mic'} size={voice.listening ? 19 : 20} color={colors.white} />
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={[s.send, (!input.trim() && !files.length) || uploading ? { opacity: 0.4 } : null]} disabled={(!input.trim() && !files.length) || uploading > 0} onPress={() => send(input, files)} accessibilityLabel="Send">
+              <TouchableOpacity style={[s.send, (!input.trim() && !files.length) || uploading ? { opacity: 0.4 } : null]} disabled={(!input.trim() && !files.length) || uploading > 0} onPress={submit} accessibilityLabel="Send">
                 <Ionicons name="arrow-up" size={19} color={colors.white} />
               </TouchableOpacity>
             )}

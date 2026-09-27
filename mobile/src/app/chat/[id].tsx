@@ -49,6 +49,9 @@ export default function ChatThread() {
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ url: string; name: string } | null>(null)
   const scroller = useRef<ScrollView>(null)
+  const box = useRef<TextInput>(null)
+  /* Builds without the speech module: the keyboard's own mic does it. */
+  const [keyboardMic, setKeyboardMic] = useState(false)
   const latest = useRef<string | null>(null)
   const convId = useRef<string | null>(null)
 
@@ -262,6 +265,12 @@ export default function ChatThread() {
               <Text style={s.error}>{error}</Text>
             </TouchableOpacity>
           ) : null}
+          {keyboardMic && !voice.listening ? (
+            <View style={s.listening}>
+              <Ionicons name="mic" size={15} color={colors.goldDeep} />
+              <Text style={s.listenText} numberOfLines={2}>Tap the 🎤 on your keyboard and speak, then send.</Text>
+            </View>
+          ) : null}
           {voice.listening || voice.error ? (
             <View style={s.listening}>
               {voice.listening ? <View style={s.liveDot} /> : <Ionicons name="alert-circle" size={15} color={colors.flagged} />}
@@ -289,9 +298,11 @@ export default function ChatThread() {
                 <Ionicons name="camera-outline" size={21} color={colors.ink2} />
               </TouchableOpacity>
             ) : null}
-            <TextInput style={s.input} value={input} onChangeText={setInput} placeholder="Message" placeholderTextColor={colors.muted} multiline />
-            {voice.available && !canSend ? (
-              <TouchableOpacity style={[s.send, voice.listening && { backgroundColor: colors.flagged }]} onPress={voice.listening ? voice.stop : voice.start} accessibilityLabel={voice.listening ? 'Stop dictating' : 'Dictate'}>
+            <TextInput ref={box} style={s.input} value={input} onChangeText={(v) => (setInput(v), setKeyboardMic(false))} placeholder="Message" placeholderTextColor={colors.muted} multiline />
+            {!canSend ? (
+              <TouchableOpacity
+                style={[s.send, voice.listening && { backgroundColor: colors.flagged }]}
+                onPress={voice.listening ? voice.stop : voice.available ? voice.start : () => (setKeyboardMic(true), box.current?.focus())} accessibilityLabel={voice.listening ? 'Stop dictating' : 'Dictate'}>
                 <Ionicons name={voice.listening ? 'stop' : 'mic'} size={voice.listening ? 16 : 20} color={colors.white} />
               </TouchableOpacity>
             ) : (
