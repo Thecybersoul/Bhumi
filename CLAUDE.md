@@ -246,7 +246,11 @@ Add to Home Screen. The export does not rebuild itself: after changing `mobile/`
 commit `public/app/`, or iPhones keep the old version. On web the app calls the API on its own origin, and
 local notifications and background refresh are native-only. Anything native-only must be guarded with
 `Platform.OS`, including hooks: an unguarded `expo-notifications` call blanked the whole web app once.
-`public/app/assets/node_modules/` holds the icon font and is re-included in `.gitignore` on purpose.
+`Alert.alert` is a no-op in react-native-web, so `src/lib/webAlert.ts` (imported by the root layout) maps it
+onto `window.alert`/`confirm`/`prompt` on web; without it every "Delete this?" button on iPhone did nothing.
+The app has the same agents (`components/agents.tsx`, the Deals → Agents tab, the agent profile on
+`contact/[id]`), search (`search.tsx`) and assistant (`assistant.tsx`, streamed over XHR because React Native's
+fetch can't read a body incrementally) as the web admin. `public/app/assets/node_modules/` holds the icon font and is re-included in `.gitignore` on purpose.
 `mobile/app.json` also carries the iOS config (bundle id, usage strings) for a future `eas build -p ios`.
 
 ## Conventions

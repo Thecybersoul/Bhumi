@@ -77,4 +77,9 @@ export const statusColor: Record<string, { fg: string; bg: string }> = {
   draft: { fg: colors.muted, bg: colors.line2 },
   shortlisted: { fg: colors.pending, bg: colors.pendingBg },
   closed: { fg: colors.verified, bg: colors.verifiedBg },
+  cancelled: { fg: colors.muted, bg: colors.line2 },
+  preferred: { fg: colors.verified, bg: colors.verifiedBg },
+  active: { fg: colors.progress, bg: colors.progressBg },
+  inactive: { fg: colors.muted, bg: colors.line2 },
+  'do not engage': { fg: colors.flagged, bg: colors.flaggedBg },
 }

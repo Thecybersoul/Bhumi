@@ -11,6 +11,7 @@ import { ByLine } from '@/components/people'
 import { RelatedMeetings } from '@/components/relatedMeetings'
 import { EmailButton, EmailLog, MeetNowButton } from '@/components/google'
 import { ContactPickerSheet, PeoplePanel } from '@/components/contacts'
+import { AgentsPanel } from '@/components/agents'
 import { PendingFiles, RelatedTasks } from '@/components/leadPanels'
 import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { ApiResult, CommissionType, PropertyTransaction, Representing, TransactionStage } from '@/lib/types'
@@ -298,8 +299,20 @@ export default function TransactionScreen() {
 
         {t && (
           <Card>
+            <SectionTitle>Agents & commission split</SectionTitle>
+            <AgentsPanel
+              entityType="transaction"
+              entityId={t.id}
+              entityLabel={`${t.reference} · ${t.property_label}`}
+              deal={{ deal_value_cr: t.deal_value_cr, commission_type: t.commission_type, commission_value: t.commission_value }}
+            />
+          </Card>
+        )}
+
+        {t && (
+          <Card>
             <SectionTitle>Also involved</SectionTitle>
-            <PeoplePanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} roles={['Lawyer', 'Landowner', 'Surveyor', 'Investor', 'Other']} emptyText="Tag the lawyers, surveyors or co-owners on this deal." />
+            <PeoplePanel hideAgents entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} roles={['Lawyer', 'Landowner', 'Surveyor', 'Investor', 'Other']} emptyText="Tag the lawyers, surveyors or co-owners on this deal." />
           </Card>
         )}
 

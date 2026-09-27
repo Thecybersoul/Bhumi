@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, radius, space, text } from '@/lib/theme'
-import { budget, CONTACT_ROLES, stageLabel, TYPE_LABEL } from '@/lib/leads'
+import { budget, CONTACT_ROLES, stageLabel, TYPE_LABEL, waUrl } from '@/lib/leads'
+import { AGENT_SPECIALTIES, AGENT_STATUSES, agentShareLakh, lakh, type DealMoney, type Involvement } from '@/lib/agents'
 import { uploadDocument, type PickedFile } from '@/lib/documents'
-import type { Contact, Lead } from '@/lib/types'
+import type { Contact, Lead, Property } from '@/lib/types'
 import { Badge, Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button, SectionTitle, TextField } from '@/components/form'
 import { DocumentsPanel } from '@/components/documents'
@@ -13,8 +14,9 @@ import { ActivityFeed } from '@/components/activity'
 import { ByLine, timeAgo } from '@/components/people'
 import { RelatedMeetings } from '@/components/relatedMeetings'
 import { ActionBtn, ContactActions } from '@/components/contacts'
-import { PendingFiles, RelatedTasks } from '@/components/leadPanels'
-import { LINK_ICON } from '@/components/entityPicker'
+import { listingMessage, PendingFiles, RelatedTasks } from '@/components/leadPanels'
+import { EntityPicker, LINK_ICON } from '@/components/entityPicker'
+import { InvolvementRow, Stars } from '@/components/agents'
 import Ionicons from '@expo/vector-icons/Ionicons'
 
 interface Deal {
@@ -25,14 +27,8 @@ interface Deal {
   outcome: string
   side: string
 }
-interface LinkRow {
-  id: string
-  entity_type: string
-  entity_id: string
-  entity_label: string
-  role: string
-  created_at: string
-}
+type LinkRow = Omit<Involvement, 'contact'> & { created_at: string }
+const KIND: Record<string, string> = { property: 'Listing', transaction: 'Deal', lead: 'Lead' }
 
 function openRecord(type: string, id: string) {
   if (type === 'property') router.push({ pathname: '/property/[id]', params: { id } })
@@ -43,7 +39,7 @@ function openRecord(type: string, id: string) {
 }
 
 export default function ContactScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, agent } = useLocalSearchParams<{ id: string; agent?: string }>()
   const isNew = id === 'new'
   const api = useApi()
 
@@ -62,7 +58,19 @@ export default function ContactScreen() {
   const [altPhone, setAltPhone] = useState('')
   const [email, setEmail] = useState('')
   const [company, setCompany] = useState('')
-  const [roles, setRoles] = useState<string[]>([])
+  const [roles, setRoles] = useState<string[]>(isNew && agent === '1' ? ['Agent'] : [])
+  const [money, setMoney] = useState<Record<string, DealMoney>>({})
+  const [sharing, setSharing] = useState(false)
+  // Agent profile (migration 016)
+  const [agency, setAgency] = useState('')
+  const [rera, setRera] = useState('')
+  const [areas, setAreas] = useState('')
+  const [specialties, setSpecialties] = useState<string[]>([])
+  const [share, setShare] = useState('')
+  const [agentStatus, setAgentStatus] = useState('Active')
+  const [rating, setRating] = useState<number | null>(null)
+  const [gstin, setGstin] = useState('')
+  const [pan, setPan] = useState('')
   const [city, setCity] = useState('')
   const [source, setSource] = useState('')
   const [notes, setNotes] = useState('')
@@ -70,8 +78,18 @@ export default function ContactScreen() {
   const [fileCat, setFileCat] = useState('KYC')
 
   const reload = useCallback(async () => {
-    const r = await api.get<{ data: Contact; leads: Lead[]; deals: Deal[]; links: LinkRow[] }>(`/api/contacts/${id}`)
+    const r = await api.get<{ data: Contact; leads: Lead[]; deals: Deal[]; links: LinkRow[]; deal_money?: Record<string, DealMoney> }>(`/api/contacts/${id}`)
     setC(r.data)
+    setMoney(r.deal_money ?? {})
+    setAgency(r.data.agency ?? '')
+    setRera(r.data.rera_number ?? '')
+    setAreas(r.data.operating_areas ?? '')
+    setSpecialties(r.data.specialties ?? [])
+    setShare(r.data.default_share_pct != null ? String(r.data.default_share_pct) : '')
+    setAgentStatus(r.data.agent_status ?? 'Active')
+    setRating(r.data.rating ?? null)
+    setGstin(r.data.gstin ?? '')
+    setPan(r.data.pan ?? '')
     setLeads(r.leads)
     setDeals(r.deals)
     setLinks(r.links)
@@ -98,7 +116,14 @@ export default function ContactScreen() {
     setBusy(true)
     setError(null)
     setDup(null)
-    const body = { name: name.trim(), phone: phone.trim(), alt_phone: altPhone.trim(), email: email.trim(), company: company.trim(), roles, city: city.trim(), source: source.trim(), notes: notes.trim(), force }
+    const isAgentNow = roles.includes('Agent')
+    const body = {
+      name: name.trim(), phone: phone.trim(), alt_phone: altPhone.trim(), email: email.trim(), company: company.trim(), roles, city: city.trim(), source: source.trim(), notes: notes.trim(), force,
+      // Only sent for agents, so a plain contact still saves on a database without migration 016.
+      ...(isAgentNow
+        ? { agency: agency.trim(), rera_number: rera.trim(), operating_areas: areas.trim(), specialties, default_share_pct: share.trim() === '' ? null : Number(share), agent_status: agentStatus, rating, gstin: gstin.trim(), pan: pan.trim() }
+        : {}),
+    }
     try {
       if (isNew) {
         const r = await api.post<{ id?: string }>('/api/contacts', body)
@@ -140,7 +165,7 @@ export default function ContactScreen() {
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: isNew ? 'New contact' : c?.name ?? 'Contact' }} />
+      <Stack.Screen options={{ title: isNew ? (roles.includes('Agent') ? 'New agent' : 'New contact') : c?.name ?? 'Contact' }} />
       <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
         {error ? <ErrorBanner message={error} /> : null}
         {dup ? (
@@ -158,7 +183,13 @@ export default function ContactScreen() {
                 <Badge key={r} label={r} tone="progress" />
               ))}
             </View>
-            {c.company || c.city ? <Text style={s.meta}>{[c.company, c.city].filter(Boolean).join(' · ')}</Text> : null}
+            {c.agency || c.company || c.city ? <Text style={s.meta}>{[c.agency, c.company, c.city].filter(Boolean).join(' · ')}</Text> : null}
+            {c.roles?.includes('Agent') && (c.rating || c.operating_areas) ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                {c.rating ? <Stars n={c.rating} size={12} /> : null}
+                {c.operating_areas ? <Text style={[s.meta, { marginTop: 0, flex: 1 }]} numberOfLines={1}>Works {c.operating_areas}</Text> : null}
+              </View>
+            ) : null}
             <ByLine record={c} createdAt={c.created_at} />
             <View style={{ marginTop: space.sm }}>
               <ContactActions name={c.name} phone={c.phone} email={c.email} />
@@ -212,10 +243,77 @@ export default function ContactScreen() {
           </Card>
         ) : null}
 
-        {c && links.length ? (
+        {c && roles.includes('Agent') ? (
+          <Card>
+            <SectionTitle>Work & commissions</SectionTitle>
+            {(() => {
+              const work = links.filter((l) => ['property', 'transaction', 'lead'].includes(l.entity_type))
+              const onDeals = work.filter((l) => l.entity_type === 'transaction' && l.share_type && l.share_type !== 'Paid by their client')
+              const amount = (l: LinkRow) => l.payout_amount_lakh ?? (money[l.entity_id] ? agentShareLakh(l, money[l.entity_id]) : null) ?? 0
+              const paid = onDeals.filter((l) => l.payout_status === 'Paid').reduce((x, l) => x + amount(l), 0)
+              const owed = onDeals.filter((l) => l.payout_status === 'Due' || l.payout_status === 'Invoiced').reduce((x, l) => x + amount(l), 0)
+              const pipeline = onDeals.filter((l) => !l.payout_status || l.payout_status === 'Not due').reduce((x, l) => x + amount(l), 0)
+              return (
+                <>
+                  <View style={s.totals}>
+                    <View style={s.total}>
+                      <Text style={s.totalLabel}>Paid</Text>
+                      <Text style={s.totalValue}>{lakh(paid)}</Text>
+                    </View>
+                    <View style={s.total}>
+                      <Text style={s.totalLabel}>Owed now</Text>
+                      <Text style={[s.totalValue, owed > 0 && { color: colors.pending }]}>{lakh(owed)}</Text>
+                    </View>
+                    <View style={s.total}>
+                      <Text style={s.totalLabel}>Open deals</Text>
+                      <Text style={s.totalValue}>{lakh(pipeline)}</Text>
+                    </View>
+                  </View>
+                  {work.length === 0 ? <Text style={s.empty}>Not on any listing, deal or lead yet. Add them from the record’s Agents card.</Text> : null}
+                  {work.map((l) => (
+                    <InvolvementRow
+                      key={l.id}
+                      r={{ ...l, contact: null }}
+                      deal={money[l.entity_id] ?? null}
+                      record={{ kind: KIND[l.entity_type] ?? l.entity_type, label: l.entity_label, onOpen: () => openRecord(l.entity_type, l.entity_id) }}
+                      onChange={reload}
+                    />
+                  ))}
+                  {c.phone ? (
+                    sharing ? (
+                      <View style={{ marginTop: space.sm }}>
+                        <EntityPicker
+                          value={{ entity_type: 'general', entity_id: null, entity_label: '' }}
+                          types={['property']}
+                          label="Listing to share with them"
+                          onChange={async (v) => {
+                            if (!v.entity_id) return
+                            const all = await api.get<{ data: Property[] }>('/api/properties?admin=1')
+                            const p = all.data.find((x) => x.id === v.entity_id)
+                            if (p) Linking.openURL(waUrl(c.phone, listingMessage(c.name, p).replace("that fits what you're looking for", 'for your buyers')))
+                            // Remember who has it: tagged as a co-broker on the listing.
+                            await api.post('/api/contact-links', { contact_id: c.id, entity_type: 'property', entity_id: v.entity_id, entity_label: v.entity_label, role: 'Co-broker' }).catch(() => {})
+                            setSharing(false)
+                            reload()
+                          }}
+                        />
+                      </View>
+                    ) : (
+                      <View style={{ marginTop: space.sm }}>
+                        <Button label={`Share a listing with ${c.name.split(' ')[0]}`} tone="ghost" onPress={() => setSharing(true)} />
+                      </View>
+                    )
+                  ) : null}
+                </>
+              )
+            })()}
+          </Card>
+        ) : null}
+
+        {c && links.some((l) => !roles.includes('Agent') || !['property', 'transaction', 'lead'].includes(l.entity_type)) ? (
           <Card>
             <SectionTitle>Tagged on</SectionTitle>
-            {links.map((l) => (
+            {links.filter((l) => !roles.includes('Agent') || !['property', 'transaction', 'lead'].includes(l.entity_type)).map((l) => (
               <TouchableOpacity key={l.id} style={s.item} onPress={() => openRecord(l.entity_type, l.entity_id)}>
                 <Ionicons name={LINK_ICON[l.entity_type] ?? 'link-outline'} size={16} color={colors.goldDeep} />
                 <View style={{ flex: 1 }}>
@@ -249,6 +347,37 @@ export default function ContactScreen() {
               </TouchableOpacity>
             ))}
           </View>
+          {roles.includes('Agent') ? (
+            <View style={s.agentBox}>
+              <Text style={[s.label, { color: colors.goldDeep }]}>Agent profile</Text>
+              <TextField label="Agency / firm" value={agency} onChange={setAgency} />
+              <TextField label="Areas they cover" value={areas} onChange={setAreas} placeholder="Devanahalli, Hoskote, Budigere" />
+              <Text style={s.label}>Property types</Text>
+              <View style={s.chips}>
+                {AGENT_SPECIALTIES.map((t) => (
+                  <TouchableOpacity key={t} style={[s.chip, specialties.includes(t) && s.chipOn]} onPress={() => setSpecialties((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]))}>
+                    <Text style={[s.chipText, specialties.includes(t) && { color: colors.white }]}>{TYPE_LABEL[t] ?? t}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TextField label="Usual share (% of our commission)" value={share} onChange={setShare} keyboard="numeric" placeholder="25" />
+              <Text style={s.label}>Status</Text>
+              <View style={s.chips}>
+                {AGENT_STATUSES.map((x) => (
+                  <TouchableOpacity key={x} style={[s.chip, agentStatus === x && s.chipOn]} onPress={() => setAgentStatus(x)}>
+                    <Text style={[s.chipText, agentStatus === x && { color: colors.white }]}>{x}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={s.label}>Rating</Text>
+              <View style={{ marginBottom: space.md }}>
+                <Stars n={rating} onChange={setRating} size={24} />
+              </View>
+              <TextField label="RERA agent registration no." value={rera} onChange={setRera} />
+              <TextField label="GSTIN" value={gstin} onChange={setGstin} />
+              <TextField label="PAN" value={pan} onChange={setPan} />
+            </View>
+          ) : null}
           <TextField label="City / area" value={city} onChange={setCity} />
           <TextField label="How we know them" value={source} onChange={setSource} placeholder="Referred by…, walk-in, website" />
           <TextField label="Notes" value={notes} onChange={setNotes} multiline />
@@ -296,4 +425,9 @@ const s = StyleSheet.create({
   chip: { paddingHorizontal: 13, paddingVertical: 7, borderRadius: radius.lg * 5, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white },
   chipOn: { backgroundColor: colors.navy, borderColor: colors.navy },
   chipText: { fontSize: text.sm, fontWeight: '600', color: colors.ink2 },
+  agentBox: { borderWidth: 1, borderColor: colors.gold, backgroundColor: colors.goldTint, borderRadius: radius.base, padding: space.md, marginBottom: space.md },
+  totals: { flexDirection: 'row', gap: 8, marginBottom: space.sm },
+  total: { flex: 1, borderWidth: 1, borderColor: colors.line, borderRadius: radius.base, padding: 10 },
+  totalLabel: { fontSize: 10.5, fontWeight: '800', letterSpacing: 0.4, color: colors.muted, textTransform: 'uppercase' },
+  totalValue: { fontSize: text.lg, fontWeight: '800', color: colors.navy, marginTop: 2 },
 })

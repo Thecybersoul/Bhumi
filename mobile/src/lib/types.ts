@@ -134,6 +134,23 @@ export interface Contact extends Audited {
   lead_count?: number
   open_leads?: number
   deal_count?: number
+  /* Agent profile (migration 016). */
+  agency?: string
+  rera_number?: string
+  operating_areas?: string
+  specialties?: string[]
+  default_share_pct?: number | null
+  agent_status?: string
+  rating?: number | null
+  gstin?: string
+  pan?: string
+  /* /api/agents adds these. */
+  listings?: number
+  leads?: number
+  open_deals?: number
+  closed_deals?: number
+  paid_lakh?: number
+  owed_lakh?: number
 }
 
 export type ShownStatus = 'Shortlisted' | 'Shared' | 'Visit planned' | 'Visited' | 'Interested' | 'Not interested' | 'Offer made'

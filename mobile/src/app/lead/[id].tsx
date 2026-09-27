@@ -22,6 +22,7 @@ import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { Contact, Lead } from '@/lib/types'
 import { Badge, Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button, Chips, SectionTitle, TextField } from '@/components/form'
+import { AgentsPanel } from '@/components/agents'
 import { WhenField } from '@/components/when'
 import { DocumentsPanel } from '@/components/documents'
 import { ActivityFeed } from '@/components/activity'
@@ -391,6 +392,10 @@ export default function LeadScreen() {
         {lead ? (
           <>
             <Card style={{ marginTop: space.lg }}>
+              <SectionTitle>Agents</SectionTitle>
+              <AgentsPanel entityType="lead" entityId={lead.id} entityLabel={lead.name} />
+            </Card>
+            <Card>
               <SectionTitle>Site visits & meetings</SectionTitle>
               <RelatedMeetings entityType="lead" entityId={lead.id} entityLabel={lead.name} />
             </Card>

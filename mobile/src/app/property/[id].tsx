@@ -11,6 +11,7 @@ import { ByLine } from '@/components/people'
 import { RelatedMeetings } from '@/components/relatedMeetings'
 import { EmailButton, EmailLog } from '@/components/google'
 import { PeoplePanel } from '@/components/contacts'
+import { AgentsPanel } from '@/components/agents'
 import { ListingBuyers, PendingFiles, RelatedTasks } from '@/components/leadPanels'
 import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { ApiResult, Property, PropertyStatus, PropertyTypeSlug, PriceType, Zone } from '@/lib/types'
@@ -258,7 +259,11 @@ export default function PropertyScreen() {
             </Card>
             <Card>
               <SectionTitle>Owner & people</SectionTitle>
-              <PeoplePanel entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} roles={['Landowner', 'Seller', 'Developer', 'Lawyer', 'Other']} emptyText="Tag the landowner, developer or lawyer behind this listing." />
+              <PeoplePanel hideAgents entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} roles={['Landowner', 'Seller', 'Developer', 'Lawyer', 'Other']} emptyText="Tag the landowner, developer or lawyer behind this listing." />
+            </Card>
+            <Card>
+              <SectionTitle>Agents</SectionTitle>
+              <AgentsPanel entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} />
             </Card>
             <Card>
               <SectionTitle>Follow-ups</SectionTitle>

@@ -5,12 +5,14 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, radius, space, text } from '@/lib/theme'
 import { budget, followUpDue, isSelling, LEAD_PIPELINE, leadIsOpen, stageLabel, telUrl, TYPE_LABEL, waUrl, whenShort } from '@/lib/leads'
+import { lakh } from '@/lib/agents'
 import { Badge, EmptyState, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button } from '@/components/form'
 import { Avatar, ByLine, timeAgo } from '@/components/people'
 import type { ApiResult, Contact, DataRoomRequest, Lead, PropertyTransaction } from '@/lib/types'
 
-type View_ = 'leads' | 'pipeline' | 'contacts' | 'requests'
+type View_ = 'leads' | 'pipeline' | 'contacts' | 'agents' | 'requests'
+const AGENT_FILTERS = ['All', 'Preferred', 'Owed', 'On open deals'] as const
 const LEAD_FILTERS = ['Open', 'Due now', ...LEAD_PIPELINE, 'Nurture', 'Converted', 'Lost'] as const
 const ROLE_FILTERS = ['All', 'Buyer', 'Seller', 'Landowner', 'Investor', 'Lawyer'] as const
 const PRIORITY_RANK: Record<string, number> = { Hot: 0, Warm: 1, Cold: 2 }
@@ -36,10 +38,12 @@ export default function DealsScreen() {
   const [leadFilter, setLeadFilter] = useState<(typeof LEAD_FILTERS)[number]>('Open')
   const [q, setQ] = useState('')
   const [role, setRole] = useState<(typeof ROLE_FILTERS)[number]>('All')
+  const [agents, setAgents] = useState<Contact[] | null>(null)
+  const [agentFilter, setAgentFilter] = useState<(typeof AGENT_FILTERS)[number]>('All')
 
   // Home's "Leads" and "+ Lead" land here on the right view.
   useEffect(() => {
-    if (params.view && ['leads', 'pipeline', 'contacts', 'requests'].includes(params.view)) {
+    if (params.view && ['leads', 'pipeline', 'contacts', 'agents', 'requests'].includes(params.view)) {
       setView(params.view as View_)
       router.setParams({ view: undefined })
     }
@@ -47,12 +51,14 @@ export default function DealsScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [t, l, d, c] = await Promise.all([
+      const [t, l, d, c, a] = await Promise.all([
         api.get<ApiResult<PropertyTransaction[]>>('/api/transactions'),
         api.get<ApiResult<Lead[]>>('/api/leads'),
         api.get<ApiResult<DataRoomRequest[]>>('/api/data-room'),
         api.get<{ data: Contact[]; ready: boolean }>('/api/contacts').catch(() => ({ data: [] as Contact[], ready: false })),
+        api.get<{ data: Contact[] }>('/api/agents').catch(() => ({ data: [] as Contact[] })),
       ])
+      setAgents(a.data)
       setTxns(t.source === 'live' ? t.data : [])
       setLeads(l.source === 'live' ? l.data : [])
       setDocs(d.source === 'live' ? d.data : [])
@@ -141,6 +147,21 @@ export default function DealsScreen() {
     [contacts, role, needle, digits]
   )
 
+  const shownAgents = useMemo(
+    () =>
+      (agents ?? [])
+        .filter(
+          (a) =>
+            (agentFilter === 'All' ||
+              (agentFilter === 'Preferred' && a.agent_status === 'Preferred') ||
+              (agentFilter === 'Owed' && (a.owed_lakh ?? 0) > 0) ||
+              (agentFilter === 'On open deals' && (a.open_deals ?? 0) > 0)) &&
+            (!needle || `${a.name} ${a.agency ?? ''} ${a.operating_areas ?? ''} ${a.rera_number ?? ''}`.toLowerCase().includes(needle) || (digits.length >= 3 && a.phone.replace(/\D/g, '').includes(digits)))
+        )
+        .sort((x, y) => Number(y.agent_status === 'Preferred') - Number(x.agent_status === 'Preferred') || (y.owed_lakh ?? 0) - (x.owed_lakh ?? 0) || x.name.localeCompare(y.name)),
+    [agents, agentFilter, needle, digits]
+  )
+
   const count = (f: (typeof LEAD_FILTERS)[number]) =>
     f === 'Open' ? (leads ?? []).filter((l) => leadIsOpen(l.stage) && l.stage !== 'Nurture').length : f === 'Due now' ? (leads ?? []).filter(followUpDue).length : null
 
@@ -149,6 +170,7 @@ export default function DealsScreen() {
     { id: 'leads', label: `Leads${leads ? ` ${(leads ?? []).filter((l) => leadIsOpen(l.stage)).length}` : ''}` },
     { id: 'pipeline', label: `Deals${txns ? ` ${txns.filter((t) => t.outcome === 'In progress').length}` : ''}` },
     { id: 'contacts', label: `People${contacts ? ` ${contacts.length}` : ''}` },
+    { id: 'agents', label: `Agents${agents ? ` ${agents.length}` : ''}` },
     { id: 'requests', label: `Docs${docs ? ` ${docs.filter((d) => d.status === 'Pending').length}` : ''}` },
   ] as const
 
@@ -292,6 +314,64 @@ export default function DealsScreen() {
                 </View>
                 {c.phone ? (
                   <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(telUrl(c.phone))}>
+                    <Ionicons name="call" size={16} color={colors.navy} />
+                  </TouchableOpacity>
+                ) : null}
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      ) : view === 'agents' ? (
+        <FlatList
+          data={shownAgents}
+          keyExtractor={(a) => a.id}
+          contentContainerStyle={s.list}
+          refreshControl={rc}
+          keyboardShouldPersistTaps="handled"
+          ListHeaderComponent={
+            <View>
+              <Button label="+ New agent" onPress={() => router.push({ pathname: '/contact/[id]', params: { id: 'new', agent: '1' } })} />
+              <View style={{ height: space.sm }} />
+              {search('Name, agency, area, RERA no.')}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filters}>
+                {AGENT_FILTERS.map((f) => (
+                  <TouchableOpacity key={f} style={[s.chip, agentFilter === f && s.chipOn]} onPress={() => setAgentFilter(f)}>
+                    <Text style={[s.chipText, agentFilter === f && { color: colors.white }]}>{f}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          }
+          ListEmptyComponent={
+            <EmptyState
+              text={!contactsReady ? 'Agents need database migrations 015 and 016 (Setup, on the website).' : agents?.length ? 'No agent matches.' : 'No agents yet. Add the outside brokers you work with, then put them on listings and deals with their share.'}
+            />
+          }
+          renderItem={({ item: a }) => (
+            <View style={s.card}>
+              <TouchableOpacity style={s.head} onPress={() => router.push({ pathname: '/contact/[id]', params: { id: a.id } })}>
+                <Avatar name={a.name} size={34} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.title} numberOfLines={1}>
+                    {a.name}
+                    {a.agent_status === 'Preferred' ? <Text style={{ color: colors.verified }}>  ✓ Preferred</Text> : null}
+                    {a.agent_status === 'Do not engage' ? <Text style={{ color: colors.flagged }}>  Do not engage</Text> : null}
+                  </Text>
+                  <Text style={s.meta} numberOfLines={1}>{[a.agency, a.operating_areas].filter(Boolean).join(' · ') || a.phone}</Text>
+                  <Text style={s.metaGold} numberOfLines={1}>
+                    {[
+                      a.rating ? '★'.repeat(a.rating) : '',
+                      a.listings ? `${a.listings} listing${a.listings > 1 ? 's' : ''}` : '',
+                      a.open_deals ? `${a.open_deals} open deal${a.open_deals > 1 ? 's' : ''}` : '',
+                      a.owed_lakh ? `owed ${lakh(a.owed_lakh)}` : '',
+                      a.default_share_pct != null ? `usually ${a.default_share_pct}%` : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || 'Not on any record yet'}
+                  </Text>
+                </View>
+                {a.phone ? (
+                  <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(telUrl(a.phone))}>
                     <Ionicons name="call" size={16} color={colors.navy} />
                   </TouchableOpacity>
                 ) : null}

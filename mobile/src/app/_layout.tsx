@@ -7,6 +7,7 @@ import { SessionProvider, useSession } from '@/lib/auth'
 import { clearAll, configureNotifications, ensurePermission, refreshAll, registerBackgroundRefresh } from '@/lib/notify'
 import { LoadingScreen } from '@/components/ui'
 import { colors } from '@/lib/theme'
+import '@/lib/webAlert'
 
 configureNotifications()
 
@@ -78,6 +79,8 @@ function RootNavigator() {
         <Stack.Screen name="meeting/[id]" options={{ title: 'Meeting' }} />
         <Stack.Screen name="activity" options={{ title: 'Team activity' }} />
         <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
+        <Stack.Screen name="search" options={{ title: 'Search' }} />
+        <Stack.Screen name="assistant" options={{ title: 'Assistant' }} />
         <Stack.Screen name="email" options={{ title: 'New email', presentation: 'modal' }} />
         <Stack.Screen name="google" options={{ headerShown: false, animation: 'none' }} />
       </Stack.Protected>

@@ -54,6 +54,12 @@ function Me() {
   }, [load])
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginRight: 16 }}>
+      <TouchableOpacity onPress={() => router.push('/search')} hitSlop={8} accessibilityLabel="Search">
+        <Ionicons name="search" size={22} color={colors.white} />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push('/assistant')} hitSlop={8} accessibilityLabel="Assistant">
+        <Ionicons name="sparkles" size={21} color={colors.goldTint} />
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push('/notifications')} hitSlop={8}>
         <Ionicons name={unread ? 'notifications' : 'notifications-outline'} size={23} color={colors.white} />
         {unread ? (
