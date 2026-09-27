@@ -115,6 +115,9 @@ const nextConfig = {
       { source: '/admin/feasibility', destination: '/admin/plan', permanent: true },
       { source: '/admin/vision', destination: '/admin/plan', permanent: true },
       { source: '/admin', destination: '/admin/dashboard', permanent: false },
+      // The app's router only knows /app/…; the shell's own filename would
+      // render its "unmatched route" screen. (Rewrites below never hit this.)
+      { source: '/app/index.html', destination: '/app', permanent: false },
     ]
   },
 }
