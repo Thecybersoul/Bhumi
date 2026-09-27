@@ -10,7 +10,8 @@
         "buildType": "apk"
       },
       "channel": "preview",
-      "node": "24.16.0"
+      "node": "24.16.0",
+      "autoIncrement": true
     },
     "production": {
       "autoIncrement": true,

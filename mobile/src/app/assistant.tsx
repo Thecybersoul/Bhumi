@@ -10,6 +10,9 @@ import { uploadDocument, type PickedFile } from '@/lib/documents'
 import { colors, radius, space, text } from '@/lib/theme'
 import { Screen } from '@/components/ui'
 import { pickFiles, takePhoto } from '@/components/documents'
+import { useVoice } from '@/lib/voice'
+import { canPaste, readClipboard } from '@/lib/clipboard'
+import { forwardedPrompt, takeShared } from '@/lib/shared'
 
 /* The ERP assistant in the app — the twin of /admin/assistant on the
    web, over the same /api/assistant. Say what happened or what you
@@ -19,7 +22,13 @@ import { pickFiles, takePhoto } from '@/components/documents'
    the iPhone web app it's kept in localStorage; in the native app it
    lives for as long as the app is open. Replies stream through XHR's
    progress events, which React Native delivers incrementally (its
-   fetch can't stream a body). */
+   fetch can't stream a body).
+
+   Three ways in besides typing: the mic (speak, and it sends when you
+   stop), "Paste a WhatsApp message", and sharing a WhatsApp message or
+   its photos to Bhumi from WhatsApp itself (Android). A forwarded
+   message is marked for the assistant, which files it as a listing or
+   a lead. */
 
 type ApiMessage = { role: 'user' | 'assistant'; content: unknown }
 interface Step {
@@ -42,6 +51,7 @@ interface Turn {
 }
 
 const STORE = 'bhumi.assistant.v1'
+const PASTE = 'Paste a WhatsApp message'
 const SUGGESTIONS = [
   'What needs my attention today?',
   'Which agent commissions are due or unpaid?',
@@ -119,7 +129,7 @@ export default function AssistantScreen() {
   const api = useApi()
   const { token } = useSession()
   const insets = useSafeAreaInsets()
-  const params = useLocalSearchParams<{ q?: string }>()
+  const params = useLocalSearchParams<{ q?: string; shared?: string }>()
   const [turns, setTurns] = useState<Turn[]>(() => load().turns)
   const [messages, setMessages] = useState<ApiMessage[]>(() => load().messages)
   const [input, setInput] = useState('')
@@ -138,14 +148,15 @@ export default function AssistantScreen() {
     })
 
   const send = useCallback(
-    (words: string, attached: Attachment[] = []) => {
+    (words: string, attached: Attachment[] = [], opts: { voice?: boolean; shown?: string } = {}) => {
       const said = words.trim()
       if ((!said && !attached.length) || busy) return
       const note = attached.length
         ? `\n\n[Attached files — document ids for read_document / attach_document]\n${attached.map((f) => `- ${f.name}: ${f.id}`).join('\n')}`
         : ''
-      const history = [...messages, { role: 'user' as const, content: (said || 'Here are some files.') + note }]
-      setTurns((all) => [...all, { role: 'user', text: said, files: attached }, { role: 'assistant', text: '', steps: [] }])
+      const content = (opts.voice ? `[Voice] ${said}` : said || 'Here are some files.') + note
+      const history = [...messages, { role: 'user' as const, content }]
+      setTurns((all) => [...all, { role: 'user', text: opts.shown ?? (opts.voice ? `🎙 ${said}` : said), files: attached }, { role: 'assistant', text: '', steps: [] }])
       setInput('')
       setFiles([])
       setBusy(true)
@@ -231,6 +242,54 @@ export default function AssistantScreen() {
     [busy, messages, token]
   )
 
+  const voice = useVoice((heard) => send(heard, files, { voice: true }))
+
+  async function uploadAll(picked: PickedFile[]): Promise<Attachment[]> {
+    const out: Attachment[] = []
+    setUploading((n) => n + picked.length)
+    for (const f of picked) {
+      try {
+        const d = await uploadDocument(api, f, { entity_type: 'general', entity_id: '', entity_label: 'Assistant upload', category: 'Other' })
+        out.push({ id: d.id, name: d.name })
+      } catch (e) {
+        setTurns((all) => [...all, { role: 'assistant', text: '', error: `${f.name}: ${(e as Error).message}` }])
+      } finally {
+        setUploading((n) => n - 1)
+      }
+    }
+    return out
+  }
+
+  /** A WhatsApp message (and its photos) handed to the assistant to file. */
+  async function forward(textIn: string, photos: PickedFile[] = []) {
+    const text = textIn.trim()
+    if (!text && !photos.length) return
+    const attached = photos.length ? await uploadAll(photos) : []
+    const shown = `📲 Forwarded from WhatsApp${text ? `\n${text.length > 600 ? `${text.slice(0, 600)}…` : text}` : ''}`
+    send(forwardedPrompt(text, attached.length), attached, { shown })
+  }
+
+  async function paste() {
+    try {
+      const text = await readClipboard()
+      if (!text.trim()) {
+        setTurns((all) => [...all, { role: 'assistant', text: '', error: 'Nothing copied. In WhatsApp, long-press the message, tap Copy, then come back and tap Paste.' }])
+        return
+      }
+      forward(text)
+    } catch {
+      setTurns((all) => [...all, { role: 'assistant', text: '', error: 'Couldn’t read what you copied. Long-press in the message box and choose Paste instead.' }])
+    }
+  }
+
+  // Shared from WhatsApp (Android): the root layout parks it, we take it once.
+  useEffect(() => {
+    if (!params.shared) return
+    const got = takeShared()
+    if (got) forward(got.text, got.files.filter((f) => f.mime.startsWith('image/') || f.mime === 'application/pdf'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.shared])
+
   // Search's "Ask the assistant" arrives as ?q=
   useEffect(() => {
     if (params.q && !started.current) {
@@ -245,17 +304,8 @@ export default function AssistantScreen() {
 
   async function attach(picked: PickedFile[]) {
     if (!picked.length) return
-    setUploading((n) => n + picked.length)
-    for (const f of picked) {
-      try {
-        const d = await uploadDocument(api, f, { entity_type: 'general', entity_id: '', entity_label: 'Assistant upload', category: 'Other' })
-        setFiles((all) => [...all, { id: d.id, name: d.name }])
-      } catch (e) {
-        setTurns((all) => [...all, { role: 'assistant', text: '', error: `${f.name}: ${(e as Error).message}` }])
-      } finally {
-        setUploading((n) => n - 1)
-      }
-    }
+    const done = await uploadAll(picked)
+    setFiles((all) => [...all, ...done])
   }
 
   function reset() {
@@ -286,6 +336,24 @@ export default function AssistantScreen() {
                 Tell it what happened or what you need. It adds listings, leads, deals, contacts and agents, links people with their share, books visits, and files
                 documents — as you, in the activity trail.
               </Text>
+              {canPaste() ? (
+                <TouchableOpacity style={[s.suggest, s.suggestWa]} onPress={paste}>
+                  <Ionicons name="logo-whatsapp" size={17} color={colors.verified} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.suggestText}>{PASTE}</Text>
+                    <Text style={s.suggestSub}>Copy a property post in WhatsApp, then tap here. It becomes a draft listing or a lead.</Text>
+                  </View>
+                </TouchableOpacity>
+              ) : null}
+              {voice.available ? (
+                <TouchableOpacity style={s.suggest} onPress={voice.start}>
+                  <Ionicons name="mic-outline" size={16} color={colors.goldDeep} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.suggestText}>Speak instead of typing</Text>
+                    <Text style={s.suggestSub}>Tap the mic, say what happened, then tap it again to send.</Text>
+                  </View>
+                </TouchableOpacity>
+              ) : null}
               {SUGGESTIONS.map((x) => (
                 <TouchableOpacity key={x} style={s.suggest} onPress={() => send(x)}>
                   <Ionicons name="sparkles-outline" size={15} color={colors.goldDeep} />
@@ -340,6 +408,19 @@ export default function AssistantScreen() {
               {uploading ? <Text style={s.pendingText}>Uploading {uploading}…</Text> : null}
             </View>
           ) : null}
+          {voice.listening || voice.error ? (
+            <View style={s.listening}>
+              {voice.listening ? <View style={s.liveDot} /> : <Ionicons name="alert-circle" size={15} color={colors.flagged} />}
+              <Text style={[s.listenText, voice.error && !voice.listening ? { color: colors.flagged } : null]} numberOfLines={3}>
+                {voice.listening ? voice.transcript || 'Listening… say what happened, then tap the arrow to send.' : voice.error}
+              </Text>
+              {voice.listening ? (
+                <TouchableOpacity onPress={voice.cancel} hitSlop={8}>
+                  <Text style={s.listenCancel}>Cancel</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null}
           <View style={s.row}>
             <TouchableOpacity style={s.icon} onPress={async () => attach(await pickFiles())} hitSlop={6} accessibilityLabel="Attach files">
               <Ionicons name="attach" size={22} color={colors.ink2} />
@@ -347,6 +428,11 @@ export default function AssistantScreen() {
             {Platform.OS !== 'web' ? (
               <TouchableOpacity style={s.icon} onPress={async () => attach(await takePhoto())} hitSlop={6} accessibilityLabel="Take a photo">
                 <Ionicons name="camera-outline" size={21} color={colors.ink2} />
+              </TouchableOpacity>
+            ) : null}
+            {canPaste() ? (
+              <TouchableOpacity style={s.icon} onPress={paste} hitSlop={6} accessibilityLabel="Paste a WhatsApp message" disabled={busy}>
+                <Ionicons name="logo-whatsapp" size={20} color={colors.verified} />
               </TouchableOpacity>
             ) : null}
             <TextInput
@@ -360,6 +446,14 @@ export default function AssistantScreen() {
             {busy ? (
               <TouchableOpacity style={s.send} onPress={() => xhr.current?.abort()} accessibilityLabel="Stop">
                 <Ionicons name="stop" size={16} color={colors.white} />
+              </TouchableOpacity>
+            ) : voice.available && !input.trim() && !uploading ? (
+              <TouchableOpacity
+                style={[s.send, voice.listening && s.sendLive]}
+                onPress={voice.listening ? voice.stop : voice.start}
+                accessibilityLabel={voice.listening ? 'Stop and send' : 'Speak'}
+              >
+                <Ionicons name={voice.listening ? 'arrow-up' : 'mic'} size={voice.listening ? 19 : 20} color={colors.white} />
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={[s.send, (!input.trim() && !files.length) || uploading ? { opacity: 0.4 } : null]} disabled={(!input.trim() && !files.length) || uploading > 0} onPress={() => send(input, files)} accessibilityLabel="Send">
@@ -377,6 +471,13 @@ const s = StyleSheet.create({
   intro: { fontSize: text.base, color: colors.ink2, lineHeight: 22, marginBottom: space.md },
   suggest: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 13, borderRadius: radius.base, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, marginBottom: 8 },
   suggestText: { flex: 1, fontSize: text.sm, color: colors.navy, fontWeight: '600' },
+  suggestSub: { fontSize: text.xs, color: colors.muted, marginTop: 2, lineHeight: 16 },
+  suggestWa: { borderColor: colors.verifiedBg, backgroundColor: colors.verifiedBg },
+  listening: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 6, paddingBottom: 8 },
+  liveDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.flagged },
+  listenText: { flex: 1, fontSize: text.sm, color: colors.ink2 },
+  listenCancel: { fontSize: text.sm, fontWeight: '700', color: colors.muted },
+  sendLive: { backgroundColor: colors.flagged },
   bubble: { alignSelf: 'flex-end', maxWidth: '86%', backgroundColor: colors.navy, borderRadius: 16, borderBottomRightRadius: 4, paddingHorizontal: 13, paddingVertical: 9 },
   fileNote: { fontSize: text.xs, color: colors.goldTint, marginTop: 4 },
   text: { fontSize: text.base, lineHeight: 22, color: colors.ink },

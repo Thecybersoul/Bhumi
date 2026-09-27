@@ -17,6 +17,8 @@ export interface ToolContext {
   call: (method: string, path: string, body?: unknown) => Promise<{ status: number; json: Record<string, unknown> }>
   /** Uploads a stored ERP document to the Files API so Claude can read it. */
   readDocument: (id: string) => Promise<{ blocks: NonNullable<Exclude<Block, string>>; note: string } | { error: string }>
+  /** Copies an image document to the public media library and returns its URL. */
+  publishImage: (id: string) => Promise<{ url: string } | { error: string }>
 }
 
 /** What the chat shows for a step: a label, and a link to the record touched. */
@@ -200,6 +202,12 @@ export const TOOLS: Tool[] = [
     name: 'update_listing',
     description: 'Change fields on a listing. Send only what changes.',
     input_schema: obj({ id: str, changes: obj(LISTING_FIELDS) }, ['id', 'changes']),
+  },
+  {
+    name: 'set_listing_photo',
+    description:
+      "Make an attached photo (an image document id) the listing's main photo on the website and in the app. Use the best exterior or site photo. Also file the photo on the listing with attach_document so it stays with its documents.",
+    input_schema: obj({ listing_id: str, document_id: str }, ['listing_id', 'document_id']),
   },
   {
     name: 'property_register',
@@ -617,6 +625,15 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       const err = errorOf(r)
       if (err) return fail('Couldn’t update the listing', err)
       return { content: json({ ok: true }), step: { label: `Updated listing (${Object.keys(i.changes as object).join(', ')})`, href: hrefFor('property', id), ok: true } }
+    }
+
+    case 'set_listing_photo': {
+      const pub = await ctx.publishImage(String(i.document_id))
+      if ('error' in pub) return fail('Couldn’t use that photo', pub.error)
+      const r = await ctx.call('PUT', `/api/properties/${i.listing_id}`, { img_url: pub.url })
+      const err = errorOf(r)
+      if (err) return fail('Couldn’t set the listing photo', err)
+      return { content: json({ ok: true, img_url: pub.url }), step: { label: 'Set the listing photo', href: hrefFor('property', String(i.listing_id)), ok: true } }
     }
 
     case 'property_register': {

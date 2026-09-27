@@ -19,6 +19,7 @@ import {
   Map,
   Megaphone,
   Menu,
+  MessagesSquare,
   Search,
   Sparkles,
   Users,
@@ -46,6 +47,7 @@ const nav: { group: string; items: Item[] }[] = [
       { href: '/admin/properties', label: 'Listings', icon: Map, hint: 'Marketplace & verification', match: '/admin/properties' },
       { href: '/admin/meetings', label: 'Meetings', icon: Users, hint: 'Visits, calls & discussions', match: '/admin/meetings' },
       { href: '/admin/notes-tasks', label: 'Tasks & notes', icon: CircleCheck },
+      { href: '/admin/messages', label: 'Messages', icon: MessagesSquare, hint: 'Team chat' },
     ],
   },
   {

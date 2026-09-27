@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { ArrowUp, CircleAlert, CircleCheck, FileText, Loader2, Mic, MicOff, Paperclip, RotateCcw, Square, X } from 'lucide-react'
+import { ArrowUp, CircleAlert, CircleCheck, ClipboardPaste, FileText, Loader2, Mic, MicOff, Paperclip, RotateCcw, Square, X } from 'lucide-react'
 import { uploadDocument } from './documents'
 
 /* The ERP assistant. Type (or say) what happened or what you need:
@@ -147,6 +147,8 @@ export default function AssistantView() {
   const [listening, setListening] = useState(false)
   const abort = useRef<AbortController | null>(null)
   const rec = useRef<SpeechRec | null>(null)
+  /** The box holds dictated words, so the assistant is told to expect transcription slips. */
+  const dictated = useRef(false)
   const end = useRef<HTMLDivElement>(null)
   const box = useRef<HTMLTextAreaElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
@@ -163,15 +165,17 @@ export default function AssistantView() {
   }, [turns])
 
   const send = useCallback(
-    async (text: string, attached: Attachment[] = []) => {
+    async (text: string, attached: Attachment[] = [], opts: { shown?: string } = {}) => {
       const words = text.trim()
       if ((!words && !attached.length) || busy) return
+      const voice = dictated.current && !opts.shown
+      dictated.current = false
       const note = attached.length
         ? `\n\n[Attached files — document ids for read_document / attach_document]\n${attached.map((f) => `- ${f.name} (${f.mime || 'file'}): ${f.id}`).join('\n')}`
         : ''
-      const userMsg: ApiMessage = { role: 'user', content: (words || 'Here are some files.') + note }
+      const userMsg: ApiMessage = { role: 'user', content: (voice ? `[Voice] ${words}` : words || 'Here are some files.') + note }
       const history = [...messages, userMsg]
-      const base: Turn[] = [...turns, { role: 'user', text: words, files: attached }, { role: 'assistant', text: '', steps: [] }]
+      const base: Turn[] = [...turns, { role: 'user', text: opts.shown ?? words, files: attached }, { role: 'assistant', text: '', steps: [] }]
       setTurns(base)
       setInput('')
       setFiles([])
@@ -280,6 +284,26 @@ export default function AssistantView() {
     }
   }
 
+  /** A WhatsApp message copied to the clipboard, filed as a listing or lead. */
+  async function pasteWhatsApp() {
+    let text = ''
+    try {
+      text = (await navigator.clipboard.readText()).trim()
+    } catch {
+      setTurns((all) => [...all, { role: 'assistant', text: '', error: 'The browser didn’t allow reading the clipboard. Paste the message into the box with Ctrl+V instead, then send.' }])
+      return
+    }
+    if (!text) {
+      setTurns((all) => [...all, { role: 'assistant', text: '', error: 'Nothing copied. Copy the WhatsApp message first (on WhatsApp Web: select it, then Ctrl+C).' }])
+      return
+    }
+    const ask = files.length
+      ? `File this in the ERP. The ${files.length === 1 ? 'file attached came' : `${files.length} files attached came`} with the message.`
+      : 'File this in the ERP.'
+    const shown = `📲 Forwarded from WhatsApp\n${text.length > 600 ? `${text.slice(0, 600)}…` : text}`
+    send(['[Forwarded from WhatsApp]', text, '', ask].join('\n'), files, { shown })
+  }
+
   function toggleMic() {
     if (listening) return rec.current?.stop()
     const W = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec }
@@ -297,6 +321,7 @@ export default function AssistantView() {
       const said = Array.from(e.results)
         .map((x) => x[0].transcript)
         .join('')
+      dictated.current = true
       setInput(before + said)
     }
     r.onend = () => setListening(false)
@@ -340,6 +365,9 @@ export default function AssistantView() {
           <div className="erpChat__welcome">
             <p>Try one of these, or type your own. You can attach deeds, RTCs, brochures or photos, and it will read them, fill in the listing and file each document.</p>
             <div className="erpChat__suggest">
+              <button type="button" className="is-wa" onClick={pasteWhatsApp}>
+                <ClipboardPaste size={15} /> <b>Paste a WhatsApp message.</b> Copy a property post, then click here to file it as a draft listing or a lead.
+              </button>
               {SUGGESTIONS.map((s) => (
                 <button key={s} type="button" onClick={() => send(s)}>
                   {s}
@@ -451,6 +479,9 @@ export default function AssistantView() {
               }
             }}
           />
+          <button type="button" className="erpChat__icon" onClick={pasteWhatsApp} disabled={busy} aria-label="Paste a WhatsApp message" title="Paste a WhatsApp message">
+            <ClipboardPaste size={18} />
+          </button>
           <button type="button" className={`erpChat__icon ${listening ? 'is-on' : ''}`} onClick={toggleMic} aria-label={listening ? 'Stop listening' : 'Speak'} title="Speak">
             {listening ? <MicOff size={18} /> : <Mic size={18} />}
           </button>

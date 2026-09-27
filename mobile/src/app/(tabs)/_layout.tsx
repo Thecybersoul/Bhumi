@@ -34,17 +34,23 @@ function Logo() {
   return <Image source={require('../../../assets/logo-dark.png')} style={s.logo} resizeMode="contain" />
 }
 
-/* Bell with the unread count, then the signed-in person. The count
+/* Search, the assistant, messages and the bell (each with its unread
+   count), then the signed-in person. The count
    refreshes whenever a tab gains focus and when the app returns to
    the foreground. */
 function Me() {
   const { user } = useSession()
   const api = useApi()
   const [unread, setUnread] = useState(0)
+  const [chats, setChats] = useState(0)
   const load = useCallback(() => {
     api
       .get<{ unread: number }>('/api/notifications?limit=40')
       .then((r) => setUnread(r.unread))
+      .catch(() => {})
+    api
+      .get<{ unread: number }>('/api/messages')
+      .then((r) => setChats(r.unread))
       .catch(() => {})
   }, [api])
   useFocusEffect(load)
@@ -53,14 +59,22 @@ function Me() {
     return () => sub.remove()
   }, [load])
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginRight: 16 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13, marginRight: 14 }}>
       <TouchableOpacity onPress={() => router.push('/search')} hitSlop={8} accessibilityLabel="Search">
         <Ionicons name="search" size={22} color={colors.white} />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push('/assistant')} hitSlop={8} accessibilityLabel="Assistant">
         <Ionicons name="sparkles" size={21} color={colors.goldTint} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push('/notifications')} hitSlop={8}>
+      <TouchableOpacity onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel="Messages">
+        <Ionicons name={chats ? 'chatbubbles' : 'chatbubbles-outline'} size={22} color={colors.white} />
+        {chats ? (
+          <View style={s.badge}>
+            <Text style={s.badgeText}>{chats > 9 ? '9+' : chats}</Text>
+          </View>
+        ) : null}
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push('/notifications')} hitSlop={8} accessibilityLabel="Notifications">
         <Ionicons name={unread ? 'notifications' : 'notifications-outline'} size={23} color={colors.white} />
         {unread ? (
           <View style={s.badge}>

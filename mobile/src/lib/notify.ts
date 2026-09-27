@@ -36,6 +36,7 @@ export interface NotifyPrefs {
   outcomeNudge: boolean
   taskDue: boolean
   teamUpdates: boolean
+  messages: boolean
 }
 
 export const DEFAULT_PREFS: NotifyPrefs = {
@@ -46,10 +47,12 @@ export const DEFAULT_PREFS: NotifyPrefs = {
   outcomeNudge: true,
   taskDue: true,
   teamUpdates: true,
+  messages: true,
 }
 
 const PREFS_KEY = 'bhumi_notify_prefs'
 const LAST_CHECK_KEY = 'bhumi_notify_last_check'
+const LAST_MSG_KEY = 'bhumi_notify_last_message'
 export const REFRESH_TASK = 'bhumi-refresh'
 
 export async function getPrefs(): Promise<NotifyPrefs> {
@@ -84,6 +87,13 @@ export function configureNotifications() {
       name: 'Morning digest',
       description: 'Your day at 8:30 AM',
       importance: Notifications.AndroidImportance.DEFAULT,
+    }).catch(() => {})
+    Notifications.setNotificationChannelAsync('messages', {
+      name: 'Messages',
+      description: 'Messages from the team',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 200, 100, 200],
+      lightColor: '#C2974A',
     }).catch(() => {})
     Notifications.setNotificationChannelAsync('updates', {
       name: 'Team updates',
@@ -252,10 +262,53 @@ export async function checkTeamUpdates(token?: string | null) {
   }
 }
 
-/** Everything a refresh does: team updates, then the reminders. */
+interface InboxItem {
+  id: string
+  author_name: string
+  body: string
+  attachments: { name: string; mime: string }[]
+  created_at: string
+  conversation_title: string
+  ref: string
+}
+
+/** New messages from the team since the last check, as phone
+    notifications. Like the feed, the first run only sets the start. */
+export async function checkMessages(token?: string | null) {
+  if (Platform.OS === 'web') return
+  const t = token ?? (await tokenIfValid())
+  if (!t) return
+  const prefs = await getPrefs()
+  const last = await storage.get(LAST_MSG_KEY).catch(() => null)
+  if (!last) return storage.set(LAST_MSG_KEY, new Date().toISOString())
+  const { messages } = await get<{ messages: InboxItem[] }>(t, `/api/messages?since=${encodeURIComponent(last)}`)
+  if (!messages.length) return
+  await storage.set(LAST_MSG_KEY, messages[messages.length - 1].created_at)
+  if (!prefs.messages) return
+  // One notification per conversation, showing its latest message.
+  const byConv = new Map<string, InboxItem[]>()
+  for (const m of messages) byConv.set(m.ref, [...(byConv.get(m.ref) ?? []), m])
+  for (const [ref, list] of byConv) {
+    const m = list[list.length - 1]
+    const what = m.body || (m.attachments?.length ? (m.attachments.every((a) => a.mime?.startsWith('image/')) ? '📷 Photo' : `📎 ${m.attachments[0].name}`) : 'New message')
+    const team = m.conversation_title !== m.author_name
+    await Notifications.scheduleNotificationAsync({
+      identifier: `chat-${ref}`,
+      content: {
+        title: team ? `${m.author_name} · ${m.conversation_title}` : m.author_name,
+        body: list.length > 1 ? `${what}  (+${list.length - 1} more)` : what,
+        data: { path: `/chat/${ref}` },
+      },
+      trigger: Platform.OS === 'android' ? { channelId: 'messages' } : null,
+    })
+  }
+}
+
+/** Everything a refresh does: messages, team updates, then the reminders. */
 export async function refreshAll() {
   const t = await tokenIfValid()
   if (!t) return
+  await checkMessages(t).catch(() => {})
   await checkTeamUpdates(t).catch(() => {})
   await syncReminders(t).catch(() => {})
 }
@@ -292,4 +345,5 @@ export async function clearAll() {
   if (Platform.OS === 'web') return
   await Notifications.cancelAllScheduledNotificationsAsync().catch(() => {})
   await storage.remove(LAST_CHECK_KEY).catch(() => {})
+  await storage.remove(LAST_MSG_KEY).catch(() => {})
 }

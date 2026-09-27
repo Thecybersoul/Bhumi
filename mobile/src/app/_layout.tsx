@@ -6,6 +6,8 @@ import * as Notifications from 'expo-notifications'
 import { SessionProvider, useSession } from '@/lib/auth'
 import { clearAll, configureNotifications, ensurePermission, refreshAll, registerBackgroundRefresh } from '@/lib/notify'
 import { forget as forgetWebPush, registerWorker } from '@/lib/webPush'
+import { useShareIntent } from 'expo-share-intent'
+import { setShared } from '@/lib/shared'
 import { LoadingScreen } from '@/components/ui'
 import { colors } from '@/lib/theme'
 import '@/lib/webAlert'
@@ -60,9 +62,26 @@ function useNotifications(token: string | null) {
   }, [response, token])
 }
 
+/* Shared into Bhumi from WhatsApp (or any app): hand it to the
+   assistant, which files it as a listing or lead. On builds without the
+   share module, and on the web, the hook does nothing. */
+function useSharedIntoApp(token: string | null) {
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent({ resetOnBackground: true, disabled: Platform.OS === 'web' })
+  useEffect(() => {
+    if (!hasShareIntent || !token) return
+    setShared({
+      text: [shareIntent.text, shareIntent.webUrl && !shareIntent.text?.includes(shareIntent.webUrl) ? shareIntent.webUrl : null].filter(Boolean).join('\n'),
+      files: (shareIntent.files ?? []).map((f) => ({ uri: f.path, name: f.fileName || 'shared-file', mime: f.mimeType || 'application/octet-stream', size: f.size ?? null })),
+    })
+    resetShareIntent()
+    router.push({ pathname: '/assistant', params: { shared: String(Date.now()) } })
+  }, [hasShareIntent, shareIntent, token, resetShareIntent])
+}
+
 function RootNavigator() {
   const { token, isLoading } = useSession()
   useNotifications(token)
+  useSharedIntoApp(isLoading ? null : token)
   if (isLoading) return <LoadingScreen />
 
   return (
@@ -91,6 +110,8 @@ function RootNavigator() {
         <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
         <Stack.Screen name="search" options={{ title: 'Search' }} />
         <Stack.Screen name="assistant" options={{ title: 'Assistant' }} />
+        <Stack.Screen name="chat/index" options={{ title: 'Messages' }} />
+        <Stack.Screen name="chat/[id]" options={{ title: 'Messages' }} />
         <Stack.Screen name="email" options={{ title: 'New email', presentation: 'modal' }} />
         <Stack.Screen name="google" options={{ headerShown: false, animation: 'none' }} />
       </Stack.Protected>

@@ -68,7 +68,7 @@
         {
           "photosPermission": "Bhumi Estates needs your photos to upload listing images and website media.",
           "cameraPermission": "Bhumi Estates uses the camera to photograph documents and site visits.",
-          "microphonePermission": false
+          "microphonePermission": "Bhumi Estates uses the microphone when you speak to the assistant or dictate a message."
         }
       ],
       "expo-web-browser",
@@ -81,6 +81,30 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#0E3B2E",
           "defaultChannel": "reminders"
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Bhumi Estates uses the microphone when you speak to the assistant or dictate a message.",
+          "speechRecognitionPermission": "Bhumi Estates turns what you say into text for the assistant and messages.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "androidIntentFilters": [
+            "text/*",
+            "image/*",
+            "application/pdf"
+          ],
+          "androidMultiIntentFilters": [
+            "image/*"
+          ]
         }
       ]
     ],

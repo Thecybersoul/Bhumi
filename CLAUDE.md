@@ -218,6 +218,27 @@ uncached block.
 imports them. Imports are always `Draft` and never overwrite an existing code. They can be run from the
 Listings page button or from the assistant.
 
+### Team messages, voice and WhatsApp (migrations 017–018)
+
+**Messages** (`lib/messages.ts`, `/api/messages`, app `chat/`, web `/admin/messages`): one team room
+(`conversations.key = 'team'`) plus a direct conversation per pair (`dm:<id>:<id>`, created on first send).
+Addressed as `'team'`, `'user:<id>'` or a conversation id. Not in the activity trail. Threads poll every 4 s
+while open. Alerts: iPhone gets Web Push instantly; Android picks new messages up in the background check
+(`checkMessages` in `mobile/src/lib/notify.ts`, via `GET /api/messages?since=`), which Android runs roughly
+every 15 minutes. There is no FCM, so Android can't get instant pushes.
+
+**iPhone push** (`lib/webpush.ts`, 017): the home-screen web app subscribes through `mobile/public/sw.js`.
+Team updates push from `logActivity`; timed reminders come from `/api/cron/reminders`, which pg_cron calls
+every 5 minutes with a key kept in `app_secrets`. VAPID keys are generated on first use and stored there too.
+
+**Voice and sharing need native modules** (`expo-speech-recognition`, `expo-share-intent`, `expo-clipboard`),
+so they only work in APKs built after they were added. The JS loads them only after checking with
+`requireOptionalNativeModule` (`lib/voice.ts`, `lib/clipboard.ts`), so OTA updates stay safe on older APKs,
+which just don't show the mic or paste buttons. Keep the app `version` at 1.0.0 unless you mean to cut old
+APKs off from updates: the runtime version follows it. On the web export, voice uses the Web Speech API.
+A WhatsApp message shared into the app, pasted, or dictated reaches the assistant marked `[Forwarded from
+WhatsApp]` or `[Voice]`; `lib/assistant/prompt.ts` tells it how to handle each.
+
 ### Documents never pass through the server
 
 `/api/documents` is a two-step upload. `action: 'start'` returns a destination. With Google Drive connected

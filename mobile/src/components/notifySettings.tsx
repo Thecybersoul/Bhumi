@@ -134,6 +134,8 @@ export function NotifySettings() {
       <View style={s.sep} />
       <Row title="Tasks due" sub="An alert the moment a task falls due" value={prefs.taskDue} onChange={(v) => update({ taskDue: v })} />
       <View style={s.sep} />
+      <Row title="Messages" sub="New messages from the team and direct messages to you" value={prefs.messages} onChange={(v) => update({ messages: v })} />
+      <View style={s.sep} />
       <Row title="Team updates" sub="New leads, document requests, deal and meeting changes" value={prefs.teamUpdates} onChange={(v) => update({ teamUpdates: v })} />
       <View style={s.sep} />
       <Row title="Daily email" sub="The same digest by email at 8:30 AM, from the company Gmail" value={digestEmail} onChange={toggleEmail} />

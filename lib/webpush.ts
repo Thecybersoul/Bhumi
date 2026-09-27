@@ -26,6 +26,7 @@ export interface PushPrefs {
   outcomeNudge: boolean
   taskDue: boolean
   teamUpdates: boolean
+  messages: boolean
 }
 
 export const DEFAULT_PUSH_PREFS: PushPrefs = {
@@ -36,6 +37,7 @@ export const DEFAULT_PUSH_PREFS: PushPrefs = {
   outcomeNudge: true,
   taskDue: true,
   teamUpdates: true,
+  messages: true,
 }
 
 export interface PushPayload {
@@ -126,5 +128,12 @@ export async function claim(key: string): Promise<boolean> {
 /** A team update: everyone who wants them except the person who did it. */
 export async function pushTeamUpdate(actorId: string | null, payload: PushPayload) {
   const subs = (await subscriptions()).filter((s) => s.user_id !== actorId && prefsOf(s).teamUpdates)
+  if (subs.length) await pushTo(subs, payload)
+}
+
+/** A chat message: the people it was sent to, if they want message alerts. */
+export async function pushMessage(userIds: string[], payload: PushPayload) {
+  const ids = new Set(userIds)
+  const subs = (await subscriptions()).filter((s) => ids.has(s.user_id) && prefsOf(s).messages)
   if (subs.length) await pushTo(subs, payload)
 }
