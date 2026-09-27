@@ -146,6 +146,24 @@ export default function ListingEditor({ id }: { id: string }) {
     }
   }
 
+  /** A draft goes live in one deliberate step, saving any edits with it. */
+  async function goLive() {
+    if (!orig) return
+    if (!confirm(`Make ${orig.code} · ${orig.title} live on the website? It appears on the public marketplace straight away.`)) return
+    setBusy(true)
+    setError(null)
+    try {
+      await api.put(`/api/properties/${orig.id}`, { ...payload(), status: 'Live' })
+      await load()
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function remove() {
     if (source === 'fallback') return setError('Built-in listing: save it once first, then it can be deleted.')
     if (!orig || !confirm(`Delete ${orig.code}? It disappears from the marketplace. This cannot be undone.`)) return
@@ -196,6 +214,16 @@ export default function ListingEditor({ id }: { id: string }) {
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
       {saved ? <Banner tone="ok">Saved. The marketplace shows the change straight away.</Banner> : null}
+      {live && orig?.status === 'Draft' ? (
+        <div className="erpDraftBar">
+          <span>
+            <b>Draft.</b> Only the team can see this listing. Check the particulars{orig.code.startsWith('P0') ? ' (they come from the Property Register, as stated by the owner)' : ''}, then make it live.
+          </span>
+          <button type="button" className="erpGoLive" onClick={goLive} disabled={busy}>
+            {busy ? 'Publishing…' : 'Go live'}
+          </button>
+        </div>
+      ) : null}
 
       <div className="erpGrid main">
         <div className="erpCol">

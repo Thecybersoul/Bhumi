@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
-import { Alert, ScrollView, Text, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, space, text } from '@/lib/theme'
 import { Card, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
@@ -154,6 +154,30 @@ export default function PropertyScreen() {
     }
   }
 
+  /** A draft goes live in one deliberate step, saving any edits with it. */
+  function goLive() {
+    if (!orig) return
+    Alert.alert('Make it live?', `${orig.code} · ${orig.title} will appear on the website's marketplace straight away.`, [
+      { text: 'Not yet', style: 'cancel' },
+      {
+        text: 'Go live',
+        onPress: async () => {
+          setBusy(true)
+          setError(null)
+          try {
+            await api.put(`/api/properties/${orig.id}`, { ...payload(), status: 'Live' })
+            setStatus('Live')
+            setOrig({ ...orig, status: 'Live' })
+          } catch (e) {
+            setError((e as Error).message)
+          } finally {
+            setBusy(false)
+          }
+        },
+      },
+    ])
+  }
+
   function remove() {
     if (source === 'fallback') return setError('Built-in listing — edit and save it first, then it can be deleted.')
     Alert.alert('Delete listing?', 'It disappears from the marketplace. This cannot be undone.', [
@@ -182,6 +206,19 @@ export default function PropertyScreen() {
         {orig && source === 'live' ? (
           <View style={{ marginBottom: space.md }}>
             <ByLine record={orig} createdAt={orig.created_at} />
+          </View>
+        ) : null}
+        {orig && source === 'live' && orig.status === 'Draft' ? (
+          <View style={ls.draftBar}>
+            <View style={{ flex: 1 }}>
+              <Text style={ls.draftTitle}>Draft: only the team can see this</Text>
+              <Text style={ls.draftText}>
+                Check the particulars{String(orig.code).startsWith('P0') ? ' (from the Property Register, as stated by the owner)' : ''}, then make it live.
+              </Text>
+            </View>
+            <TouchableOpacity style={ls.goLive} onPress={goLive} disabled={busy}>
+              <Text style={ls.goLiveText}>{busy ? 'Publishing…' : 'Go live'}</Text>
+            </TouchableOpacity>
           </View>
         ) : null}
 
@@ -298,3 +335,11 @@ export default function PropertyScreen() {
     </Screen>
   )
 }
+
+const ls = StyleSheet.create({
+  draftBar: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.pendingBg, borderRadius: 12, padding: 12, marginBottom: space.md },
+  draftTitle: { fontSize: text.sm, fontWeight: '800', color: colors.pending },
+  draftText: { fontSize: text.xs, color: colors.pending, marginTop: 2, lineHeight: 17 },
+  goLive: { backgroundColor: colors.verified, borderRadius: 100, paddingHorizontal: 16, paddingVertical: 10 },
+  goLiveText: { color: colors.white, fontWeight: '800', fontSize: text.sm },
+})

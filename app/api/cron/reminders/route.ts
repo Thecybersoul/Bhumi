@@ -120,6 +120,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Keep the Property Register in Listings (cheap when nothing changed).
+  await import('@/lib/register-sync').then((m) => m.syncRegisterIfDue()).catch((e) => console.error('[bhumi] register sync failed', e))
+
   // Housekeeping: reminder keys older than a month can't recur.
   await sb.from('push_sent').delete().lt('sent_at', new Date(t - 30 * 86_400_000).toISOString())
   await sb.from('app_secrets').upsert({ key: 'reminders_last_run', value: now.toISOString(), updated_at: now.toISOString() }, { onConflict: 'key' })

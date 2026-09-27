@@ -259,6 +259,18 @@ issues a per-person secret link (only its SHA-256 is stored; revocable). It expo
 `read_document` returns file bytes inline (no Files API). Hand-rolled JSON-RPC (initialize, tools/list,
 tools/call, ping), deliberately with no MCP SDK dependency.
 
+### The Property Register is kept in Listings (migration 020)
+
+`lib/data/property-register.ts` is the team's register (P001…). `lib/register-sync.ts` keeps a listing for each entry,
+with the entry id as its code. Missing entries are added as **Draft**. When the register changes, the listing's
+particulars follow, but only fields that still hold what the sync last wrote (`register_snapshot`), so hand edits
+survive. It never touches status, photo, featured or code. Going live is always one deliberate tap ("Go live"
+with a confirmation, on the listing and on draft cards, app and web). It runs when Listings is opened
+(`GET /api/properties?admin=1`), from the 5-minute reminders job and the daily cron, and on
+`POST /api/properties/register`. To add or change a property, edit the register file and deploy; the listing
+updates itself. `/api/health` reports `register: { entries, listed }` and a probe per recent migration
+(`schema.migrations`).
+
 ### Documents never pass through the server
 
 `/api/documents` is a two-step upload. `action: 'start'` returns a destination. With Google Drive connected

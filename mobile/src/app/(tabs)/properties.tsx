@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { router, useFocusEffect } from 'expo-router'
-import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { API_URL } from '@/lib/config'
 import { Avatar } from '@/components/people'
@@ -122,6 +122,17 @@ export default function PropertiesScreen() {
               {source === 'fallback' ? (
                 <Text style={s.hint}>Showing built-in listings. Editing one saves them all to the live database.</Text>
               ) : null}
+              {(() => {
+                const drafts = (props ?? []).filter((x) => x.status === 'Draft').length
+                return drafts && source !== 'fallback' ? (
+                  <View style={s.draftNote}>
+                    <Ionicons name="eye-off-outline" size={15} color={colors.pending} />
+                    <Text style={s.draftNoteText}>
+                      {drafts} draft{drafts === 1 ? '' : 's'} waiting to be checked and made live. New Property Register entries arrive here automatically.
+                    </Text>
+                  </View>
+                ) : null
+              })()}
               <Button label="+ New listing" onPress={() => router.push('/property/new')} />
             </View>
           }
@@ -152,6 +163,25 @@ export default function PropertiesScreen() {
                   </Text>
                   <View style={s.foot}>
                     <Text style={s.price}>{price}</Text>
+                    {p.status === 'Draft' && source !== 'fallback' ? (
+                      <TouchableOpacity
+                        style={s.goLive}
+                        onPress={() =>
+                          Alert.alert('Make it live?', `${p.code} · ${p.title} will appear on the website's marketplace straight away.`, [
+                            { text: 'Not yet', style: 'cancel' },
+                            {
+                              text: 'Go live',
+                              onPress: () =>
+                                api
+                                  .put(`/api/properties/${encodeURIComponent(p.id)}`, { status: 'Live' })
+                                  .then(load, (e) => setError((e as Error).message)),
+                            },
+                          ])
+                        }
+                      >
+                        <Text style={s.goLiveText}>Go live</Text>
+                      </TouchableOpacity>
+                    ) : null}
                     <View style={[s.docs, { gap: 8 }]}>
                       <View style={s.docs}>
                         <Ionicons name="document-text-outline" size={13} color={docs ? colors.goldDeep : colors.muted} />
@@ -221,6 +251,10 @@ const s = StyleSheet.create({
   code: { fontSize: text['2xs'], fontWeight: '800', color: colors.muted, letterSpacing: 0.6 },
   foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
   price: { fontSize: text.base, fontWeight: '800', color: colors.navy },
+  goLive: { backgroundColor: colors.verified, borderRadius: 100, paddingHorizontal: 11, paddingVertical: 5 },
+  goLiveText: { color: colors.white, fontWeight: '800', fontSize: text.xs },
+  draftNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.pendingBg, borderRadius: 12, padding: 10, marginBottom: 10 },
+  draftNoteText: { flex: 1, fontSize: text.xs, color: colors.pending, fontWeight: '600', lineHeight: 17 },
   docs: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   docsText: { fontSize: text.xs, fontWeight: '700', color: colors.muted },
   switcher: { flexDirection: 'row', gap: 8, padding: space.lg, paddingBottom: space.sm },

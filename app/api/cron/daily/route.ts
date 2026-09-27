@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { safeEqual } from '@/lib/session'
 import { syncRegister } from '@/lib/sheets'
+import { syncRegister as syncPropertyRegister } from '@/lib/register-sync'
 import { upcomingSchedule } from '@/lib/notifications'
 import { hasService } from '@/lib/google'
 import { sendEmail } from '@/lib/gmail'
@@ -29,6 +30,13 @@ export async function GET(req: NextRequest) {
   if (!secret || !safeEqual(got, secret)) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
 
   const result: Record<string, unknown> = {}
+
+  try {
+    const r = await syncPropertyRegister()
+    result.property_register = { created: r.created, updated: r.updated.map((u) => u.code), errors: r.errors }
+  } catch (e) {
+    result.property_register = `skipped: ${(e as Error).message}`
+  }
 
   try {
     result.sheets = (await syncRegister('Daily sync')).last_synced_at

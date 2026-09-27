@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { FileText, Import, MapPin, Plus, Search } from 'lucide-react'
+import { FileText, MapPin, Plus, Search } from 'lucide-react'
 import { api, type Audited } from './lib'
 import { Avatar, Banner, Empty, Loading, Pill } from './ui'
 
@@ -37,7 +37,8 @@ export default function ListingsView() {
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<'All' | 'Draft' | 'Live' | 'Reserved' | 'Sold'>('All')
   const [error, setError] = useState<string | null>(null)
-  const [register, setRegister] = useState<{ pending: number; busy: boolean; note: string | null }>({ pending: 0, busy: false, note: null })
+  const [note, setNote] = useState<string | null>(null)
+  const [going, setGoing] = useState<string | null>(null)
 
   const load = () =>
     Promise.all([
@@ -58,22 +59,26 @@ export default function ListingsView() {
 
   useEffect(() => {
     load()
-    // How many Property Register entries aren't listings yet.
-    api
-      .get<{ live: boolean; data: { listing_id: string | null }[] }>('/api/properties/register')
-      .then((r) => r.live && setRegister((x) => ({ ...x, pending: r.data.filter((d) => !d.listing_id).length })))
-      .catch(() => null)
   }, [])
 
-  async function importRegister() {
-    if (!confirm(`Import ${register.pending} properties from the Property Register as Draft listings? Existing listings are never changed.`)) return
-    setRegister((x) => ({ ...x, busy: true, note: null }))
+  /* Going live is always one deliberate step: a draft (from the Property
+     Register, a WhatsApp post or by hand) is checked, then made Live here
+     or on its page. */
+  async function goLive(e: React.MouseEvent, p: { id: string; code: string; title: string }) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm(`Make ${p.code} · ${p.title} live on the website?
+
+It appears on the public marketplace straight away.`)) return
+    setGoing(p.id)
     try {
-      const r = await api.post<{ created: unknown[]; failed: { code: string; error: string }[] }>('/api/properties/register', {})
-      setRegister({ pending: 0, busy: false, note: `Imported ${r.created.length} as Draft${r.failed.length ? `; ${r.failed.length} failed: ${r.failed[0].error}` : ''}.` })
+      await api.put(`/api/properties/${encodeURIComponent(p.id)}`, { status: 'Live' })
+      setNote(`${p.code} is live on the website.`)
       load()
-    } catch (e) {
-      setRegister((x) => ({ ...x, busy: false, note: (e as Error).message }))
+    } catch (err) {
+      setNote((err as Error).message)
+    } finally {
+      setGoing(null)
     }
   }
 
@@ -90,18 +95,22 @@ export default function ListingsView() {
           <p>What’s on the marketplace, its documents, and who changed it last.</p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {register.pending > 0 && (
-            <button type="button" className="erpBtn ghost" onClick={importRegister} disabled={register.busy}>
-              <Import size={16} /> {register.busy ? 'Importing…' : `Import ${register.pending} from Property Register`}
-            </button>
-          )}
           <Link href="/admin/properties/new" className="erpBtn primary">
             <Plus size={16} /> New listing
           </Link>
         </div>
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
-      {register.note ? <Banner tone="ok">{register.note}</Banner> : null}
+      {note ? <Banner tone="ok">{note}</Banner> : null}
+      {(() => {
+        const drafts = (items ?? []).filter((p) => p.status === 'Draft').length
+        return drafts > 0 && status !== 'Draft' ? (
+          <Banner>
+            {drafts} draft listing{drafts === 1 ? '' : 's'} waiting to be checked and made live (new Property Register entries arrive here automatically).{' '}
+            <button type="button" className="erpLinkBtn" onClick={() => setStatus('Draft')}>Review drafts</button>
+          </Banner>
+        ) : null
+      })()}
       {source === 'fallback' ? <Banner>Showing the built-in listings. Editing one saves them all to the live database.</Banner> : null}
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
@@ -140,6 +149,11 @@ export default function ListingsView() {
                 </div>
                 <div className="erpListing__foot">
                   <span className="erpListing__price">{price(p)}</span>
+                  {p.status === 'Draft' ? (
+                    <button type="button" className="erpGoLive" onClick={(e) => goLive(e, p)} disabled={going === p.id}>
+                      {going === p.id ? 'Publishing…' : 'Go live'}
+                    </button>
+                  ) : null}
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 'var(--text-xs)', fontWeight: 700, color: docs[p.id] ? 'var(--gold-deep)' : 'var(--muted)' }}>
                       <FileText size={13} /> {docs[p.id] ?? 0}

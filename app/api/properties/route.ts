@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { ensureRecordFolder } from '@/lib/google'
 import { getProperties, insertReturningId } from '@/lib/db'
 import { assertAdmin, isAdmin } from '@/lib/auth'
+import { syncRegisterIfDue } from '@/lib/register-sync'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,9 @@ export async function GET(req: NextRequest) {
   if (wantsAdmin && !(await isAdmin())) {
     return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
   }
+
+  // The Property Register is kept in Listings (lib/register-sync.ts); cheap when nothing changed.
+  if (wantsAdmin) await syncRegisterIfDue().catch((e) => console.error('[bhumi] register sync failed', e))
 
   const { data, source } = await getProperties({ admin: wantsAdmin })
 
