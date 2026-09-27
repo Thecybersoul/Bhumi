@@ -18,6 +18,13 @@ const nextConfig = {
   compress: true,
   reactStrictMode: true,
 
+  // The SQL files are read at runtime by Setup and the migration runner
+  // (lib/migrator.js); nothing imports them, so tracing would drop them.
+  outputFileTracingIncludes: {
+    '/api/admin/migrate': ['./supabase/**/*.sql'],
+    '/admin/setup': ['./supabase/**/*.sql'],
+  },
+
   images: {
     // WebP/AVIF keep heavy property galleries fast, not just
     // good-looking (Plan §10).

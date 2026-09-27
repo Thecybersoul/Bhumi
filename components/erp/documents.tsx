@@ -194,8 +194,26 @@ export function DocumentsPanel({
         </div>
       ) : null}
 
+      <div className="erpDocs__actions">
+        <button type="button" className="erpBtn primary" onClick={() => input.current?.click()} disabled={!!progress}>
+          <Paperclip size={15} /> Attach documents
+        </button>
+        <button type="button" className="erpBtn ghost sm" onClick={() => setLinking((v) => !v)}>
+          <LinkIcon size={14} /> Drive link
+        </button>
+        {drive && ['property', 'transaction', 'verification', 'lead', 'contact'].includes(entityType) ? (
+          <button type="button" className="erpBtn soft sm" onClick={openFolder}>
+            <FolderOpen size={14} /> Drive folder
+          </button>
+        ) : null}
+        <input ref={input} type="file" multiple hidden onChange={(e) => {
+          if (e.target.files) add(e.target.files)
+          e.target.value = ''
+        }} />
+      </div>
       <div
-        className={`erpDrop ${over ? 'is-over' : ''}`}
+        className={`erpDrop sm ${over ? 'is-over' : ''}`}
+        style={{ marginTop: 8 }}
         onClick={() => input.current?.click()}
         onDragOver={(e) => {
           e.preventDefault()
@@ -208,21 +226,8 @@ export function DocumentsPanel({
           add(e.dataTransfer.files)
         }}
       >
-        <Upload size={18} style={{ verticalAlign: -4, marginRight: 6 }} />
-        Drop files here or <b>browse</b>
-        {!compact && cats.length > 1 ? <> · saved as “{category}”</> : null}
-        <input ref={input} type="file" multiple hidden onChange={(e) => e.target.files && add(e.target.files)} />
-      </div>
-
-      <div className="erpDocs__actions" style={{ marginTop: 8 }}>
-        <button type="button" className="erpBtn ghost sm" onClick={() => setLinking((v) => !v)}>
-          <LinkIcon size={14} /> Attach a Drive link
-        </button>
-        {drive && ['property', 'transaction', 'verification'].includes(entityType) ? (
-          <button type="button" className="erpBtn soft sm" onClick={openFolder}>
-            <FolderOpen size={14} /> Open this record’s Drive folder
-          </button>
-        ) : null}
+        <Upload size={15} style={{ verticalAlign: -3, marginRight: 6 }} />
+        or drop files here{!compact && cats.length > 1 ? <> · saved as “{category}”</> : null}
       </div>
       <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--muted)', marginTop: 8 }}>
         {drive ? 'Saved to Google Drive (info@bhumiestates.in) › Bhumi Estates ERP' : 'Saved to Bhumi secure storage until Google Drive is connected'}

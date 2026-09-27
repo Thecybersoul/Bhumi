@@ -44,6 +44,12 @@ The OAuth client must be a **Web application** with these scopes on its consent 
 `userinfo.email`, `calendar.events`, `drive.file`, `gmail.send`, `meetings.space.created` and
 `meetings.space.readonly`.
 
+### Database updates (migrations)
+
+| Variable | What it's for | Where to get the value |
+|---|---|---|
+| `SUPABASE_DB_URL` | Lets production deploys apply new migrations themselves (`scripts/migrate.js --deploy` runs before `next build`), and powers Setup's **Apply pending updates** button. **Secret** | Supabase → **Connect** → *Session pooler* URI, with the database password filled in. Not needed if the Supabase ↔ Vercel integration already added `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING`, which are picked up automatically |
+
 ### Scheduled jobs
 
 | Variable | What it's for | Value |
@@ -54,7 +60,6 @@ The OAuth client must be a **Web application** with these scopes on its consent 
 
 | Variable | Why it stays local |
 |---|---|
-| `SUPABASE_DB_URL` | Postgres password, only used by `npm run migrate` on your machine |
 | `LISTING_SRC` | Input path for the listing image scripts |
 
 ---

@@ -66,6 +66,10 @@ interface Tab {
   table: string
   order: string
   columns: [string, (r: Row) => Cell][]
+  /** PostgREST select, when a tab needs a joined record (default '*'). */
+  select?: string
+  /** Keep only some rows of the table. */
+  keep?: (r: Row) => boolean
 }
 
 const TABS: Tab[] = [
@@ -169,6 +173,46 @@ const TABS: Tab[] = [
     ],
   },
   {
+    title: 'Agents',
+    table: 'contacts',
+    order: 'created_at',
+    keep: (r) => Array.isArray(r.roles) && (r.roles as string[]).includes('Agent'),
+    columns: [
+      ['Name', (r) => str(r.name)],
+      ['Agency', (r) => str(r.agency)],
+      ['RERA no.', (r) => str(r.rera_number)],
+      ['Status', (r) => str(r.agent_status)],
+      ['Rating', (r) => str(r.rating)],
+      ['Phone', (r) => str(r.phone)],
+      ['Email', (r) => str(r.email)],
+      ['Works in', (r) => str(r.operating_areas)],
+      ['Handles', (r) => (Array.isArray(r.specialties) ? (r.specialties as string[]).join(', ') : '')],
+      ['Usual share %', (r) => str(r.default_share_pct)],
+      ['GSTIN', (r) => str(r.gstin)],
+      ['Added', (r) => ist(r.created_at)],
+    ],
+  },
+  {
+    title: 'Agent commissions',
+    table: 'contact_links',
+    order: 'created_at',
+    select: '*, contact:contacts(name, agency, roles)',
+    keep: (r) => Boolean(r.share_type) || Boolean((r.contact as Row | null)?.roles && ((r.contact as Row).roles as string[]).includes('Agent')),
+    columns: [
+      ['Agent', (r) => str((r.contact as Row | null)?.name)],
+      ['Agency', (r) => str((r.contact as Row | null)?.agency)],
+      ['On', (r) => ({ transaction: 'Deal', property: 'Listing', lead: 'Lead', task: 'Task', note: 'Note', meeting: 'Meeting', verification: 'Verification' })[String(r.entity_type ?? '')] ?? String(r.entity_type ?? '')],
+      ['Record', (r) => str(r.entity_label)],
+      ['Role', (r) => str(r.role)],
+      ['Share', (r) => str(r.share_type)],
+      ['Share value', (r) => str(r.share_value)],
+      ['Payout', (r) => str(r.payout_status)],
+      ['Paid (₹ lakh)', (r) => str(r.payout_amount_lakh)],
+      ['Paid on', (r) => ist(r.paid_at)],
+      ['Payment ref', (r) => str(r.payout_ref)],
+    ],
+  },
+  {
     title: 'Shown to clients',
     table: 'lead_properties',
     order: 'created_at',
@@ -233,10 +277,11 @@ const TABS: Tab[] = [
 ]
 
 async function fetchRows(tab: Tab): Promise<Row[]> {
-  let q = createServiceClient().from(tab.table).select('*').order(tab.order, { ascending: false }).limit(tab.table === 'activity_log' ? 2000 : 5000)
+  let q = createServiceClient().from(tab.table).select(tab.select ?? '*').order(tab.order, { ascending: false }).limit(tab.table === 'activity_log' ? 2000 : 5000)
   if (tab.table === 'activity_log') q = q.neq('action', 'login')
   const { data } = await q
-  return (data ?? []) as Row[]
+  const rows = (data ?? []) as unknown as Row[]
+  return tab.keep ? rows.filter(tab.keep) : rows
 }
 
 /* ─── The spreadsheet itself ────────────────────────────── */

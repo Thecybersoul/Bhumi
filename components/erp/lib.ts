@@ -158,7 +158,7 @@ export const DOC_CATEGORIES: Record<DocEntity, string[]> = {
   transaction: ['Agreement', 'Sale deed', 'Token receipt', 'KYC', 'Invoice', 'Other'],
   verification: ['Title deed', 'EC', 'RTC / Pahani', 'Survey sketch', 'Legal opinion', 'Report', 'Other'],
   lead: ['KYC', 'Requirement', 'Brochure', 'Other'],
-  contact: ['KYC', 'PAN', 'Aadhaar', 'Agreement', 'Other'],
+  contact: ['KYC', 'PAN', 'Aadhaar', 'Agreement', 'RERA certificate', 'Invoice', 'GST certificate', 'Other'],
   note: ['Attachment'],
   meeting: ['Minutes', 'Photos', 'Other'],
   task: ['Attachment'],
@@ -231,7 +231,7 @@ export interface Lead extends Audited {
   converted_at?: string | null
 }
 
-export const CONTACT_ROLES = ['Buyer', 'Seller', 'Landowner', 'Investor', 'Developer', 'Tenant', 'Broker', 'Lawyer', 'Surveyor', 'Other'] as const
+export const CONTACT_ROLES = ['Buyer', 'Seller', 'Landowner', 'Investor', 'Developer', 'Tenant', 'Agent', 'Lawyer', 'Surveyor', 'Other'] as const
 export interface Contact extends Audited {
   id: string
   name: string
@@ -248,6 +248,90 @@ export interface Contact extends Audited {
   lead_count?: number
   open_leads?: number
   deal_count?: number
+  /* Agent profile (migration 016). */
+  agency?: string
+  rera_number?: string
+  operating_areas?: string
+  specialties?: string[]
+  default_share_pct?: number | null
+  agent_status?: AgentStatus
+  rating?: number | null
+  gstin?: string
+  pan?: string
+  /* From /api/agents. */
+  listings?: number
+  leads?: number
+  open_deals?: number
+  closed_deals?: number
+  owed_lakh?: number
+  paid_lakh?: number
+}
+
+/* ─── Agents (migration 016) ─────────────────────────────── */
+
+export const isAgent = (c?: { roles?: string[] | null } | null) => Boolean(c?.roles?.includes('Agent'))
+export const AGENT_STATUSES = ['Preferred', 'Active', 'Inactive', 'Do not engage'] as const
+export type AgentStatus = (typeof AGENT_STATUSES)[number]
+export const AGENT_LINK_ROLES = ['Listing agent', 'Buyer’s agent', 'Seller’s agent', 'Co-broker', 'Referral', 'Mandate holder'] as const
+export const SHARE_TYPES = ['Percent of our commission', 'Percent of deal value', 'Flat', 'Paid by their client'] as const
+export const PAYOUT_STATUSES = ['Not due', 'Due', 'Invoiced', 'Paid', 'Waived'] as const
+export type ShareType = (typeof SHARE_TYPES)[number] | ''
+export type PayoutStatus = (typeof PAYOUT_STATUSES)[number] | ''
+
+/** A contact tagged on a record, with an agent's terms (contact_links). */
+export interface Involvement {
+  id: string
+  contact_id: string
+  entity_type: string
+  entity_id: string
+  entity_label: string
+  role: string
+  share_type?: ShareType
+  share_value?: number | null
+  payout_status?: PayoutStatus
+  payout_amount_lakh?: number | null
+  paid_at?: string | null
+  payout_ref?: string
+  notes?: string
+  created_at: string
+  contact: (Pick<Contact, 'id' | 'name' | 'phone' | 'email' | 'roles' | 'company'> & Partial<Pick<Contact, 'agency' | 'rera_number' | 'default_share_pct' | 'agent_status' | 'rating'>>) | null
+}
+
+export interface DealMoney {
+  deal_value_cr?: number | null
+  commission_type?: 'Percentage' | 'Flat' | string
+  commission_value?: number | null
+}
+
+/** Our commission on a deal in ₹ lakh (1 crore = 100 lakh). Same maths as lib/agents.ts. */
+export function ourCommissionLakh(d: DealMoney): number | null {
+  if (d.commission_value == null) return null
+  if (d.commission_type === 'Flat') return d.commission_value
+  if (d.deal_value_cr == null) return null
+  return d.deal_value_cr * d.commission_value
+}
+export function agentShareLakh(x: { share_type?: string | null; share_value?: number | null }, d: DealMoney): number | null {
+  const v = x.share_value
+  if (x.share_type === 'Paid by their client') return 0
+  if (x.share_type === 'Flat') return v ?? null
+  if (x.share_type === 'Percent of deal value') return v != null && d.deal_value_cr != null ? d.deal_value_cr * v : null
+  if (x.share_type === 'Percent of our commission') {
+    const ours = ourCommissionLakh(d)
+    return v != null && ours != null ? (ours * v) / 100 : null
+  }
+  return null
+}
+/** ₹ lakh, or crore once it's that big. */
+export function lakh(n?: number | null) {
+  if (n == null || !Number.isFinite(n)) return '—'
+  if (n >= 100) return `₹${Number((n / 100).toFixed(2))} Cr`
+  return `₹${Number(n.toFixed(2))} L`
+}
+export function shareLabel(x: { share_type?: string | null; share_value?: number | null }) {
+  if (!x.share_type) return 'Terms not set'
+  if (x.share_type === 'Paid by their client') return 'Paid by their client'
+  if (x.share_type === 'Flat') return `${lakh(x.share_value)} flat`
+  return `${x.share_value ?? '?'}% of ${x.share_type === 'Percent of deal value' ? 'deal value' : 'our commission'}`
 }
 
 export const SHOWN_STATUSES = ['Shortlisted', 'Shared', 'Visit planned', 'Visited', 'Interested', 'Not interested', 'Offer made'] as const
@@ -298,3 +382,6 @@ export const waHref = (p?: string | null, text?: string) => `https://wa.me/${pho
 /** A follow-up that is due today or already late. */
 export const followUpDue = (l: Pick<Lead, 'next_follow_up_at' | 'stage'>) =>
   !!l.next_follow_up_at && leadIsOpen(l.stage) && new Date(l.next_follow_up_at).getTime() < new Date().setHours(23, 59, 59, 999)
+
+/** The ERP assistant's entry points (sidebar, top bar, ⌘K); off until /admin/assistant ships. */
+export const ASSISTANT = false

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ArrowRight, Briefcase, CalendarClock, FolderOpen, History, ListChecks, Map, PhoneCall, Sparkles, Target, Trash2, UserRound, Users } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Briefcase, CalendarClock, FolderOpen, Handshake, History, ListChecks, Map, PhoneCall, Sparkles, Target, Trash2, UserRound, Users } from 'lucide-react'
 import {
   api,
   budget,
@@ -29,6 +29,7 @@ import { DocsJump, DocumentsPanel, PendingDocs, uploadAll } from './documents'
 import { ContactActions, ContactPicker } from './contacts'
 import { EmailLog, MeetNowButton } from './google'
 import { ConvertPanel, LeadMatches, RelatedTasks, ShownPanel } from './leadPanels'
+import { AgentsPanel } from './agents'
 
 type Form = {
   name: string
@@ -490,6 +491,11 @@ export default function LeadEditor({ id, contactId }: { id: string; contactId?: 
                   />
                 </Card>
               </>
+            ) : null}
+            {ready ? (
+              <Card title="Agents" icon={Handshake}>
+                <AgentsPanel entityType="lead" entityId={lead.id} entityLabel={lead.name} />
+              </Card>
             ) : null}
             <Card title="Follow-ups" icon={ListChecks}>
               <RelatedTasks entityType="lead" entityId={lead.id} entityLabel={lead.name} suggest={`Call ${lead.name.split(' ')[0]} back`} />

@@ -16,7 +16,7 @@ import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { ApiResult, Property, PropertyStatus, PropertyTypeSlug, PriceType, Zone } from '@/lib/types'
 
 const TYPES: PropertyTypeSlug[] = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels']
-const STATUSES: PropertyStatus[] = ['Live', 'Reserved', 'Sold']
+const STATUSES: PropertyStatus[] = ['Draft', 'Live', 'Reserved', 'Sold']
 const PRICE_TYPES: PriceType[] = ['Fixed', 'Negotiable', 'On Request']
 const ZONES: Zone[] = ['North', 'East', 'South', 'West']
 
@@ -258,7 +258,7 @@ export default function PropertyScreen() {
             </Card>
             <Card>
               <SectionTitle>Owner & people</SectionTitle>
-              <PeoplePanel entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} roles={['Landowner', 'Seller', 'Developer', 'Broker', 'Lawyer', 'Other']} emptyText="Tag the landowner, developer or broker behind this listing." />
+              <PeoplePanel entityType="property" entityId={orig.id} entityLabel={`${orig.code} · ${orig.title}`} roles={['Landowner', 'Seller', 'Developer', 'Lawyer', 'Other']} emptyText="Tag the landowner, developer or lawyer behind this listing." />
             </Card>
             <Card>
               <SectionTitle>Follow-ups</SectionTitle>

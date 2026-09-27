@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Icon from '@/components/site/Icon'
 import { verificationStages } from '@/lib/content/verification'
 import type { VerificationCase, StageStatus, VerificationStageKey } from '@/lib/types'
+import { DocumentsPanel } from '@/components/erp/documents'
 
 /* The internal side of the four-stage protocol.
 
@@ -33,6 +34,7 @@ export default function VerificationBoard({
   const [filter, setFilter] = useState<'all' | 'In progress' | 'Verified' | 'Flagged'>('all')
   const [busy, setBusy] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [docsFor, setDocsFor] = useState<string | null>(null)
 
   const shown = filter === 'all' ? cases : cases.filter((c) => c.outcome === filter)
 
@@ -200,6 +202,20 @@ export default function VerificationBoard({
                 <Icon name="flag" size={13} /> {c.flag_reason}
               </p>
             )}
+
+            {/* The case file: deed, EC, RTC, sketch, legal opinion, report. */}
+            {source === 'live' ? (
+              <div style={{ marginTop: 12 }}>
+                <button className="erpBtn ghost sm" onClick={() => setDocsFor(docsFor === c.id ? null : c.id)}>
+                  {docsFor === c.id ? 'Hide documents' : 'Documents · attach or open'}
+                </button>
+                {docsFor === c.id ? (
+                  <div style={{ marginTop: 10 }}>
+                    <DocumentsPanel entityType="verification" entityId={c.id} entityLabel={`${c.reference} · ${c.parcel_label}`} />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </article>
         ))}
       </div>

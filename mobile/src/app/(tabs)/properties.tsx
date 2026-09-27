@@ -18,8 +18,8 @@ const STAGE_LABEL: Record<VerificationStageKey, string> = {
 }
 const CYCLE: StageStatus[] = ['Not started', 'In progress', 'Verified', 'Flagged']
 
-function statusTone(s: Property['status']): 'live' | 'progress' | 'flagged' {
-  return s === 'Live' ? 'live' : s === 'Reserved' ? 'progress' : 'flagged'
+function statusTone(s: Property['status']): 'live' | 'progress' | 'flagged' | 'draft' {
+  return s === 'Live' ? 'live' : s === 'Reserved' ? 'progress' : s === 'Draft' ? 'draft' : 'flagged'
 }
 const stageColor = (s: StageStatus) =>
   s === 'Verified' ? colors.verified : s === 'Flagged' ? colors.flagged : s === 'In progress' ? colors.progress : colors.muted

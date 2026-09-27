@@ -291,7 +291,7 @@ export default function NotesTasksScreen() {
             <Text style={s.sub}>Attachments</Text>
             <DocumentsPanel compact entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 60)} onCount={() => load()} />
             <Text style={s.sub}>People</Text>
-            <PeoplePanel entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 80)} roles={['Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who this is about or who is involved." />
+            <PeoplePanel entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 80)} roles={['Client', 'Owner', 'Agent', 'Lawyer', 'Other']} emptyText="Tag who this is about or who is involved." />
             <View style={{ marginTop: space.md }}>
               <Button label="Delete task" tone="danger" onPress={() => removeTask(t)} />
             </View>
@@ -395,7 +395,7 @@ export default function NotesTasksScreen() {
                   <View style={{ marginTop: space.sm }}>
                     <DocumentsPanel compact entityType="note" entityId={n.id} entityLabel={(n.entity_label || n.body).slice(0, 60)} onCount={() => load()} />
                     <Text style={s.sub}>People mentioned</Text>
-                    <PeoplePanel entityType="note" entityId={n.id} entityLabel={n.body.slice(0, 80)} roles={['Mentioned', 'Client', 'Owner', 'Broker', 'Lawyer']} emptyText="Tag the people this note is about." />
+                    <PeoplePanel entityType="note" entityId={n.id} entityLabel={n.body.slice(0, 80)} roles={['Mentioned', 'Client', 'Owner', 'Agent', 'Lawyer']} emptyText="Tag the people this note is about." />
                   </View>
                 ) : null}
               </View>

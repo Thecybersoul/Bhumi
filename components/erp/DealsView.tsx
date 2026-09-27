@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Check, Columns3, List, Plus, Search, UserPlus, X } from 'lucide-react'
-import { api, timeAgo, type Audited, type Contact, type Lead } from './lib'
+import { BadgeCheck, Check, Columns3, Handshake, List, Plus, Search, UserPlus, X } from 'lucide-react'
+import { AGENT_STATUSES, api, lakh, timeAgo, TYPE_LABEL, type Audited, type Contact, type Lead } from './lib'
+import { Stars } from './agents'
 import { Avatar, Banner, ByLine, Empty, Loading, Pill } from './ui'
 import { LeadsBoard } from './LeadsBoard'
 import { ContactActions } from './contacts'
@@ -40,10 +41,14 @@ const cr = (n?: number | null) => (n == null ? 'Value TBD' : `₹${n >= 10 ? Mat
 
 export default function DealsView() {
   const params = useSearchParams()
-  const [tab, setTab] = useState<'pipeline' | 'leads' | 'contacts' | 'docs'>(() => {
+  const [tab, setTab] = useState<'pipeline' | 'leads' | 'contacts' | 'agents' | 'docs'>(() => {
     const t = params.get('tab')
-    return t === 'leads' ? 'leads' : t === 'contacts' ? 'contacts' : t === 'documents' || t === 'docs' ? 'docs' : 'pipeline'
+    return t === 'leads' ? 'leads' : t === 'contacts' ? 'contacts' : t === 'agents' ? 'agents' : t === 'documents' || t === 'docs' ? 'docs' : 'pipeline'
   })
+  const [agents, setAgents] = useState<Contact[] | null>(null)
+  const [agentsReady, setAgentsReady] = useState(true)
+  const [aq, setAq] = useState('')
+  const [astatus, setAstatus] = useState('All')
   const [deals, setDeals] = useState<Deal[] | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
   const [docs, setDocs] = useState<DocRequest[]>([])
@@ -64,6 +69,13 @@ export default function DealsView() {
         api.get<{ data: DocRequest[]; source: string }>('/api/data-room'),
         api.get<{ data: Contact[]; ready: boolean }>('/api/contacts').catch(() => ({ data: [] as Contact[], ready: false })),
       ])
+      api
+        .get<{ data: Contact[]; agents: boolean }>('/api/agents')
+        .then((r) => {
+          setAgents(r.data)
+          setAgentsReady(r.agents)
+        })
+        .catch(() => setAgents([]))
       setDeals(t.source === 'live' ? t.data : [])
       setLeads(l.source === 'live' ? l.data : [])
       setDocs(d.source === 'live' ? d.data : [])
@@ -141,7 +153,10 @@ export default function DealsView() {
           Deals · {(deals ?? []).filter((d) => d.outcome === 'In progress').length}
         </button>
         <button className={tab === 'contacts' ? 'is-on' : ''} onClick={() => setTab('contacts')}>
-          Contacts · {contacts?.length ?? 0}
+          Contacts · {(contacts ?? []).filter((c) => !c.roles?.includes('Agent')).length}
+        </button>
+        <button className={tab === 'agents' ? 'is-on' : ''} onClick={() => setTab('agents')}>
+          Agents · {agents?.length ?? 0}
         </button>
         <button className={tab === 'docs' ? 'is-on' : ''} onClick={() => setTab('docs')}>
           Document requests · {docs.filter((d) => d.status === 'Pending').length}
@@ -201,6 +216,96 @@ export default function DealsView() {
           </div>
           <LeadsBoard leads={leads} view={leadView} busy={busy} onAdvance={advance} />
         </>
+      ) : tab === 'agents' ? (
+        !contactsReady ? (
+          <div className="erpCard">
+            <Empty>Agents need database migrations 015 and 016. Open Setup in the sidebar to apply them.</Empty>
+          </div>
+        ) : (
+          <>
+            {!agentsReady ? <Banner tone="warn">Agent profiles, shares and payouts need migration 016 — open Setup to apply it.</Banner> : null}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ position: 'relative', flex: '1 1 260px' }}>
+                <Search size={15} style={{ position: 'absolute', left: 10, top: 12, color: 'var(--muted)' }} />
+                <input className="erpInput" style={{ paddingLeft: 32 }} placeholder="Search name, agency, area, phone, RERA no." value={aq} onChange={(e) => setAq(e.target.value)} />
+              </div>
+              <Link href="/admin/deals/contacts/new?agent=1" className="erpBtn primary">
+                <Handshake size={16} /> New agent
+              </Link>
+            </div>
+            <div className="erpChips" style={{ marginBottom: 12 }}>
+              {['All', ...AGENT_STATUSES, 'Owed'].map((x) => (
+                <button key={x} className={`erpChip ${astatus === x ? 'is-on' : ''}`} onClick={() => setAstatus(x)}>
+                  {x}
+                </button>
+              ))}
+            </div>
+            {agents === null ? (
+              <Loading />
+            ) : (
+              (() => {
+                const n = aq.trim().toLowerCase()
+                const d = n.replace(/\D/g, '')
+                const list = agents
+                  .filter((a) => (astatus === 'All' ? true : astatus === 'Owed' ? (a.owed_lakh ?? 0) > 0 : (a.agent_status ?? 'Active') === astatus))
+                  .filter(
+                    (a) =>
+                      !n ||
+                      `${a.name} ${a.agency ?? ''} ${a.operating_areas ?? ''} ${a.rera_number ?? ''} ${a.email}`.toLowerCase().includes(n) ||
+                      (d.length >= 3 && a.phone.replace(/\D/g, '').includes(d))
+                  )
+                  .sort((x, y) => Number(y.agent_status === 'Preferred') - Number(x.agent_status === 'Preferred') || (y.open_deals ?? 0) - (x.open_deals ?? 0) || x.name.localeCompare(y.name))
+                const owedTotal = agents.reduce((x, a) => x + (a.owed_lakh ?? 0), 0)
+                return (
+                  <>
+                    {owedTotal > 0 ? <Banner tone="warn">{lakh(owedTotal)} owed to agents on closed deals. Filter by “Owed” to settle them.</Banner> : null}
+                    {list.length === 0 ? (
+                      <div className="erpCard">
+                        <Empty>{agents.length ? 'Nobody matches.' : 'No agents yet. Add the brokers you co-broke with — then put them on listings, deals and leads with their share.'}</Empty>
+                      </div>
+                    ) : (
+                      <div className="erpListings">
+                        {list.map((a) => (
+                          <div key={a.id} className="erpCard">
+                            <Link href={`/admin/deals/contacts/${a.id}`} style={{ display: 'block', color: 'inherit' }}>
+                              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                <Avatar name={a.name} size={36} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div className="erpListing__title" style={{ marginTop: 0 }}>
+                                    {a.name}
+                                    {a.agent_status === 'Preferred' ? <BadgeCheck size={14} color="var(--verified)" style={{ marginLeft: 4, verticalAlign: -2 }} /> : null}
+                                  </div>
+                                  <div className="erpListing__meta">{[a.agency, a.rera_number ? 'RERA ✓' : ''].filter(Boolean).join(' · ') || 'Independent'}</div>
+                                </div>
+                                {a.rating ? <Stars n={a.rating} size={11} /> : null}
+                              </div>
+                              {a.operating_areas ? <div className="erpListing__meta" style={{ marginTop: 8 }}>Works in {a.operating_areas}</div> : null}
+                              {a.specialties?.length ? <div className="erpListing__meta">{a.specialties.map((t) => TYPE_LABEL[t] ?? t).join(', ')}</div> : null}
+                              <div className="erpAgentStats">
+                                <span><b>{a.listings ?? 0}</b> listings</span>
+                                <span><b>{a.open_deals ?? 0}</b> open deals</span>
+                                <span><b>{a.closed_deals ?? 0}</b> closed</span>
+                              </div>
+                              {(a.owed_lakh ?? 0) > 0 || (a.paid_lakh ?? 0) > 0 ? (
+                                <div className="erpListing__meta" style={{ marginBottom: 8 }}>
+                                  {(a.owed_lakh ?? 0) > 0 ? <b style={{ color: 'var(--pending)' }}>{lakh(a.owed_lakh)} owed</b> : null}
+                                  {(a.owed_lakh ?? 0) > 0 && (a.paid_lakh ?? 0) > 0 ? ' · ' : ''}
+                                  {(a.paid_lakh ?? 0) > 0 ? `${lakh(a.paid_lakh)} paid` : ''}
+                                </div>
+                              ) : null}
+                              {a.agent_status && a.agent_status !== 'Active' && a.agent_status !== 'Preferred' ? <Pill label={a.agent_status} tone={a.agent_status === 'Do not engage' ? 'lost' : 'cancelled'} /> : null}
+                            </Link>
+                            <ContactActions name={a.name} phone={a.phone} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )
+              })()
+            )}
+          </>
+        )
       ) : tab === 'contacts' ? (
         !contactsReady ? (
           <div className="erpCard">
@@ -218,7 +323,7 @@ export default function DealsView() {
               </Link>
             </div>
             <div className="erpChips" style={{ marginBottom: 12 }}>
-              {['All', 'Buyer', 'Seller', 'Landowner', 'Investor', 'Broker', 'Lawyer'].map((r) => (
+              {['All', 'Buyer', 'Seller', 'Landowner', 'Investor', 'Lawyer'].map((r) => (
                 <button key={r} className={`erpChip ${role === r ? 'is-on' : ''}`} onClick={() => setRole(r)}>
                   {r}
                 </button>
@@ -229,6 +334,7 @@ export default function DealsView() {
               const d = n.replace(/\D/g, '')
               const list = (contacts ?? []).filter(
                 (c) =>
+                  !c.roles?.includes('Agent') &&
                   (role === 'All' || c.roles?.includes(role)) &&
                   (!n || `${c.name} ${c.company ?? ''} ${c.email} ${c.city ?? ''}`.toLowerCase().includes(n) || (d.length >= 3 && c.phone.replace(/\D/g, '').includes(d)))
               )

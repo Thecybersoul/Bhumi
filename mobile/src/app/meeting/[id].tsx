@@ -335,7 +335,7 @@ export default function MeetingScreen() {
 
             <Card>
               <SectionTitle>People</SectionTitle>
-              <PeoplePanel entityType="meeting" entityId={m.id} entityLabel={m.title} roles={['Attendee', 'Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who was there from your contacts." />
+              <PeoplePanel entityType="meeting" entityId={m.id} entityLabel={m.title} roles={['Attendee', 'Client', 'Owner', 'Agent', 'Lawyer', 'Other']} emptyText="Tag who was there from your contacts." />
             </Card>
             <Card>
               <SectionTitle>Documents & photos</SectionTitle>

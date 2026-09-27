@@ -432,7 +432,7 @@ export function ConvertPanel({ lead, preset, onCancel }: { lead: Lead; preset?: 
   return (
     <div className="erpForm">
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--ink-2)' }}>
-        Opens a deal with <b>{lead.name}</b> as the {selling ? 'seller' : 'buyer'}. The lead is marked Converted and links to it.
+        Opens a deal with <b>{lead.name}</b> as the {selling ? 'seller' : 'buyer'}. The lead is marked Converted and links to it; agents on the lead and the listing come along with their terms.
       </p>
       <label className="erpField">
         <span>Listing</span>

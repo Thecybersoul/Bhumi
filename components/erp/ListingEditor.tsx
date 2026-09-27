@@ -3,18 +3,19 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, FolderOpen, History, Image as ImageIcon, LandPlot, ListChecks, Mail, Map, Ruler, Scale, Tag, Trash2, UserSearch, Users } from 'lucide-react'
+import { ArrowLeft, FolderOpen, Handshake, History, Image as ImageIcon, LandPlot, ListChecks, Mail, Map, Ruler, Scale, Tag, Trash2, UserSearch, Users } from 'lucide-react'
 import MediaPicker from '@/components/admin/MediaPicker'
 import { api, type Audited } from './lib'
 import { Banner, ByLine, Card, Chips, Field, Loading } from './ui'
 import { ActivityFeed, RelatedMeetings } from './records'
 import { DocsJump, DocumentsPanel, PendingDocs, uploadAll } from './documents'
 import { PeoplePanel } from './contacts'
+import { AgentsPanel } from './agents'
 import { ListingBuyers, RelatedTasks } from './leadPanels'
 import { EmailButton, EmailLog } from './google'
 
 const TYPES = ['land-parcels', 'residential', 'villas', 'commercial', 'warehouses', 'large-land-parcels'] as const
-const STATUSES = ['Live', 'Reserved', 'Sold'] as const
+const STATUSES = ['Draft', 'Live', 'Reserved', 'Sold'] as const
 const PRICE_TYPES = ['Fixed', 'Negotiable', 'On Request'] as const
 const ZONES = ['North', 'East', 'South', 'West'] as const
 
@@ -174,7 +175,7 @@ export default function ListingEditor({ id }: { id: string }) {
             <>
               <p>
                 {orig.code}
-                {live ? (
+                {live && orig.status !== 'Draft' ? (
                   <>
                     {' · '}
                     <a href={`/marketplace/${encodeURIComponent(orig.code)}`} target="_blank" rel="noreferrer" style={{ color: 'var(--gold-deep)', fontWeight: 700 }}>
@@ -297,13 +298,17 @@ export default function ListingEditor({ id }: { id: string }) {
               <Card title="Clients" icon={UserSearch}>
                 <ListingBuyers propertyId={orig!.id} />
               </Card>
+              <Card title="Agents" icon={Handshake}>
+                <AgentsPanel entityType="property" entityId={orig!.id} entityLabel={label} />
+              </Card>
               <Card title="Owner & people" icon={Tag}>
                 <PeoplePanel
+                  hideAgents
                   entityType="property"
                   entityId={orig!.id}
                   entityLabel={label}
-                  roles={['Landowner', 'Seller', 'Developer', 'Broker', 'Lawyer', 'Other']}
-                  emptyText="Tag the landowner, developer or broker behind this listing."
+                  roles={['Landowner', 'Seller', 'Developer', 'Lawyer', 'Other']}
+                  emptyText="Tag the landowner, developer or lawyer behind this listing."
                 />
               </Card>
               <Card title="Follow-ups" icon={ListChecks}>

@@ -35,7 +35,7 @@ export default function ListingsView() {
   const [source, setSource] = useState<'live' | 'fallback'>('live')
   const [docs, setDocs] = useState<Record<string, number>>({})
   const [q, setQ] = useState('')
-  const [status, setStatus] = useState<'All' | 'Live' | 'Reserved' | 'Sold'>('All')
+  const [status, setStatus] = useState<'All' | 'Draft' | 'Live' | 'Reserved' | 'Sold'>('All')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function ListingsView() {
           <input className="erpInput" style={{ paddingLeft: 32 }} placeholder="Search code, title, location" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="erpChips">
-          {(['All', 'Live', 'Reserved', 'Sold'] as const).map((s) => (
+          {(['All', 'Draft', 'Live', 'Reserved', 'Sold'] as const).map((s) => (
             <button key={s} className={`erpChip ${status === s ? 'is-on' : ''}`} onClick={() => setStatus(s)}>
               {s} {s === 'All' ? (items?.length ?? '') : (items ?? []).filter((p) => p.status === s).length}
             </button>

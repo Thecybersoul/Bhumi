@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Briefcase, FolderOpen, History, ListChecks, Mail, Tag, Target, Trash2, UserRound, Users, Wallet } from 'lucide-react'
+import { ArrowLeft, Briefcase, FolderOpen, Handshake, History, ListChecks, Mail, Tag, Target, Trash2, UserRound, Users, Wallet } from 'lucide-react'
 import { api, type Audited, type Contact } from './lib'
 import { Banner, ByLine, Card, Chips, Field, Loading, Pill } from './ui'
 import { ActivityFeed, EntityPicker, RelatedMeetings, NO_LINK, type LinkValue } from './records'
 import { DocsJump, DocumentsPanel, PendingDocs, uploadAll } from './documents'
 import { ContactPicker, PeoplePanel } from './contacts'
+import { AgentsPanel } from './agents'
 import { RelatedTasks } from './leadPanels'
 import { EmailButton, EmailLog, MeetNowButton } from './google'
 
@@ -379,6 +380,14 @@ export default function DealEditor({ id }: { id: string }) {
             <Card title="Documents" icon={FolderOpen} id="documents">
               <DocumentsPanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} />
             </Card>
+            <Card title="Agents & commission split" icon={Handshake}>
+              <AgentsPanel
+                entityType="transaction"
+                entityId={t.id}
+                entityLabel={`${t.reference} · ${t.property_label}`}
+                deal={{ deal_value_cr: t.deal_value_cr, commission_type: t.commission_type, commission_value: t.commission_value }}
+              />
+            </Card>
             <Card title="Contact" icon={Mail}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <EmailButton block label={t.buyer_name ? `Email ${t.buyer_name.split(' ')[0]}` : 'Email buyer'} draft={dealEmail(t, 'buyer')} />
@@ -396,11 +405,12 @@ export default function DealEditor({ id }: { id: string }) {
             </Card>
             <Card title="Also involved" icon={Tag}>
               <PeoplePanel
+                hideAgents
                 entityType="transaction"
                 entityId={t.id}
                 entityLabel={`${t.reference} · ${t.property_label}`}
-                roles={['Lawyer', 'Broker', 'Landowner', 'Surveyor', 'Investor', 'Other']}
-                emptyText="Tag the lawyers, brokers or co-owners on this deal."
+                roles={['Lawyer', 'Landowner', 'Surveyor', 'Investor', 'Other']}
+                emptyText="Tag the lawyers, surveyors or co-owners on this deal."
               />
             </Card>
             <Card title="Meetings & calls" icon={Users}>

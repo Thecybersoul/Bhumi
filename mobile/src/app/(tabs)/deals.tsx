@@ -12,7 +12,7 @@ import type { ApiResult, Contact, DataRoomRequest, Lead, PropertyTransaction } f
 
 type View_ = 'leads' | 'pipeline' | 'contacts' | 'requests'
 const LEAD_FILTERS = ['Open', 'Due now', ...LEAD_PIPELINE, 'Nurture', 'Converted', 'Lost'] as const
-const ROLE_FILTERS = ['All', 'Buyer', 'Seller', 'Landowner', 'Investor', 'Broker', 'Lawyer'] as const
+const ROLE_FILTERS = ['All', 'Buyer', 'Seller', 'Landowner', 'Investor', 'Lawyer'] as const
 const PRIORITY_RANK: Record<string, number> = { Hot: 0, Warm: 1, Cold: 2 }
 
 function cr(n: number | null | undefined) {

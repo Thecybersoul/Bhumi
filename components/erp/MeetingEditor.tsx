@@ -305,7 +305,7 @@ export default function MeetingEditor({ id }: { id: string }) {
             ) : null}
 
             <Card title="People" icon={Tag}>
-              <PeoplePanel entityType="meeting" entityId={m.id} entityLabel={m.title} roles={['Attendee', 'Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who was there from your contacts." />
+              <PeoplePanel entityType="meeting" entityId={m.id} entityLabel={m.title} roles={['Attendee', 'Client', 'Owner', 'Agent', 'Lawyer', 'Other']} emptyText="Tag who was there from your contacts." />
             </Card>
             <Card title="Documents & photos" icon={FolderOpen}>
               <DocumentsPanel compact entityType="meeting" entityId={m.id} entityLabel={m.title} />

@@ -74,6 +74,7 @@ export const statusColor: Record<string, { fg: string; bg: string }> = {
   cold: { fg: colors.progress, bg: colors.progressBg },
   negotiation: { fg: colors.goldDeep, bg: colors.goldTint },
   nurture: { fg: colors.muted, bg: colors.line2 },
+  draft: { fg: colors.muted, bg: colors.line2 },
   shortlisted: { fg: colors.pending, bg: colors.pendingBg },
   closed: { fg: colors.verified, bg: colors.verifiedBg },
 }

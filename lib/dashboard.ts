@@ -8,7 +8,7 @@ import type { Property, PropertyStatus, PropertyTransaction, TransactionStage } 
    surfaces can never quietly disagree. */
 
 export const TXN_STAGES: TransactionStage[] = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
-export const PROPERTY_STATUSES: PropertyStatus[] = ['Live', 'Reserved', 'Sold']
+export const PROPERTY_STATUSES: PropertyStatus[] = ['Draft', 'Live', 'Reserved', 'Sold']
 
 function valueByStatus(props: Property[], status: PropertyStatus) {
   return props.filter((p) => p.status === status).reduce((sum, p) => sum + (dealValueCr(p) ?? 0), 0)

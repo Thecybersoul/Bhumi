@@ -19,11 +19,15 @@ import {
   Map,
   Megaphone,
   Menu,
+  Search,
+  Sparkles,
   Users,
   type LucideIcon,
 } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { Avatar } from '@/components/erp/ui'
+import SearchPalette from '@/components/erp/SearchPalette'
+import { ASSISTANT } from '@/components/erp/lib'
 
 /* The same workspace as the mobile app, in the same order: Home,
    Deals, Listings, Meetings, Tasks. The website's content editors
@@ -91,6 +95,19 @@ export default function AdminShell({ user, children }: { user: ShellUser | null;
 
   const active = (i: Item) => (i.match ? pathname.startsWith(i.match) : pathname === i.href)
 
+  // ⌘K / Ctrl+K opens search from anywhere in the admin.
+  const [searching, setSearching] = useState(false)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearching((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <div className="adminLayout">
       {open && <div className="overlay adminLayout__overlay" onClick={() => setOpen(false)} />}
@@ -99,6 +116,17 @@ export default function AdminShell({ user, children }: { user: ShellUser | null;
         <Link href="/admin/dashboard" className="adminSidebar__brand">
           <Logo theme="dark" style={{ height: 34 }} />
         </Link>
+
+        <div className="adminSidebar__tools">
+          <button className="adminSidebar__search" onClick={() => (setOpen(false), setSearching(true))}>
+            <Search size={15} /> <span>Search</span> <kbd>⌘K</kbd>
+          </button>
+          {ASSISTANT && (
+            <Link href="/admin/assistant" className="adminSidebar__ask" onClick={() => setOpen(false)} title="Bhumi Assistant">
+              <Sparkles size={15} /> Ask
+            </Link>
+          )}
+        </div>
 
         <nav className="adminSidebar__nav" aria-label="Admin">
           {nav.map((group) => (
@@ -150,11 +178,22 @@ export default function AdminShell({ user, children }: { user: ShellUser | null;
       <main className="adminMain">
         <div className="adminMain__topbar">
           <Logo theme="light" style={{ height: 30 }} />
-          <button className="btn btn-sm btn-ghost" onClick={() => setOpen(true)} aria-label="Open menu">
-            <Menu size={18} />
-          </button>
+          <span style={{ display: 'flex', gap: 4 }}>
+            <button className="btn btn-sm btn-ghost" onClick={() => setSearching(true)} aria-label="Search">
+              <Search size={18} />
+            </button>
+            {ASSISTANT && (
+              <Link className="btn btn-sm btn-ghost" href="/admin/assistant" aria-label="Assistant">
+                <Sparkles size={18} />
+              </Link>
+            )}
+            <button className="btn btn-sm btn-ghost" onClick={() => setOpen(true)} aria-label="Open menu">
+              <Menu size={18} />
+            </button>
+          </span>
         </div>
         {children}
+        <SearchPalette open={searching} onClose={() => setSearching(false)} />
       </main>
     </div>
   )

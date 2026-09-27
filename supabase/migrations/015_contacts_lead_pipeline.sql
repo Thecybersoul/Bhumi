@@ -220,3 +220,6 @@ BEGIN
     $f$, side);
   END LOOP;
 END $$;
+
+-- Tell PostgREST (the Supabase API) to pick up the new columns now.
+NOTIFY pgrst, 'reload schema';

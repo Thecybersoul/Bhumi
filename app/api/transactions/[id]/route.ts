@@ -3,6 +3,8 @@ import { update, remove } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
 import { schemaHint } from '@/lib/contacts'
 import { partyContacts } from '@/lib/transactions'
+import { agentsReady } from '@/lib/agents'
+import { createServiceClient } from '@/lib/supabase'
 import type { TransactionStage } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -74,6 +76,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const result = await update('transactions', id, patch)
   if (!result.ok) return NextResponse.json({ error: schemaHint(result.error) }, { status: 502 })
+
+  // A closed deal makes its agents' shares payable.
+  if (patch.outcome === 'Closed' && result.persisted && (await agentsReady())) {
+    await createServiceClient()
+      .from('contact_links')
+      .update({ payout_status: 'Due', updated_at: new Date().toISOString() })
+      .eq('entity_type', 'transaction')
+      .eq('entity_id', id)
+      .in('payout_status', ['', 'Not due'])
+      .in('share_type', ['Percent of our commission', 'Percent of deal value', 'Flat'])
+  }
   return NextResponse.json({ ok: true, persisted: result.persisted })
 }
 

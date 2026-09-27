@@ -162,6 +162,7 @@ const TONES: Record<string, [string, string]> = {
   new: ['var(--pending)', 'var(--pending-bg)'],
   pending: ['var(--pending)', 'var(--pending-bg)'],
   cancelled: ['var(--muted)', 'var(--line-2)'],
+  draft: ['var(--muted)', 'var(--line-2)'],
   converted: ['var(--verified)', 'var(--verified-bg)'],
   interested: ['var(--verified)', 'var(--verified-bg)'],
   'offer made': ['var(--verified)', 'var(--verified-bg)'],

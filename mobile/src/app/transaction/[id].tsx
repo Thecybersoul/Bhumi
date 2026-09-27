@@ -299,7 +299,7 @@ export default function TransactionScreen() {
         {t && (
           <Card>
             <SectionTitle>Also involved</SectionTitle>
-            <PeoplePanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} roles={['Lawyer', 'Broker', 'Landowner', 'Surveyor', 'Investor', 'Other']} emptyText="Tag the lawyers, brokers or co-owners on this deal." />
+            <PeoplePanel entityType="transaction" entityId={t.id} entityLabel={`${t.reference} · ${t.property_label}`} roles={['Lawyer', 'Landowner', 'Surveyor', 'Investor', 'Other']} emptyText="Tag the lawyers, surveyors or co-owners on this deal." />
           </Card>
         )}
 

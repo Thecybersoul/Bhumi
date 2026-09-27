@@ -20,7 +20,7 @@ export const TYPE_LABEL: Record<string, string> = {
   warehouses: 'Warehouse',
   'large-land-parcels': 'Large land',
 }
-export const CONTACT_ROLES = ['Buyer', 'Seller', 'Landowner', 'Investor', 'Developer', 'Tenant', 'Broker', 'Lawyer', 'Surveyor', 'Other'] as const
+export const CONTACT_ROLES = ['Buyer', 'Seller', 'Landowner', 'Investor', 'Developer', 'Tenant', 'Agent', 'Lawyer', 'Surveyor', 'Other'] as const
 export const SHOWN_STATUSES = ['Shortlisted', 'Shared', 'Visit planned', 'Visited', 'Interested', 'Not interested', 'Offer made'] as const
 export const isSelling = (intent?: string | null) => intent === 'Sell' || intent === 'Rent out'
 

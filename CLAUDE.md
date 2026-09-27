@@ -78,7 +78,7 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`015`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`016`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
@@ -90,8 +90,13 @@ listing, note, transaction, lead or verification case. **014** adds notification
 `contacts`, `contact_links` and `lead_properties`** and gives leads their pipeline fields (see below). `schema.sql` itself
 carries no seed data by design — a listing represents real land, so demo rows belong only in
 `lib/data/seed.ts`, the in-code fallback. The service-role key reaches PostgREST and Storage but *cannot*
-execute DDL; that is why `npm run migrate` needs `SUPABASE_DB_URL` (a real Postgres connection string)
-separately from the Supabase keys.
+execute DDL, so migrations need a real Postgres connection string: `SUPABASE_DB_URL`, or the
+`POSTGRES_URL*`/`DATABASE_URL` the Supabase ↔ Vercel integration injects. `lib/migrator.js` applies each file
+once and records it in `schema_migrations`. A database migrated by hand is baselined from per-file markers, so
+it is never re-run: 015's intent flip would undo later edits. `npm run build` runs `scripts/migrate.js --deploy`
+first. It migrates only when `VERCEL_ENV=production`, because previews share the database, and it never fails
+the build. Setup's **Apply pending updates** (`/api/admin/migrate`) does the same on demand. `/api/health`
+reports `schema.current` (is 016 in?) and `schema.auto_migrate` (is a connection string present?).
 
 ### The web admin and the app are one ERP with one structure
 

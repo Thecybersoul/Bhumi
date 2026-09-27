@@ -5,8 +5,11 @@
  * reaches PostgREST and Storage. It cannot reach DDL — creating a table
  * needs a real Postgres connection, which is what this script is for.
  *
- * Every file is written with IF NOT EXISTS, so running this twice is
- * harmless and nothing already in the database is dropped or renamed.
+ * Each file runs once; lib/migrator.js records it in schema_migrations.
+ * Production builds on Vercel run this with --deploy, so a push to main
+ * migrates the database on its own whenever Vercel has a connection
+ * string (SUPABASE_DB_URL, or the POSTGRES_* variables the Supabase
+ * integration adds).
  *
  * Setup, once:
  *   Supabase dashboard -> Settings -> Database -> Connection string ->
@@ -20,10 +23,12 @@
  * Then:
  *   node scripts/migrate.js           # apply everything
  *   node scripts/migrate.js --check   # report only, change nothing
+ *   node scripts/migrate.js --deploy  # the build step: production only,
+ *                                     # never fails the build
  */
 const fs = require('fs')
 const path = require('path')
-const { Client } = require('pg')
+const { migrate, URL_VARS } = require('../lib/migrator')
 
 const root = path.resolve(__dirname, '..')
 
@@ -46,97 +51,46 @@ function loadEnv() {
   }
 }
 
-/* schema.sql first, then migrations by their numeric prefix. Sorting
-   the filenames as strings would be right today and wrong at 010. */
-function sqlFiles() {
-  const files = [path.join(root, 'supabase/schema.sql')].filter(fs.existsSync)
-  const dir = path.join(root, 'supabase/migrations')
-  if (fs.existsSync(dir)) {
-    const migrations = fs
-      .readdirSync(dir)
-      .filter((f) => f.endsWith('.sql'))
-      .sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0))
-      .map((f) => path.join(dir, f))
-    files.push(...migrations)
-  }
-  return files
-}
-
-const EXPECTED = ['site_content', 'media', 'properties', 'billboards', 'designs', 'insights', 'leads']
-
-async function tableReport(client) {
-  const { rows } = await client.query(
-    `SELECT table_name FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = ANY($1)`,
-    [EXPECTED]
-  )
-  const present = new Set(rows.map((r) => r.table_name))
-  return EXPECTED.map((name) => ({ name, exists: present.has(name) }))
-}
-
-function print(report) {
-  for (const t of report) console.log(`   ${t.exists ? '✓' : '✗'} ${t.name}`)
-}
-
 async function main() {
-  loadEnv()
-  const url = process.env.SUPABASE_DB_URL
-  if (!url) {
-    console.error(
-      'SUPABASE_DB_URL is not set.\n\n' +
-        'Supabase dashboard -> Settings -> Database -> Connection string -> URI.\n' +
-        'Substitute your database password for [YOUR-PASSWORD] and add it to\n' +
-        '.env.local as SUPABASE_DB_URL=...\n'
-    )
-    process.exit(1)
+  const deploy = process.argv.includes('--deploy')
+  const checkOnly = process.argv.includes('--check')
+
+  if (deploy) {
+    /* Preview deployments share the production database, and a branch
+       may carry a migration that is not merged yet: only production
+       builds migrate. A build is never failed from here: the app runs
+       on an older schema (new features report that Setup needs
+       attention), and Setup can apply what is left. */
+    if (process.env.VERCEL_ENV !== 'production') return console.log('migrate: skipped (not a production build)')
+  } else {
+    loadEnv()
   }
 
-  const checkOnly = process.argv.includes('--check')
-  // Supabase terminates non-TLS connections; its cert chain is not in
-  // Node's default store, so verification is relaxed rather than absent.
-  const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } })
-
-  await client.connect()
-  console.log('connected\n\nbefore:')
-  print(await tableReport(client))
-
-  if (checkOnly) {
-    await client.end()
+  let r
+  try {
+    r = await migrate({ checkOnly })
+  } catch (e) {
+    if (e.code === 'NO_DB_URL') {
+      console.log(`migrate: no connection string (${URL_VARS.join(' / ')}); skipping`)
+      if (!deploy) process.exit(1)
+      return
+    }
+    console.error(`migrate: ${e.message}`)
+    if (!deploy) process.exit(1)
     return
   }
 
-  console.log('')
-  for (const file of sqlFiles()) {
-    const rel = path.relative(root, file).split(path.sep).join('/')
-    try {
-      /* One transaction per file: a file that fails half way leaves
-         nothing behind rather than a partly-created schema. */
-      await client.query('BEGIN')
-      await client.query(fs.readFileSync(file, 'utf8'))
-      await client.query('COMMIT')
-      console.log(`  applied  ${rel}`)
-    } catch (e) {
-      await client.query('ROLLBACK').catch(() => {})
-      console.error(`  FAILED   ${rel}\n           ${e.message}`)
-      await client.end()
-      process.exit(1)
-    }
+  console.log(`migrate: connected via ${r.via}`)
+  if (checkOnly) {
+    console.log(r.pending.length ? `pending: ${r.pending.join(', ')}` : 'up to date')
+    return
   }
-
-  console.log('\nafter:')
-  const report = await tableReport(client)
-  print(report)
-  await client.end()
-
-  const missing = report.filter((t) => !t.exists)
-  if (missing.length) {
-    console.log(`\n${missing.length} still missing: ${missing.map((t) => t.name).join(', ')}`)
-    process.exit(1)
+  if (r.failed) {
+    console.error(`migrate: ${r.failed.name} failed: ${r.failed.error}`)
+    if (!deploy) process.exit(1)
+    return
   }
-  console.log('\nAll tables present. Uploads and the content editor will work.')
+  console.log(r.applied.length ? `migrate: applied ${r.applied.join(', ')}` : 'migrate: already up to date')
 }
 
-main().catch((e) => {
-  console.error(e.message)
-  process.exit(1)
-})
+main()

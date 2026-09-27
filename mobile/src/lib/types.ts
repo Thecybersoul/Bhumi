@@ -18,7 +18,7 @@ export type PropertyTypeSlug =
   | 'warehouses'
   | 'large-land-parcels'
 
-export type PropertyStatus = 'Live' | 'Reserved' | 'Sold'
+export type PropertyStatus = 'Draft' | 'Live' | 'Reserved' | 'Sold'
 export type PriceType = 'Fixed' | 'Negotiable' | 'On Request'
 export type Zone = 'North' | 'East' | 'South' | 'West'
 

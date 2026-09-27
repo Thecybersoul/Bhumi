@@ -235,7 +235,7 @@ export function PeoplePanel({
   entityType,
   entityId,
   entityLabel,
-  roles = ['Landowner', 'Buyer', 'Seller', 'Broker', 'Lawyer', 'Other'],
+  roles = ['Landowner', 'Buyer', 'Seller', 'Agent', 'Lawyer', 'Other'],
   emptyText = 'Nobody tagged yet.',
 }: {
   entityType: 'lead' | 'transaction' | 'property' | 'task' | 'note' | 'meeting' | 'verification'

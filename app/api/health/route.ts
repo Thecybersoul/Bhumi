@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { hasSupabase } from '@/lib/supabase'
+import { createServiceClient, hasSupabase } from '@/lib/supabase'
+import { configuredUrls } from '@/lib/migrator'
 import { getProperties } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -27,6 +28,14 @@ export async function GET() {
     error = (e as Error).message
   }
 
+  /* Whether the newest migration (016) is in, and whether the server
+     could apply one itself. Booleans only: no names, no URLs. */
+  let schemaCurrent: boolean | null = null
+  if (dbReachable) {
+    const { error: e } = await createServiceClient().from('contact_links').select('payout_status').limit(1)
+    schemaCurrent = !e
+  }
+
   const degraded = configured && !dbReachable
 
   return NextResponse.json(
@@ -36,6 +45,7 @@ export async function GET() {
       // failure — the site is designed to render without a database.
       serving: true,
       database: { configured, reachable: dbReachable, source, error },
+      schema: { current: schemaCurrent, auto_migrate: configuredUrls().length > 0 },
       latency_ms: Date.now() - started,
       timestamp: new Date().toISOString(),
     },

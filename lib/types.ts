@@ -13,7 +13,7 @@ export type PropertyTypeSlug =
   | 'warehouses'
   | 'large-land-parcels'
 
-export type PropertyStatus = 'Live' | 'Reserved' | 'Sold'
+export type PropertyStatus = 'Draft' | 'Live' | 'Reserved' | 'Sold'
 export type PriceType = 'Fixed' | 'Negotiable' | 'On Request'
 export type Zone = 'North' | 'East' | 'South' | 'West'
 
@@ -212,7 +212,7 @@ export interface Lead {
 }
 
 /* ─── Contacts (migration 015) ───────────────────────────── */
-export type ContactRole = 'Buyer' | 'Seller' | 'Landowner' | 'Investor' | 'Developer' | 'Tenant' | 'Broker' | 'Lawyer' | 'Surveyor' | 'Other'
+export type ContactRole = 'Buyer' | 'Seller' | 'Landowner' | 'Investor' | 'Developer' | 'Tenant' | 'Agent' | 'Lawyer' | 'Surveyor' | 'Other'
 
 export interface Contact {
   id: string
@@ -228,6 +228,16 @@ export interface Contact {
   source?: string
   notes?: string
   created_at: string
+  /* Agent profile (migration 016). */
+  agency?: string
+  rera_number?: string
+  operating_areas?: string
+  specialties?: string[]
+  default_share_pct?: number | null
+  agent_status?: 'Preferred' | 'Active' | 'Inactive' | 'Do not engage'
+  rating?: number | null
+  gstin?: string
+  pan?: string
 }
 
 export type ContactLinkEntity = 'lead' | 'transaction' | 'property' | 'task' | 'note' | 'meeting' | 'verification'
@@ -240,6 +250,16 @@ export interface ContactLink {
   role: string
   created_by?: string
   created_at: string
+  /* What an agent gets on this record (migration 016). */
+  share_type?: '' | 'Percent of our commission' | 'Percent of deal value' | 'Flat' | 'Paid by their client'
+  share_value?: number | null
+  payout_status?: '' | 'Not due' | 'Due' | 'Invoiced' | 'Paid' | 'Waived'
+  payout_amount_lakh?: number | null
+  paid_at?: string | null
+  payout_ref?: string
+  notes?: string
+  updated_by?: string
+  updated_at?: string | null
 }
 
 /* ─── Listings shown to a lead (migration 015) ───────────── */

@@ -1,5 +1,6 @@
 import { createServiceClient, hasSupabase } from './supabase'
 import { insertReturningId } from './db'
+import { agentProfileFields } from './agents'
 import type { Contact, ContactRole } from './types'
 
 /* ═══════════════════════════════════════════════════════════
@@ -11,7 +12,7 @@ import type { Contact, ContactRole } from './types'
    closing a deal, is still one contact with one history.
    ═══════════════════════════════════════════════════════════ */
 
-export const CONTACT_ROLES: ContactRole[] = ['Buyer', 'Seller', 'Landowner', 'Investor', 'Developer', 'Tenant', 'Broker', 'Lawyer', 'Surveyor', 'Other']
+export const CONTACT_ROLES: ContactRole[] = ['Buyer', 'Seller', 'Landowner', 'Investor', 'Developer', 'Tenant', 'Agent', 'Lawyer', 'Surveyor', 'Other']
 
 /** Digits with the Indian country code — the same rule as the
     bhumi_phone_norm() SQL function the migration backfilled with. */
@@ -42,8 +43,10 @@ export async function contactsReady(): Promise<boolean> {
     turned into something a person can act on. */
 export function schemaHint(message?: string | null): string | undefined {
   if (!message) return undefined
-  if (/contacts|contact_links|lead_properties|contact_id|budget_m(in|ax)_cr|next_follow_up|leads_(stage|channel|intent|priority)_check|entity_type_check|schema cache/i.test(message)) {
-    return 'The database needs migration 015 (contacts & lead pipeline). Open Setup in the admin sidebar to apply it.'
+  if (/contacts|contact_links|lead_properties|contact_id|budget_m(in|ax)_cr|next_follow_up|leads_(stage|channel|intent|priority)_check|entity_type_check|schema cache|agency|rera_number|operating_areas|specialties|share_type|share_value|payout_|agent_status/i.test(message)) {
+    return /agency|rera_number|operating_areas|specialties|share_type|share_value|payout_|agent_status/i.test(message)
+      ? 'The database needs migration 016 (agents). Open Setup in the admin sidebar to apply it.'
+      : 'The database needs migration 015 (contacts & lead pipeline). Open Setup in the admin sidebar to apply it.'
   }
   return message
 }
@@ -112,8 +115,10 @@ export function contactFields(body: Record<string, unknown>): Record<string, unk
     if (k in body) out[k] = s(k, max)
   }
   if ('email' in body) out.email = s('email', 160).toLowerCase()
-  if (Array.isArray(body.roles)) out.roles = (body.roles as unknown[]).filter((r): r is ContactRole => CONTACT_ROLES.includes(r as ContactRole))
-  return out
+  // Older app builds still send 'Broker'; it is 'Agent' since migration 016.
+  if (Array.isArray(body.roles))
+    out.roles = [...new Set((body.roles as unknown[]).map((r) => (r === 'Broker' ? 'Agent' : r)))].filter((r): r is ContactRole => CONTACT_ROLES.includes(r as ContactRole))
+  return { ...out, ...agentProfileFields(body) }
 }
 
 /** Someone already on file with this phone or email. */

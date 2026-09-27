@@ -137,6 +137,9 @@ const EXPECTED = [
   'contacts',
   'contact_links',
   'lead_properties',
+  // Migration 016 adds columns, not tables: 'table.column' probes one.
+  'contacts.agency',
+  'contact_links.payout_status',
 ]
 
 export const MEDIA_BUCKET = 'media'
@@ -175,12 +178,13 @@ export async function checkHealth(): Promise<Health> {
          back with no error and a null count, which reads as "exists,
          empty" — the exact false positive this page exists to stop
          reporting. A select surfaces the missing-table error. */
-      const { error } = await sb.from(name).select('*').limit(1)
+      const [table, column] = name.split('.')
+      const { error } = await sb.from(table).select(column ?? '*').limit(1)
       if (error) {
         tables.push({ name, exists: false, rows: null })
         continue
       }
-      const { count } = await sb.from(name).select('*', { count: 'exact', head: true })
+      const { count } = await sb.from(table).select('*', { count: 'exact', head: true })
       tables.push({ name, exists: true, rows: count ?? 0 })
     } catch {
       tables.push({ name, exists: false, rows: null })

@@ -34,6 +34,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .filter((t) => t.buyer_contact_id === id || t.seller_contact_id === id)
       .map((t) => ({ ...t, side: t.buyer_contact_id === id ? (t.seller_contact_id === id ? 'Buyer & seller' : 'Buyer') : 'Seller' })),
     links: (links.data ?? []) as ContactLink[],
+    // The money on every deal they're tagged on, so an agent's page can
+    // work out what each deal owes them.
+    deal_money: Object.fromEntries(
+      (deals.source === 'live' ? deals.data : [])
+        .filter((t) => ((links.data ?? []) as ContactLink[]).some((x) => x.entity_type === 'transaction' && x.entity_id === t.id))
+        .map((t) => [t.id, { reference: t.reference, property_label: t.property_label, stage: t.stage, outcome: t.outcome, deal_value_cr: t.deal_value_cr ?? null, commission_type: t.commission_type, commission_value: t.commission_value ?? null }])
+    ),
   })
 }
 

@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Icon from '@/components/site/Icon'
 import CopyBlock from '@/components/admin/CopyBlock'
+import MigrationCard from '@/components/admin/MigrationCard'
 import GoogleCalendarCard from '@/components/admin/GoogleCalendarCard'
 import { checkHealth } from '@/lib/cms'
 import { hasGoogleAuth, isConnected } from '@/lib/google'
@@ -9,13 +10,13 @@ import { hasGoogleAuth, isConnected } from '@/lib/google'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Setup · Admin' }
 
-/* Creating tables is the one step that cannot be done from here.
-
-   Supabase exposes no SQL endpoint over its REST API, and the
-   service-role key is not a database password — it authenticates
-   against PostgREST, which only speaks to tables that already
-   exist. So this page does the next best thing: it tells you
-   exactly what is missing and hands you the statement to run. */
+/* The service-role key is not a database password: it authenticates
+   against PostgREST, which only speaks to tables that already exist.
+   Schema changes need a Postgres connection string. With one on the
+   server (SUPABASE_DB_URL or the Supabase integration's POSTGRES_URL),
+   production deploys apply them and MigrationCard applies what is
+   left. Without one, this page says what is missing and hands you the
+   SQL to run. */
 
 function projectRef(url: string | undefined) {
   if (!url) return null
@@ -94,6 +95,8 @@ export default async function SetupPage({
           </ul>
         )}
       </section>
+
+      <MigrationCard />
 
       <GoogleCalendarCard
         configured={googleConfigured}

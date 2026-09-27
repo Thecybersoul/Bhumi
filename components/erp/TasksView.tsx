@@ -208,7 +208,7 @@ export default function TasksView() {
                       <div style={{ marginTop: 10 }}>
                         <DocumentsPanel compact entityType="note" entityId={n.id} entityLabel={(n.entity_label || n.body).slice(0, 60)} onChange={load} />
                         <div className="erpSub">People mentioned</div>
-                        <PeoplePanel entityType="note" entityId={n.id} entityLabel={n.body.slice(0, 80)} roles={['Mentioned', 'Client', 'Owner', 'Broker', 'Lawyer']} emptyText="Tag the people this note is about." />
+                        <PeoplePanel entityType="note" entityId={n.id} entityLabel={n.body.slice(0, 80)} roles={['Mentioned', 'Client', 'Owner', 'Agent', 'Lawyer']} emptyText="Tag the people this note is about." />
                       </div>
                     ) : null}
                   </div>
@@ -356,7 +356,7 @@ export default function TasksView() {
                       <div className="erpSub">Attachments</div>
                       <DocumentsPanel compact entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 60)} onChange={load} />
                       <div className="erpSub">People</div>
-                      <PeoplePanel entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 80)} roles={['Client', 'Owner', 'Broker', 'Lawyer', 'Other']} emptyText="Tag who this is about or who is involved." />
+                      <PeoplePanel entityType="task" entityId={t.id} entityLabel={t.title.slice(0, 80)} roles={['Client', 'Owner', 'Agent', 'Lawyer', 'Other']} emptyText="Tag who this is about or who is involved." />
                     </div>
                   ) : null}
                 </div>

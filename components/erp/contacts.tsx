@@ -83,7 +83,8 @@ export function NewContactForm({
   onSaved: (c: Contact) => void
   onCancel?: () => void
 }) {
-  const [f, setF] = useState({ name: initial?.name ?? '', phone: initial?.phone ?? '', email: initial?.email ?? '', company: initial?.company ?? '' })
+  const agentMode = defaultRole === 'Agent'
+  const [f, setF] = useState({ name: initial?.name ?? '', phone: initial?.phone ?? '', email: initial?.email ?? '', company: initial?.company ?? '', agency: '', operating_areas: '' })
   const [roles, setRoles] = useState<string[]>(initial?.roles ?? (defaultRole ? [defaultRole] : []))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -98,7 +99,7 @@ export function NewContactForm({
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...f, roles, force }),
+        body: JSON.stringify({ ...(agentMode ? f : { name: f.name, phone: f.phone, email: f.email, company: f.company }), roles, force }),
       })
       const body = await r.json().catch(() => ({}))
       if (r.status === 409 && body.duplicate) {
@@ -123,7 +124,14 @@ export function NewContactForm({
         <input className="erpInput" type="tel" placeholder="Phone" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
         <input className="erpInput" type="email" placeholder="Email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
       </div>
-      <input className="erpInput" placeholder="Company (optional)" value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} />
+      {agentMode ? (
+        <>
+          <input className="erpInput" placeholder="Agency / firm" value={f.agency} onChange={(e) => setF({ ...f, agency: e.target.value })} />
+          <input className="erpInput" placeholder="Areas they work, e.g. Devanahalli, Hoskote" value={f.operating_areas} onChange={(e) => setF({ ...f, operating_areas: e.target.value })} />
+        </>
+      ) : (
+        <input className="erpInput" placeholder="Company (optional)" value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} />
+      )}
       <div className="erpChips">
         {CONTACT_ROLES.map((r) => (
           <button type="button" key={r} className={`erpChip ${roles.includes(r) ? 'is-on' : ''}`} onClick={() => setRoles((p) => (p.includes(r) ? p.filter((x) => x !== r) : [...p, r]))}>
@@ -164,12 +172,15 @@ export function ContactPicker({
   defaultRole,
   exclude = [],
   autoFocus,
+  agentsOnly,
 }: {
   onPick: (c: Contact) => void
   placeholder?: string
   defaultRole?: string
   exclude?: string[]
   autoFocus?: boolean
+  /** Only agents, searchable by agency and area too; "new" makes an agent. */
+  agentsOnly?: boolean
 }) {
   const [all, setAll] = useState<Contact[] | null>(null)
   const [q, setQ] = useState('')
@@ -181,17 +192,22 @@ export function ContactPicker({
     const n = q.trim().toLowerCase()
     const digits = n.replace(/\D/g, '')
     return (all ?? [])
-      .filter((c) => !exclude.includes(c.id))
-      .filter((c) => !n || `${c.name} ${c.company ?? ''} ${c.email}`.toLowerCase().includes(n) || (digits.length >= 3 && String(c.phone).replace(/\D/g, '').includes(digits)))
+      .filter((c) => !exclude.includes(c.id) && (!agentsOnly || c.roles?.includes('Agent')))
+      .filter(
+        (c) =>
+          !n ||
+          `${c.name} ${c.company ?? ''} ${c.email} ${c.agency ?? ''} ${c.operating_areas ?? ''}`.toLowerCase().includes(n) ||
+          (digits.length >= 3 && String(c.phone).replace(/\D/g, '').includes(digits))
+      )
       .slice(0, 8)
-  }, [all, q, exclude])
+  }, [all, q, exclude, agentsOnly])
 
   if (adding) {
     const looksLikePhone = /^[\d+\s-]{6,}$/.test(q.trim())
     return (
       <NewContactForm
         initial={looksLikePhone ? { phone: q.trim() } : { name: q.trim() }}
-        defaultRole={defaultRole}
+        defaultRole={agentsOnly ? 'Agent' : defaultRole}
         onSaved={(c) => {
           setAdding(false)
           onPick(c)
@@ -216,13 +232,15 @@ export function ContactPicker({
               <UserRound size={16} color="var(--muted)" />
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span className="erpRow__title" style={{ display: 'block' }}>{c.name}</span>
-                <span className="erpRow__sub" style={{ display: 'block' }}>{[c.roles?.join(', '), c.phone, c.company].filter(Boolean).join(' · ')}</span>
+                <span className="erpRow__sub" style={{ display: 'block' }}>
+                  {(agentsOnly ? [c.agency, c.operating_areas, c.phone] : [c.roles?.join(', '), c.phone, c.company]).filter(Boolean).join(' · ')}
+                </span>
               </span>
             </button>
           ))
         )}
         <button type="button" className="erpPicker__opt" onClick={() => setAdding(true)} style={{ color: 'var(--gold-deep)', fontWeight: 700 }}>
-          <UserPlus size={16} /> {q.trim() ? `Add “${q.trim()}” as a new contact` : 'Add a new contact'}
+          <UserPlus size={16} /> {q.trim() ? `Add “${q.trim()}” as a new ${agentsOnly ? 'agent' : 'contact'}` : `Add a new ${agentsOnly ? 'agent' : 'contact'}`}
         </button>
       </div>
     </div>
@@ -237,20 +255,25 @@ interface LinkRow {
   contact: { id: string; name: string; phone?: string; email?: string; roles?: string[]; company?: string } | null
 }
 
+const AGENT_ROLES = ['Listing agent', 'Buyer’s agent', 'Seller’s agent', 'Co-broker', 'Referral', 'Mandate holder']
+
 /** Contacts tagged on one record, each with a role — the landowner on
     a listing, the buyer's lawyer on a deal, who a task is about. */
 export function PeoplePanel({
   entityType,
   entityId,
   entityLabel,
-  roles = ['Landowner', 'Buyer', 'Seller', 'Broker', 'Lawyer', 'Investor', 'Other'],
+  roles = ['Landowner', 'Buyer', 'Seller', 'Agent', 'Lawyer', 'Investor', 'Other'],
   emptyText = 'Nobody tagged yet.',
+  hideAgents,
 }: {
   entityType: 'lead' | 'transaction' | 'property' | 'task' | 'note' | 'meeting' | 'verification'
   entityId: string
   entityLabel: string
   roles?: string[]
   emptyText?: string
+  /** On a page with its own Agents panel, don't list agents twice. */
+  hideAgents?: boolean
 }) {
   const [rows, setRows] = useState<LinkRow[] | null>(null)
   const [ready, setReady] = useState(true)
@@ -263,11 +286,11 @@ export function PeoplePanel({
     api
       .get<{ data: LinkRow[]; ready: boolean }>(`/api/contact-links?entity_type=${entityType}&entity_id=${encodeURIComponent(entityId)}`)
       .then((r) => {
-        setRows(r.data)
+        setRows(hideAgents ? r.data.filter((x) => !x.contact?.roles?.includes('Agent') && !AGENT_ROLES.includes(x.role)) : r.data)
         setReady(r.ready)
       })
       .catch(() => setRows([]))
-  }, [entityType, entityId])
+  }, [entityType, entityId, hideAgents])
   useEffect(load, [load])
 
   async function add(c: Contact) {

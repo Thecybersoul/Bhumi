@@ -5,6 +5,7 @@ import { contactsReady } from '@/lib/contacts'
 import { isBuyer, isSeller } from '@/lib/matching'
 import { createServiceClient } from '@/lib/supabase'
 import { createTransaction } from '@/lib/transactions'
+import { agentsReady } from '@/lib/agents'
 import type { Contact, Lead } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -115,5 +116,42 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       )
   }
 
+  // The agents on the lead, and on the listing, come with it: the agent
+  // who brought the listing is now on the seller's side of this deal.
+  if (r.id && ready) await carryAgents(lead.id, listing?.id ?? null, otherLead?.id ?? null, r.id, `${r.reference} · ${label}`, me?.name ?? '')
+
   return NextResponse.json({ ok: true, id: r.id, reference: r.reference, persisted: r.persisted }, { status: 201 })
+}
+
+const AS_DEAL_ROLE: Record<string, string> = { 'Listing agent': 'Seller’s agent', 'Mandate holder': 'Seller’s agent' }
+
+async function carryAgents(leadId: string, propertyId: string | null, otherLeadId: string | null, dealId: string, dealLabel: string, by: string) {
+  const sb = createServiceClient()
+  const withMoney = await agentsReady()
+  const sources = [
+    { type: 'lead', id: leadId },
+    ...(otherLeadId ? [{ type: 'lead', id: otherLeadId }] : []),
+    ...(propertyId ? [{ type: 'property', id: propertyId }] : []),
+  ]
+  const seen = new Set<string>()
+  for (const src of sources) {
+    const { data } = await sb.from('contact_links').select('*').eq('entity_type', src.type).eq('entity_id', src.id)
+    for (const x of (data ?? []) as Record<string, unknown>[]) {
+      const cid = String(x.contact_id)
+      if (seen.has(cid)) continue
+      seen.add(cid)
+      await sb.from('contact_links').upsert(
+        {
+          contact_id: cid,
+          entity_type: 'transaction',
+          entity_id: dealId,
+          entity_label: dealLabel,
+          role: AS_DEAL_ROLE[String(x.role)] ?? x.role ?? '',
+          created_by: by,
+          ...(withMoney ? { share_type: x.share_type ?? '', share_value: x.share_value ?? null, payout_status: x.share_type && x.share_type !== 'Paid by their client' ? 'Not due' : '', notes: x.notes ?? '' } : {}),
+        },
+        { onConflict: 'contact_id,entity_type,entity_id', ignoreDuplicates: true }
+      )
+    }
+  }
 }
