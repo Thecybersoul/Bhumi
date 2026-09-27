@@ -3,6 +3,7 @@ import { AppState, Platform } from 'react-native'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as Notifications from 'expo-notifications'
+import * as Updates from 'expo-updates'
 import { SessionProvider, useSession } from '@/lib/auth'
 import { clearAll, configureNotifications, ensurePermission, refreshAll, registerBackgroundRefresh } from '@/lib/notify'
 import { forget as forgetWebPush, registerWorker } from '@/lib/webPush'
@@ -78,9 +79,40 @@ function useSharedIntoApp(token: string | null) {
   }, [hasShareIntent, shareIntent, token, resetShareIntent])
 }
 
+/* Over-the-air updates, applied promptly. By default expo-updates only
+   swaps in a downloaded update on a cold start, and Android keeps apps
+   alive for days, so phones lagged far behind. Instead: whenever the app
+   opens or comes back to the foreground (at most every 5 minutes), check;
+   if there's a new version and it arrives within a few seconds, restart
+   into it straight away, before anyone has started typing. A slower
+   download still lands and is used on the next open. */
+function useFreshUpdates() {
+  const last = useRef(0)
+  useEffect(() => {
+    if (Platform.OS === 'web' || __DEV__ || !Updates.isEnabled) return
+    const run = async () => {
+      if (Date.now() - last.current < 5 * 60_000) return
+      last.current = Date.now()
+      const started = Date.now()
+      try {
+        const r = await Updates.checkForUpdateAsync()
+        if (!r.isAvailable) return
+        const f = await Updates.fetchUpdateAsync()
+        if (f.isNew && Date.now() - started < 8000 && AppState.currentState === 'active') await Updates.reloadAsync()
+      } catch {
+        /* offline or the update server is unreachable: try again later */
+      }
+    }
+    run()
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && run())
+    return () => sub.remove()
+  }, [])
+}
+
 function RootNavigator() {
   const { token, isLoading } = useSession()
   useNotifications(token)
+  useFreshUpdates()
   useSharedIntoApp(isLoading ? null : token)
   if (isLoading) return <LoadingScreen />
 

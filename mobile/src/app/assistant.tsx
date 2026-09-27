@@ -107,7 +107,9 @@ function Rich({ value, color = colors.ink }: { value: string; color?: string }) 
         return (
           <View key={i} style={{ flexDirection: 'row', gap: 6, paddingLeft: li ? 4 : 0 }}>
             {li ? <Text style={[s.text, { color }]}>{/\d/.test(li[1]) ? li[1] : '•'}</Text> : null}
-            <Text style={[s.text, { color, flex: 1 }, /^#{1,4}\s/.test(line) && { fontWeight: '800' }]}>
+            {/* flexShrink, not flex: 1 — inside the user's auto-width bubble,
+                flex: 1 gave the text no width at all on Android. */}
+            <Text style={[s.text, { color, flexShrink: 1 }, /^#{1,4}\s/.test(line) && { fontWeight: '800' }]}>
               {body.map((part, j) =>
                 part.startsWith('**') && part.endsWith('**') ? (
                   <Text key={j} style={{ fontWeight: '800' }}>

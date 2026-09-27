@@ -46,6 +46,8 @@ export async function GET() {
       serving: true,
       database: { configured, reachable: dbReachable, source, error },
       schema: { current: schemaCurrent, auto_migrate: configuredUrls().length > 0 },
+      // Whether the AI assistant can run (ANTHROPIC_API_KEY is set). Never the key itself.
+      assistant: { configured: Boolean(process.env.ANTHROPIC_API_KEY) },
       latency_ms: Date.now() - started,
       timestamp: new Date().toISOString(),
     },
