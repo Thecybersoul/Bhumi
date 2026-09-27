@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar'
 import * as Notifications from 'expo-notifications'
 import { SessionProvider, useSession } from '@/lib/auth'
 import { clearAll, configureNotifications, ensurePermission, refreshAll, registerBackgroundRefresh } from '@/lib/notify'
+import { forget as forgetWebPush, registerWorker } from '@/lib/webPush'
 import { LoadingScreen } from '@/components/ui'
 import { colors } from '@/lib/theme'
 import '@/lib/webAlert'
@@ -23,8 +24,17 @@ const useLastNotificationResponse: () => Notifications.NotificationResponse | nu
    clears every scheduled reminder. */
 function useNotifications(token: string | null) {
   const last = useRef(0)
+  const signedIn = useRef(false)
   useEffect(() => {
-    if (Platform.OS === 'web') return
+    // The iPhone home-screen app: the server pushes (lib/webPush.ts). Keep
+    // the worker registered while signed in; signing out stops this device
+    // receiving that person's notifications.
+    if (Platform.OS === 'web') {
+      if (token) registerWorker()
+      else if (signedIn.current) forgetWebPush()
+      signedIn.current = !!token
+      return
+    }
     if (!token) {
       clearAll()
       return

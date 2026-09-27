@@ -92,7 +92,7 @@ export async function logActivity(entry: ActivityEntry, actor?: Actor | AdminUse
   try {
     if (!(await auditReady())) return
     const who = actor === undefined ? await currentActor() : actor
-    await createServiceClient()
+    const { data: row } = await createServiceClient()
       .from('activity_log')
       .insert({
         actor_id: who?.id ?? null,
@@ -104,6 +104,8 @@ export async function logActivity(entry: ActivityEntry, actor?: Actor | AdminUse
         summary: (entry.summary ?? '').slice(0, 500),
         changes: entry.changes ?? null,
       })
+      .select('id,actor_id,actor_name,action,entity_type,entity_id,entity_label,summary,created_at')
+      .single()
     // Keep the Google Sheets register current: after the response has
     // gone out, re-sync it if it's more than ten minutes stale.
     if (entry.action !== 'login' && entry.action !== 'sync') {
@@ -113,6 +115,16 @@ export async function logActivity(entry: ActivityEntry, actor?: Actor | AdminUse
           const { syncIfStale } = await import('./sheets')
           await syncIfStale(who?.name ?? 'Auto-sync')
         })
+        // Push it to iPhone home-screen apps if it's worth a notification.
+        if (row) {
+          after(async () => {
+            const { toNotification } = await import('./notifications')
+            const n = toNotification(row)
+            if (!n) return
+            const { pushTeamUpdate } = await import('./webpush')
+            await pushTeamUpdate(row.actor_id, { title: n.title, body: n.body, path: n.app_path ?? '/notifications', tag: `feed-${n.id}` })
+          })
+        }
       } catch {
         // Outside a request (scripts): no background work to schedule.
       }

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { createElement, useState } from 'react'
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Field } from '@/components/form'
@@ -7,8 +7,9 @@ import { colors, radius, space, text } from '@/lib/theme'
 
 /* Date and time: the phone's own pickers (Android dialogs, iOS
    spinners), plus one-tap presets for the times that cover most
-   follow-ups and meetings. The web preview has no native picker, so
-   it keeps a typed `YYYY-MM-DD HH:mm` field. Value: ISO string or ''. */
+   follow-ups and meetings. On the web (the iPhone home-screen app) it's
+   a datetime-local input, which iOS Safari shows as its own date and
+   time wheels. Value: ISO string or ''. */
 
 function at(daysFromNow: number, hour: number, minute = 0) {
   const d = new Date()
@@ -32,10 +33,40 @@ const PRESETS: { label: string; make: () => Date }[] = [
 ]
 
 const pad = (n: number) => String(n).padStart(2, '0')
-function toTyped(iso: string) {
+/** Local time as `YYYY-MM-DDTHH:mm`, what a datetime-local input holds. */
+function toLocalInput(iso: string) {
   if (!iso) return ''
   const d = new Date(iso)
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/* A real <input type="datetime-local">: react-native-web renders DOM
+   elements passed to createElement as they are. */
+function WebDateTime({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  return createElement('input', {
+    type: 'datetime-local',
+    value: toLocalInput(value),
+    onChange: (e: { target: { value: string } }) => {
+      const v = e.target.value
+      // Parsed as local time, like the phone pickers.
+      onChange(v ? new Date(v).toISOString() : '')
+    },
+    style: {
+      boxSizing: 'border-box',
+      width: '100%',
+      minHeight: 48,
+      border: `1px solid ${colors.line}`,
+      borderRadius: radius.base,
+      padding: `0 ${space.md}px`,
+      fontSize: 16, // below 16px iOS zooms the page on focus
+      fontFamily: 'inherit',
+      fontWeight: 700,
+      color: value ? colors.ink : colors.muted,
+      backgroundColor: colors.white,
+      WebkitAppearance: 'none',
+      appearance: 'none',
+    },
+  })
 }
 
 export function WhenField({
@@ -49,7 +80,6 @@ export function WhenField({
   onChange: (iso: string) => void
   clearable?: boolean
 }) {
-  const [typed, setTyped] = useState(toTyped(value))
   const [iosMode, setIosMode] = useState<'date' | 'time' | null>(null)
   const current = value ? new Date(value) : at(1, 11)
 
@@ -68,13 +98,6 @@ export function WhenField({
         },
       })
     } else setIosMode(mode)
-  }
-
-  function commit(t: string) {
-    setTyped(t)
-    const m = t.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?$/)
-    if (m) onChange(new Date(+m[1], +m[2] - 1, +m[3], +(m[4] ?? 9), +(m[5] ?? 0)).toISOString())
-    else if (!t.trim()) onChange('')
   }
 
   const native = Platform.OS !== 'web'
@@ -102,14 +125,16 @@ export function WhenField({
           ) : null}
         </View>
       ) : (
-        <TextInput
-          style={s.input}
-          value={typed}
-          onChangeText={commit}
-          placeholder="YYYY-MM-DD HH:mm"
-          placeholderTextColor={colors.muted}
-          autoCapitalize="none"
-        />
+        <View style={s.pickers}>
+          <View style={{ flex: 1 }}>
+            <WebDateTime value={value} onChange={onChange} />
+          </View>
+          {value && clearable ? (
+            <TouchableOpacity style={s.clear} onPress={() => onChange('')} hitSlop={8}>
+              <Ionicons name="close" size={18} color={colors.muted} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       )}
       {iosMode ? (
         <DateTimePicker
@@ -132,7 +157,6 @@ export function WhenField({
             style={s.chip}
             onPress={() => {
               const iso = p.make().toISOString()
-              setTyped(toTyped(iso))
               setIosMode(null)
               onChange(iso)
             }}
@@ -165,13 +189,4 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   chip: { paddingHorizontal: 11, paddingVertical: 6, borderRadius: 100, backgroundColor: colors.navyTint },
   chipText: { fontSize: text.xs, fontWeight: '700', color: colors.navy },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.base,
-    padding: space.md,
-    fontSize: text.md,
-    backgroundColor: colors.white,
-    color: colors.ink,
-  },
 })

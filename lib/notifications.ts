@@ -27,7 +27,7 @@ export interface NotificationItem {
   web_path: string | null
 }
 
-interface Row {
+export interface Row {
   id: string
   actor_id: string | null
   actor_name: string
@@ -65,7 +65,7 @@ const paths = (type: string, id: string | null): [string | null, string | null] 
 }
 
 /** Turn one activity row into a notification, or null if it isn't worth one. */
-function toNotification(r: Row): NotificationItem | null {
+export function toNotification(r: Row): NotificationItem | null {
   const label = r.entity_label || ''
   const who = r.actor_name || 'Someone'
   const [app_path, web_path] = paths(r.entity_type, r.entity_id)

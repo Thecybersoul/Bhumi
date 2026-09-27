@@ -36,6 +36,7 @@ async function main() {
   execFileSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', out, '--clear'], {
     cwd: mobile,
     stdio: 'inherit',
+    shell: process.platform === 'win32', // npx is npx.cmd on Windows
     env: { ...process.env, NODE_ENV: 'production' },
   })
   console.log(`\nExported to ${path.relative(root, out)}/ — commit it to publish.`)
