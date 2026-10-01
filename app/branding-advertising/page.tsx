@@ -6,15 +6,16 @@ import BigHero from '@/components/site/BigHero'
 import Reveal from '@/components/site/Reveal'
 import Icon from '@/components/site/Icon'
 import { brandingPractice } from '@/lib/content/services'
+import { capabilities, portfolioIntro, portfolioStats, process, processIntro, projects, scopeMatrix, type Shot } from '@/lib/content/brandingPortfolio'
 import { billboards, billboardIntro, billboardSummary } from '@/lib/content/billboards'
 import { wa, brand } from '@/lib/content/brand'
 
 export const revalidate = 300
 
 export const metadata: Metadata = {
-  title: 'Branding & Outdoor Advertising — project identity and media that earns the spend',
+  title: 'Branding & Outdoor Advertising: experience centres, site arrivals and approaches',
   description:
-    'Real estate project branding and outdoor advertising: naming and identity, boundary walls, entrance pylons and site hoarding, then billboards, highmasts and transit media bought on sightline and traffic direction.',
+    'Real estate project branding delivered for Prestige Group: experience centres and interiors, entrance arches, LED screens, road medians, pole flags and hoardings across three projects. Plus outdoor media bought on sightline and traffic direction.',
   alternates: { canonical: '/branding-advertising' },
 }
 
@@ -47,6 +48,15 @@ const outdoorPrinciples = [
   },
 ]
 
+function Photo({ shot, className }: { shot: Shot; className?: string }) {
+  return (
+    <figure className={`bpPhoto ${className ?? ''}`}>
+      <img src={shot.src} alt={shot.alt} width={shot.w} height={shot.h} loading="lazy" decoding="async" />
+      {shot.label ? <figcaption>{shot.label}</figcaption> : null}
+    </figure>
+  )
+}
+
 export default function BrandingPage() {
   const p = brandingPractice
 
@@ -76,11 +86,21 @@ export default function BrandingPage() {
         <nav className="sectionNav" aria-label="On this page">
           <div className="wrap">
             <ul>
-              {p.services.map((s) => (
-                <li key={s.slug}>
-                  <a href={`#${s.slug}`}>{s.name}</a>
-                </li>
-              ))}
+              <li>
+                <a href="#work">Selected work</a>
+              </li>
+              <li>
+                <a href="#project-branding">What we deliver</a>
+              </li>
+              <li>
+                <a href="#process">How we work</a>
+              </li>
+              <li>
+                <a href="#projects">The projects</a>
+              </li>
+              <li>
+                <a href="#outdoor-advertising">Outdoor advertising</a>
+              </li>
               <li>
                 <a href="#inventory">Bookable sites</a>
               </li>
@@ -91,8 +111,195 @@ export default function BrandingPage() {
           </div>
         </nav>
 
-        {/* ── The two services ── */}
-        {p.services.map((s, i) => (
+        {/* ── Selected work: Prestige Group (the portfolio deck) ── */}
+        <section className="section bpIntro" id="work">
+          <div className="wrap">
+            <div className="bpIntro__grid">
+              <Reveal>
+                <div className="secHead">
+                  <span className="secTag">{portfolioIntro.eyebrow}</span>
+                  <h2 className="h1">
+                    {portfolioIntro.title.before} <em>{portfolioIntro.title.italic}</em>
+                  </h2>
+                  <p className="lede">{portfolioIntro.body}</p>
+                </div>
+                <dl className="bpStats">
+                  {portfolioStats.map((st) => (
+                    <div key={st.label}>
+                      <dt>{st.label}</dt>
+                      <dd>
+                        <strong>{st.value}</strong>
+                        <span>{st.note}</span>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </Reveal>
+              <Reveal delay={90}>
+                <Photo shot={portfolioIntro.image} className="bpIntro__image" />
+              </Reveal>
+            </div>
+          </div>
+          <Reveal>
+            <Photo shot={portfolioIntro.banner} className="bpBanner" />
+          </Reveal>
+        </section>
+
+        {/* ── What we deliver: the three capability areas ── */}
+        <section className="section bpCaps" id="project-branding">
+          <div className="wrap">
+            <Reveal>
+              <div className="secHead">
+                <span className="secTag">Capabilities</span>
+                <h2 className="h1">
+                  What we <em>deliver.</em>
+                </h2>
+                <p className="lede">{p.services[0].summary}</p>
+              </div>
+            </Reveal>
+            <div className="bpCaps__grid">
+              {capabilities.map((c, i) => (
+                <Reveal key={c.number} delay={i * 70}>
+                  <article className="bpCap">
+                    <Photo shot={c.image} />
+                    <div className="bpCap__body">
+                      <span className="bpCap__num">{c.number}</span>
+                      <h3>{c.title}</h3>
+                      <p>{c.body}</p>
+                    </div>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── How we work ── */}
+        <section className="section bpProcess" id="process">
+          <div className="wrap">
+            <Reveal>
+              <div className="secHead">
+                <span className="secTag">How we work</span>
+                <h2 className="h1">
+                  One team, <em>brief to upkeep.</em>
+                </h2>
+              </div>
+            </Reveal>
+            <ol className="bpSteps" aria-label={processIntro}>
+              {process.map((st, i) => (
+                <Reveal key={st.number} delay={i * 60} as="li">
+                  <span className="bpSteps__num">{st.number}</span>
+                  <h3>{st.title}</h3>
+                  <p>{st.body}</p>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ── The three projects ── */}
+        <div id="projects">
+          {projects.map((pr, pi) => (
+            <section key={pr.number} className={`section bpProject ${pi % 2 === 1 ? 'is-alt' : ''}`} id={`project-${pr.number}`}>
+              <div className="wrap">
+                <Reveal>
+                  <header className="bpProject__head">
+                    <span className="bpProject__num">{pr.number}</span>
+                    <div>
+                      <span className="secTag">
+                        Project {pr.number}
+                        {pr.status ? ` · ${pr.status}` : ''}
+                      </span>
+                      <h2 className="h1">{pr.name}</h2>
+                      <p className="lede">{pr.summary}</p>
+                    </div>
+                    <span className="bpProject__count">
+                      <strong>{String(pr.scopes.length).padStart(2, '0')}</strong> scope areas
+                    </span>
+                  </header>
+                </Reveal>
+                {pr.cover ? (
+                  <Reveal>
+                    <Photo shot={pr.cover} className="bpProject__cover" />
+                  </Reveal>
+                ) : null}
+                <div className="bpScopes">
+                  {pr.scopes.map((sc, si) => (
+                    <Reveal key={sc.title} delay={(si % 3) * 60}>
+                      <article className={`bpScope ${sc.shots.length ? '' : 'is-text'} ${sc.shots.length > 1 ? 'is-pair' : ''}`}>
+                        {sc.shots.length ? (
+                          <div className="bpScope__shots">
+                            {sc.shots.map((sh) => (
+                              <Photo key={sh.src} shot={sh} />
+                            ))}
+                          </div>
+                        ) : null}
+                        <div className="bpScope__body">
+                          <span className="bpScope__idx">
+                            {pr.name.replace(/ @ .*/, '')} · {String(si + 1).padStart(2, '0')}
+                          </span>
+                          <h3>{sc.title}</h3>
+                          <p>{sc.body}</p>
+                          <dl>
+                            <div>
+                              <dt>Placement</dt>
+                              <dd>{sc.placement}</dd>
+                            </div>
+                            <div>
+                              <dt>Format</dt>
+                              <dd>{sc.format}</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      </article>
+                    </Reveal>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+
+        {/* ── Scope across projects ── */}
+        <section className="section bpMatrixSection" id="scope">
+          <div className="wrap">
+            <Reveal>
+              <div className="secHead">
+                <span className="secTag">Scope across projects</span>
+                <h2 className="h1">
+                  What was <em>delivered.</em>
+                </h2>
+              </div>
+              <div className="bpMatrix" role="region" aria-label="Scope delivered by project" tabIndex={0}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Scope</th>
+                      {scopeMatrix.projects.map((n) => (
+                        <th scope="col" key={n}>
+                          {n}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scopeMatrix.rows.map((r) => (
+                      <tr key={r.scope}>
+                        <th scope="row">{r.scope}</th>
+                        {r.on.map((on, i) => (
+                          <td key={i}>{on ? <span className="bpMatrix__dot" aria-label="Delivered" /> : <span className="sr-only">Not in scope</span>}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ── Outdoor advertising (the media-buying service) ── */}
+        {p.services.filter((s) => s.slug === 'outdoor-advertising').map((s, i) => (
           <section
             key={s.slug}
             id={s.slug}
