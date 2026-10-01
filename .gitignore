@@ -57,3 +57,9 @@ listing-social/
 # would drop. Must stay last so it overrides them.
 !public/app/**/node_modules/
 !public/app/**/build/
+
+# Local-only files that must never be committed: admin logins, Google OAuth
+# client secrets and built APKs.
+*-admin-logins.txt
+client_secret_*.json
+*.apk
