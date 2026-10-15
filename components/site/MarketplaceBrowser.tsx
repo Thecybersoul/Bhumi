@@ -28,6 +28,15 @@ import type { Property } from '@/lib/types'
    marketplace instead. How a listing states its size and price now
    lives in lib/listing.ts, shared with that page. */
 
+/** The short area name a listing is grouped under: its corridor/belt
+    (capitalised, since the seed fallback stores one in lowercase), or
+    its zone when no corridor is set. */
+function placeOf(p: Property): string {
+  const corridor = (p.corridor ?? '').trim()
+  if (corridor) return corridor.charAt(0).toUpperCase() + corridor.slice(1)
+  return `${p.zone} Bengaluru`
+}
+
 export default function MarketplaceBrowser({
   properties,
   source,
@@ -47,15 +56,20 @@ export default function MarketplaceBrowser({
     return [...seen].map(([slug, label]) => ({ slug, label }))
   }, [properties])
 
+  /* The "Location" chips group by corridor/belt (e.g. "Airport belt",
+     "STRR corridor"), not by each listing's full street address — a
+     chip per address stops being a filter once there are more than a
+     couple of listings, since almost nothing shares one. A listing
+     without a corridor set falls back to its zone. */
   const places = useMemo(
-    () => [...new Set(properties.map((p) => p.location).filter(Boolean))].sort(),
+    () => [...new Set(properties.map(placeOf))].sort(),
     [properties]
   )
 
   const filtered = useMemo(
     () =>
       properties.filter(
-        (p) => (!type || p.property_type === type) && (!place || p.location === place)
+        (p) => (!type || p.property_type === type) && (!place || placeOf(p) === place)
       ),
     [properties, type, place]
   )
