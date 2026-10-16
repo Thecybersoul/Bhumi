@@ -1,4 +1,5 @@
 import type Anthropic from '@anthropic-ai/sdk'
+import { signUploadToken, UPLOAD_LINK_TTL_SECONDS, type UploadPurpose } from '../upload-link'
 
 /* ═══════════════════════════════════════════════════════════
    The assistant's hands.
@@ -19,6 +20,11 @@ export interface ToolContext {
   readDocument: (id: string) => Promise<{ blocks: NonNullable<Exclude<Block, string>>; note: string } | { error: string }>
   /** Copies an image document to the public media library and returns its URL. */
   publishImage: (id: string) => Promise<{ url: string } | { error: string }>
+  /** Whose connector/session this is, and the site origin — get_upload_link
+      signs a token against both so the matching upload lands as this
+      person's work and points back at this deployment. */
+  userId: string
+  origin: string
 }
 
 /** What the chat shows for a step: a label, and a link to the record touched. */
@@ -38,6 +44,11 @@ export interface ToolOutcome {
 
 const ENTITY = ['property', 'transaction', 'lead', 'contact', 'task', 'note', 'meeting', 'verification'] as const
 const LINKABLE = ['lead', 'transaction', 'property', 'verification', 'meeting', 'contact', 'general'] as const
+
+/* Chat-typed base64 is where the corruption risk is: the model has to
+   emit every byte as text. Referenced from the TOOLS descriptions
+   below, so it has to be declared ahead of them. */
+export const MAX_BASE64_BYTES = 64 * 1024
 
 const str = { type: 'string' } as const
 const num = { type: 'number' } as const
@@ -204,15 +215,33 @@ export const TOOLS: Tool[] = [
     input_schema: obj({ id: str, changes: obj(LISTING_FIELDS) }, ['id', 'changes']),
   },
   {
+    name: 'get_upload_link',
+    description:
+      "Get a one-time link to upload a real file — almost always the right choice over content_base64, which only works for tiny files. Returns upload_url: PUT the raw file bytes to it directly (curl, not this chat) and the listing photo or document is filed automatically. Valid 15 minutes, single use. Use purpose 'listing_photo' with listing_id to set a listing's thumbnail, or 'document' with entity_type/entity_id to file any other document.",
+    input_schema: obj(
+      {
+        purpose: en(['listing_photo', 'document']),
+        listing_id: { ...str, description: 'Required when purpose is listing_photo.' },
+        entity_type: en(['property', 'transaction', 'lead', 'contact', 'task', 'note', 'meeting', 'verification', 'general'], 'For purpose document.'),
+        entity_id: { ...str, description: 'For purpose document.' },
+        entity_label: str,
+        category: { ...str, description: 'Photos, Brochure, Title deed, RTC, Other... (purpose document only; listing_photo is always filed under Photos).' },
+        file_name: str,
+      },
+      ['purpose']
+    ),
+  },
+  {
     name: 'set_listing_photo',
     description:
-      "Make a photo the listing's main photo (thumbnail) on the website and in the app. Either pass document_id (an image already in the ERP; also file it on the listing with attach_document) or send the image itself as content_base64 with file_name and mime_type, which files it on the listing under Photos in one step.",
+      "Make a photo the listing's main photo (thumbnail) on the website and in the app. Prefer get_upload_link for a real photo, then call this with document_id once it's filed. source_url (the server fetches it, https only) also works for an image already reachable at a URL. content_base64 is for a tiny file only (under 64 KB) — typing anything bigger as base64 tends to corrupt it; use get_upload_link instead.",
     input_schema: obj(
       {
         listing_id: str,
-        document_id: { ...str, description: 'An image document already in the ERP. Leave out when sending the image itself.' },
-        content_base64: { ...str, description: 'The image itself, base64-encoded (JPEG, PNG or WebP, up to 3 MB). It is filed on the listing under Photos, then made the main photo.' },
-        file_name: { ...str, description: 'File name for content_base64, e.g. P009-thumbnail.jpg' },
+        document_id: { ...str, description: 'An image document already in the ERP, e.g. from get_upload_link or attach_document.' },
+        source_url: { ...str, description: 'An https:// URL the server fetches directly — use this instead of content_base64 for anything but a tiny image.' },
+        content_base64: { ...str, description: `The image itself, base64-encoded. Tiny files only (under ${MAX_BASE64_BYTES / 1024} KB) — use get_upload_link or source_url for a real photo.` },
+        file_name: { ...str, description: 'File name for content_base64/source_url, e.g. P009-thumbnail.jpg' },
         mime_type: en(['image/jpeg', 'image/png', 'image/webp']),
       },
       ['listing_id']
@@ -221,18 +250,19 @@ export const TOOLS: Tool[] = [
   {
     name: 'upload_document',
     description:
-      'Upload a new file sent from this chat (base64) into the ERP and file it on a record, e.g. a listing photo, brochure or proposal PDF. Stored in the record\'s Google Drive folder like any other upload. Returns the new document id. Up to 3 MB.',
+      "Upload a file into the ERP and file it on a record, e.g. a brochure or proposal PDF. Prefer get_upload_link for anything real — content_base64 only works for a tiny file (under 64 KB; typing more as base64 tends to corrupt it), and source_url needs the file already reachable at an https:// URL the server can fetch. Stored in the record's Google Drive folder like any other upload.",
     input_schema: obj(
       {
         file_name: str,
         mime_type: str,
-        content_base64: { ...str, description: 'The file, base64-encoded (a data: URL prefix is fine).' },
+        content_base64: { ...str, description: `The file, base64-encoded (a data: URL prefix is fine). Tiny files only, under ${MAX_BASE64_BYTES / 1024} KB — use get_upload_link for anything bigger.` },
+        source_url: { ...str, description: 'An https:// URL the server fetches directly, as an alternative to content_base64.' },
         entity_type: en(['property', 'transaction', 'lead', 'contact', 'task', 'note', 'meeting', 'verification', 'general']),
         entity_id: str,
         entity_label: str,
         category: { ...str, description: 'Photos, Brochure, Title deed, RTC, Other...' },
       },
-      ['file_name', 'mime_type', 'content_base64']
+      ['file_name', 'mime_type']
     ),
   },
   {
@@ -566,26 +596,125 @@ async function peopleAndDocs(ctx: ToolContext, entity: string, id: string) {
 
 /* ─── Execution ────────────────────────────────────────────── */
 
-/** Uploads a file sent inline (base64) through the ERP's own two-step
-    document upload (start, PUT the bytes, record), so it lands in the
-    record's Drive folder or the documents bucket exactly like an upload
-    from the app, with the same activity trail. Returns the new row. */
+/* This cap is far below MAX_INLINE_BYTES on purpose — it only covers
+   content_base64. source_url and a direct upload-link PUT never pass
+   through the model's output, so they keep the larger cap. */
 const MAX_INLINE_BYTES = 3 * 1024 * 1024
-async function uploadInline(
-  ctx: ToolContext,
-  f: { name: string; mime: string; base64: string; entity_type?: string; entity_id?: string; entity_label?: string; category?: string }
+export const MAX_UPLOAD_LINK_BYTES = 10 * 1024 * 1024
+const SOURCE_FETCH_TIMEOUT_MS = 15_000
+
+function isBlockedIp(ip: string): boolean {
+  if (ip.includes(':')) {
+    const lower = ip.toLowerCase()
+    if (lower === '::1' || lower.startsWith('fe80:') || lower.startsWith('fc') || lower.startsWith('fd')) return true
+    return lower.startsWith('::ffff:') && isBlockedIp(lower.slice(7))
+  }
+  const [a, b] = ip.split('.').map(Number)
+  if (ip.split('.').length !== 4 || [a, b].some(Number.isNaN)) return true
+  return a === 127 || a === 10 || a === 0 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254) || (a === 100 && b >= 64 && b <= 127)
+}
+
+/** Fetches a chat-given URL server-side so the model never has to type
+    bytes. Hardened against SSRF: https only, no redirects, every
+    resolved address checked against private/loopback/link-local
+    ranges (which also blocks the cloud metadata IP, 169.254.169.254),
+    a byte cap enforced while streaming (a lying Content-Length does
+    not help it through), and a timeout. */
+async function fetchSourceUrl(url: string, maxBytes: number): Promise<{ bytes: Buffer; mime: string } | { error: string }> {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return { error: 'source_url is not a valid URL.' }
+  }
+  if (parsed.protocol !== 'https:') return { error: 'source_url must be https://.' }
+  const { lookup } = await import('node:dns/promises')
+  let addresses: { address: string }[]
+  try {
+    addresses = await lookup(parsed.hostname, { all: true })
+  } catch {
+    return { error: 'Could not resolve that host.' }
+  }
+  if (!addresses.length || addresses.some((a) => isBlockedIp(a.address))) return { error: 'That host resolves to a private or internal address and cannot be fetched.' }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), SOURCE_FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(parsed.toString(), { signal: controller.signal, redirect: 'manual' })
+    if (res.status >= 300 && res.status < 400) return { error: 'That URL redirects; pass the final https:// address directly.' }
+    if (!res.ok) return { error: `Fetching source_url failed (HTTP ${res.status}).` }
+    const len = Number(res.headers.get('content-length') ?? 0)
+    if (len > maxBytes) return { error: `That file is ${(len / 1048576).toFixed(1)} MB, over the ${(maxBytes / 1048576).toFixed(0)} MB limit.` }
+    const reader = res.body?.getReader()
+    if (!reader) return { error: 'No content received from source_url.' }
+    const chunks: Buffer[] = []
+    let total = 0
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.length
+      if (total > maxBytes) {
+        await reader.cancel()
+        return { error: `That file is over the ${(maxBytes / 1048576).toFixed(0)} MB limit.` }
+      }
+      chunks.push(Buffer.from(value))
+    }
+    return { bytes: Buffer.concat(chunks), mime: res.headers.get('content-type') || '' }
+  } catch (e) {
+    return { error: (e as Error).name === 'AbortError' ? 'Fetching source_url timed out.' : (e as Error).message }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/** Uploads a file through the ERP's own two-step document upload
+    (start, PUT the bytes, record), so it lands in the record's Drive
+    folder or the documents bucket exactly like an upload from the
+    app, with the same activity trail. The bytes come from whichever
+    of bytes/base64/source_url was given; maxBytes defaults to the
+    chat-sized cap and is raised by callers with their own bytes
+    already in hand (the upload-link route). Returns the new row. */
+export async function uploadInline(
+  ctx: Pick<ToolContext, 'call'>,
+  f: {
+    name: string
+    mime: string
+    bytes?: Buffer
+    base64?: string
+    source_url?: string
+    entity_type?: string
+    entity_id?: string
+    entity_label?: string
+    category?: string
+    maxBytes?: number
+  }
 ): Promise<{ doc: Record<string, unknown> } | { error: string }> {
-  const raw = f.base64.replace(/^data:[^,]*,/, '').replace(/\s+/g, '')
-  const bytes = Buffer.from(raw, 'base64')
-  if (!bytes.length) return { error: 'The file was empty or not valid base64.' }
-  if (bytes.length > MAX_INLINE_BYTES) return { error: `The file is ${(bytes.length / 1048576).toFixed(1)} MB; files sent from chat are limited to 3 MB.` }
+  const maxBytes = f.maxBytes ?? MAX_INLINE_BYTES
+  let bytes: Buffer
+  let mime = f.mime
+  if (f.bytes) {
+    bytes = f.bytes
+  } else if (f.source_url) {
+    const got = await fetchSourceUrl(f.source_url, maxBytes)
+    if ('error' in got) return got
+    bytes = got.bytes
+    if (!mime && got.mime) mime = got.mime
+  } else if (f.base64) {
+    if (f.base64.length > MAX_BASE64_BYTES * 2) return { error: `content_base64 is capped at ${MAX_BASE64_BYTES / 1024} KB; use get_upload_link for anything bigger.` }
+    bytes = Buffer.from(f.base64.replace(/^data:[^,]*,/, '').replace(/\s+/g, ''), 'base64')
+    if (bytes.length > MAX_BASE64_BYTES) return { error: `The file is ${(bytes.length / 1024).toFixed(0)} KB; content_base64 is capped at ${MAX_BASE64_BYTES / 1024} KB — use get_upload_link for anything bigger.` }
+  } else {
+    return { error: 'Send bytes, base64 or source_url.' }
+  }
+  if (!bytes.length) return { error: 'The file was empty or not valid.' }
+  if (bytes.length > maxBytes) return { error: `The file is ${(bytes.length / 1048576).toFixed(1)} MB, over the ${(maxBytes / 1048576).toFixed(0)} MB limit.` }
   const meta = {
     entity_type: f.entity_type || 'general',
     entity_id: f.entity_id || undefined,
     entity_label: f.entity_label || (f.entity_type ? '' : 'Assistant upload'),
     category: f.category || 'Other',
     name: f.name,
-    mime: f.mime,
+    mime,
     bytes: bytes.length,
   }
   const start = await ctx.call('POST', '/api/documents', { action: 'start', ...meta })
@@ -696,9 +825,35 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       return { content: json({ ok: true }), step: { label: `Updated listing (${Object.keys(i.changes as object).join(', ')})`, href: hrefFor('property', id), ok: true } }
     }
 
+    case 'get_upload_link': {
+      if (i.purpose === 'listing_photo' && !i.listing_id) return fail('Need a listing', 'Pass listing_id when purpose is listing_photo.')
+      const token = await signUploadToken({
+        uid: ctx.userId,
+        purpose: i.purpose as UploadPurpose,
+        listing_id: i.listing_id ? String(i.listing_id) : undefined,
+        entity_type: i.entity_type ? String(i.entity_type) : undefined,
+        entity_id: i.entity_id ? String(i.entity_id) : undefined,
+        entity_label: i.entity_label ? String(i.entity_label) : undefined,
+        category: i.category ? String(i.category) : undefined,
+        file_name: i.file_name ? String(i.file_name) : undefined,
+      })
+      if (!token) return fail('Couldn’t create an upload link', 'The server has no signing secret configured (AUTH_SECRET).')
+      const upload_url = `${ctx.origin}/api/upload/${token}`
+      return {
+        content: json({
+          upload_url,
+          expires_in_seconds: UPLOAD_LINK_TTL_SECONDS,
+          how: `PUT the raw file bytes to upload_url from a shell, e.g.: curl -sS -X PUT -H 'Content-Type: image/jpeg' --data-binary @file.jpg "${upload_url}". Try the user's PC shell if this chat's own sandbox can't reach the host, or vice versa. Never type the file's bytes into this chat.`,
+        }),
+        step: { label: `Got an upload link (${i.purpose})`, ok: true },
+      }
+    }
+
     case 'upload_document': {
       const got = await uploadInline(ctx, {
-        name: String(i.file_name), mime: String(i.mime_type), base64: String(i.content_base64),
+        name: String(i.file_name), mime: String(i.mime_type),
+        base64: i.content_base64 ? String(i.content_base64) : undefined,
+        source_url: i.source_url ? String(i.source_url) : undefined,
         entity_type: i.entity_type ? String(i.entity_type) : undefined,
         entity_id: i.entity_id ? String(i.entity_id) : undefined,
         entity_label: i.entity_label ? String(i.entity_label) : undefined,
@@ -709,15 +864,17 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
     }
 
     case 'set_listing_photo': {
-      if (!i.document_id && i.content_base64) {
+      if (!i.document_id && (i.content_base64 || i.source_url)) {
         const got = await uploadInline(ctx, {
-          name: String(i.file_name || 'listing-photo.jpg'), mime: String(i.mime_type || 'image/jpeg'), base64: String(i.content_base64),
+          name: String(i.file_name || 'listing-photo.jpg'), mime: String(i.mime_type || 'image/jpeg'),
+          base64: i.content_base64 ? String(i.content_base64) : undefined,
+          source_url: i.source_url ? String(i.source_url) : undefined,
           entity_type: 'property', entity_id: String(i.listing_id), category: 'Photos',
         })
         if ('error' in got) return fail('Couldn’t upload the photo', got.error)
         i.document_id = got.doc.id
       }
-      if (!i.document_id) return fail('Couldn’t use that photo', 'Send either document_id or content_base64.')
+      if (!i.document_id) return fail('Couldn’t use that photo', 'Send document_id, source_url, or a tiny content_base64 — or get_upload_link for a real file.')
       const pub = await ctx.publishImage(String(i.document_id))
       if ('error' in pub) return fail('Couldn’t use that photo', pub.error)
       const r = await ctx.call('PUT', `/api/properties/${i.listing_id}`, { img_url: pub.url })

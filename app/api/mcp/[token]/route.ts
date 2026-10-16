@@ -77,6 +77,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     call: erpCaller(req.nextUrl.origin, { authorization: bearer ? `Bearer ${bearer}` : null }),
     readDocument: readInline,
     publishImage,
+    userId: user.id,
+    origin: req.nextUrl.origin,
   }
 
   const answers = []
@@ -91,7 +93,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
               protocolVersion: SUPPORTED.includes(asked) ? asked : SUPPORTED[1],
               capabilities: { tools: { listChanged: false } },
               serverInfo: { name: 'bhumi-erp', title: 'Bhumi Estates ERP', version: '1.0.0' },
-              instructions: `${SYSTEM_PROMPT}\n\nYou are working through the Bhumi ERP connector inside the person's own Claude app. ${contextBlock(user)} Everything you do through these tools is recorded under ${user.name}'s name. When they paste or forward a WhatsApp property post, treat it as described under "Forwarded WhatsApp messages". Files and photos can be sent from this chat as base64 (up to 3 MB) through upload_document, or set_listing_photo with content_base64, which uploads the image and makes it the listing photo.`,
+              instructions: `${SYSTEM_PROMPT}\n\nYou are working through the Bhumi ERP connector inside the person's own Claude app. ${contextBlock(user)} Everything you do through these tools is recorded under ${user.name}'s name. When they paste or forward a WhatsApp property post, treat it as described under "Forwarded WhatsApp messages". For a real photo or file, call get_upload_link first, then PUT the raw bytes to the returned upload_url from a shell with curl — never type a file's bytes into this chat as base64, it reliably corrupts anything over a few KB. Run that curl from this chat's own sandbox, or from the person's PC shell if they're in one; if one can't reach the host, try the other. content_base64 on upload_document/set_listing_photo only works for a genuinely tiny file (under 64 KB); source_url works when the file is already reachable at an https:// address.`,
             })
           )
           break

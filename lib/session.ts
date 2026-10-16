@@ -116,6 +116,44 @@ export async function verifyPurposeToken(purpose: string, token: string | undefi
   return safeEqual(expected, token.slice(separator + 1))
 }
 
+function fromBase64Url(s: string): Uint8Array {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/')
+  const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return bytes
+}
+
+/** A signed, structured token carrying short-lived data of its own —
+ *  e.g. a one-time upload link — rather than just an account id.
+ *  `<base64url(json)>.<hmac>`. */
+export async function signPayload(payload: Record<string, unknown>, ttlSeconds: number): Promise<string | null> {
+  const k = await key()
+  if (!k) return null
+  const json = toBase64Url(encoder.encode(JSON.stringify({ ...payload, exp: Date.now() + ttlSeconds * 1000 })).buffer as ArrayBuffer)
+  const sig = await crypto.subtle.sign('HMAC', k, encoder.encode(json))
+  return `${json}.${toBase64Url(sig)}`
+}
+
+/** The payload a signPayload token carries, or null if the signature is
+ *  wrong or it has expired. */
+export async function readPayload<T>(token: string | undefined | null): Promise<T | null> {
+  if (!token) return null
+  const sep = token.lastIndexOf('.')
+  if (sep <= 0) return null
+  const json = token.slice(0, sep)
+  const k = await key()
+  if (!k) return null
+  const expected = toBase64Url(await crypto.subtle.sign('HMAC', k, encoder.encode(json)))
+  if (!safeEqual(expected, token.slice(sep + 1))) return null
+  try {
+    const body = JSON.parse(new TextDecoder().decode(fromBase64Url(json))) as T & { exp: number }
+    return body.exp > Date.now() ? body : null
+  } catch {
+    return null
+  }
+}
+
 /** Constant-time string equality for credential checks. */
 export function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false

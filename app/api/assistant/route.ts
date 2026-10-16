@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
     },
     readDocument: (id) => readDocument(client, id, fileIds),
     publishImage: (id) => publishImage(id),
+    userId: me.id,
+    origin,
   }
 
   const encoder = new TextEncoder()
