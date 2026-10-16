@@ -91,7 +91,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
               protocolVersion: SUPPORTED.includes(asked) ? asked : SUPPORTED[1],
               capabilities: { tools: { listChanged: false } },
               serverInfo: { name: 'bhumi-erp', title: 'Bhumi Estates ERP', version: '1.0.0' },
-              instructions: `${SYSTEM_PROMPT}\n\nYou are working through the Bhumi ERP connector inside the person's own Claude app. ${contextBlock(user)} Everything you do through these tools is recorded under ${user.name}'s name. When they paste or forward a WhatsApp property post, treat it as described under "Forwarded WhatsApp messages". Photos they attach in this chat can't be passed to the ERP; ask them to add photos from the Bhumi app.`,
+              instructions: `${SYSTEM_PROMPT}\n\nYou are working through the Bhumi ERP connector inside the person's own Claude app. ${contextBlock(user)} Everything you do through these tools is recorded under ${user.name}'s name. When they paste or forward a WhatsApp property post, treat it as described under "Forwarded WhatsApp messages". Files and photos can be sent from this chat as base64 (up to 3 MB) through upload_document, or set_listing_photo with content_base64, which uploads the image and makes it the listing photo.`,
             })
           )
           break

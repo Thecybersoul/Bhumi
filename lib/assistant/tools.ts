@@ -206,8 +206,34 @@ export const TOOLS: Tool[] = [
   {
     name: 'set_listing_photo',
     description:
-      "Make an attached photo (an image document id) the listing's main photo on the website and in the app. Use the best exterior or site photo. Also file the photo on the listing with attach_document so it stays with its documents.",
-    input_schema: obj({ listing_id: str, document_id: str }, ['listing_id', 'document_id']),
+      "Make a photo the listing's main photo (thumbnail) on the website and in the app. Either pass document_id (an image already in the ERP; also file it on the listing with attach_document) or send the image itself as content_base64 with file_name and mime_type, which files it on the listing under Photos in one step.",
+    input_schema: obj(
+      {
+        listing_id: str,
+        document_id: { ...str, description: 'An image document already in the ERP. Leave out when sending the image itself.' },
+        content_base64: { ...str, description: 'The image itself, base64-encoded (JPEG, PNG or WebP, up to 3 MB). It is filed on the listing under Photos, then made the main photo.' },
+        file_name: { ...str, description: 'File name for content_base64, e.g. P009-thumbnail.jpg' },
+        mime_type: en(['image/jpeg', 'image/png', 'image/webp']),
+      },
+      ['listing_id']
+    ),
+  },
+  {
+    name: 'upload_document',
+    description:
+      'Upload a new file sent from this chat (base64) into the ERP and file it on a record, e.g. a listing photo, brochure or proposal PDF. Stored in the record\'s Google Drive folder like any other upload. Returns the new document id. Up to 3 MB.',
+    input_schema: obj(
+      {
+        file_name: str,
+        mime_type: str,
+        content_base64: { ...str, description: 'The file, base64-encoded (a data: URL prefix is fine).' },
+        entity_type: en(['property', 'transaction', 'lead', 'contact', 'task', 'note', 'meeting', 'verification', 'general']),
+        entity_id: str,
+        entity_label: str,
+        category: { ...str, description: 'Photos, Brochure, Title deed, RTC, Other...' },
+      },
+      ['file_name', 'mime_type', 'content_base64']
+    ),
   },
   {
     name: 'property_register',
@@ -540,6 +566,49 @@ async function peopleAndDocs(ctx: ToolContext, entity: string, id: string) {
 
 /* ─── Execution ────────────────────────────────────────────── */
 
+/** Uploads a file sent inline (base64) through the ERP's own two-step
+    document upload (start, PUT the bytes, record), so it lands in the
+    record's Drive folder or the documents bucket exactly like an upload
+    from the app, with the same activity trail. Returns the new row. */
+const MAX_INLINE_BYTES = 3 * 1024 * 1024
+async function uploadInline(
+  ctx: ToolContext,
+  f: { name: string; mime: string; base64: string; entity_type?: string; entity_id?: string; entity_label?: string; category?: string }
+): Promise<{ doc: Record<string, unknown> } | { error: string }> {
+  const raw = f.base64.replace(/^data:[^,]*,/, '').replace(/\s+/g, '')
+  const bytes = Buffer.from(raw, 'base64')
+  if (!bytes.length) return { error: 'The file was empty or not valid base64.' }
+  if (bytes.length > MAX_INLINE_BYTES) return { error: `The file is ${(bytes.length / 1048576).toFixed(1)} MB; files sent from chat are limited to 3 MB.` }
+  const meta = {
+    entity_type: f.entity_type || 'general',
+    entity_id: f.entity_id || undefined,
+    entity_label: f.entity_label || (f.entity_type ? '' : 'Assistant upload'),
+    category: f.category || 'Other',
+    name: f.name,
+    mime: f.mime,
+    bytes: bytes.length,
+  }
+  const start = await ctx.call('POST', '/api/documents', { action: 'start', ...meta })
+  const startErr = errorOf(start)
+  if (startErr) return { error: startErr }
+  const up = start.json.upload as { url: string; method: string; headers: Record<string, string> } | undefined
+  if (!up?.url) return { error: 'The ERP did not return an upload address.' }
+  const put = await fetch(up.url, { method: up.method || 'PUT', headers: up.headers, body: new Uint8Array(bytes) })
+  if (!put.ok) return { error: `Storing the file failed (HTTP ${put.status}).` }
+  const record: Record<string, unknown> = { action: 'record', ...meta }
+  if (start.json.storage === 'drive') {
+    const file = (await put.json().catch(() => ({}))) as { id?: string }
+    if (!file.id) return { error: 'Google Drive did not confirm the upload.' }
+    Object.assign(record, { storage: 'drive', drive_file_id: file.id })
+  } else {
+    Object.assign(record, { storage: 'supabase', path: start.json.path })
+  }
+  const saved = await ctx.call('POST', '/api/documents', record)
+  const savedErr = errorOf(saved)
+  if (savedErr) return { error: savedErr }
+  return { doc: (saved.json.data as Record<string, unknown>) ?? {} }
+}
+
 export async function runTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutcome> {
   const i = input
   const id = String(i.id ?? '')
@@ -627,7 +696,28 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       return { content: json({ ok: true }), step: { label: `Updated listing (${Object.keys(i.changes as object).join(', ')})`, href: hrefFor('property', id), ok: true } }
     }
 
+    case 'upload_document': {
+      const got = await uploadInline(ctx, {
+        name: String(i.file_name), mime: String(i.mime_type), base64: String(i.content_base64),
+        entity_type: i.entity_type ? String(i.entity_type) : undefined,
+        entity_id: i.entity_id ? String(i.entity_id) : undefined,
+        entity_label: i.entity_label ? String(i.entity_label) : undefined,
+        category: i.category ? String(i.category) : undefined,
+      })
+      if ('error' in got) return fail('Couldn’t upload the file', got.error)
+      return { content: json({ ok: true, document_id: got.doc.id, document: got.doc }), step: { label: `Uploaded ${i.file_name}`, ok: true } }
+    }
+
     case 'set_listing_photo': {
+      if (!i.document_id && i.content_base64) {
+        const got = await uploadInline(ctx, {
+          name: String(i.file_name || 'listing-photo.jpg'), mime: String(i.mime_type || 'image/jpeg'), base64: String(i.content_base64),
+          entity_type: 'property', entity_id: String(i.listing_id), category: 'Photos',
+        })
+        if ('error' in got) return fail('Couldn’t upload the photo', got.error)
+        i.document_id = got.doc.id
+      }
+      if (!i.document_id) return fail('Couldn’t use that photo', 'Send either document_id or content_base64.')
       const pub = await ctx.publishImage(String(i.document_id))
       if ('error' in pub) return fail('Couldn’t use that photo', pub.error)
       const r = await ctx.call('PUT', `/api/properties/${i.listing_id}`, { img_url: pub.url })
