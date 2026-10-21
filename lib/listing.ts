@@ -91,6 +91,28 @@ export function price(p: Property): string | null {
   return null
 }
 
+/** The short area name a listing is grouped and headlined under: its
+ *  corridor/belt (capitalised, since the seed fallback stores one in
+ *  lowercase), or its zone when no corridor is set. Shared by the
+ *  marketplace filter chips and the card title so they never disagree
+ *  about what a listing's "place" is. */
+export function placeOf(p: Property): string {
+  const corridor = (p.corridor ?? '').trim()
+  if (corridor) return corridor.charAt(0).toUpperCase() + corridor.slice(1)
+  return `${p.zone} Bengaluru`
+}
+
+/** A short, uniform headline for the marketplace grid: what the
+ *  listing is and how big, not its full marketing copy. The raw
+ *  title (seller-written, often a full sentence with the price
+ *  structure crammed in) stays as the <h1> on the listing's own page,
+ *  where there is room for it — a grid of cards is not. */
+export function cardTitle(p: Property): string {
+  const { label } = listingKind(p)
+  const sz = size(p)
+  return sz ? `${sz} · ${label}` : label
+}
+
 /** Only what this listing states, most useful first. */
 export function facts(p: Property, limit = 6): [string, string][] {
   const rows: ([string, string] | null)[] = [

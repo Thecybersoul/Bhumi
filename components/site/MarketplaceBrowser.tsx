@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Icon from './Icon'
 import { getPropertyType } from '@/lib/content/propertyTypes'
 import { whatsapp } from '@/lib/content/brand'
-import { size, price, listingHref } from '@/lib/listing'
+import { size, price, listingHref, placeOf, cardTitle } from '@/lib/listing'
 import type { Property } from '@/lib/types'
 
 /* The marketplace browser.
@@ -27,15 +27,6 @@ import type { Property } from '@/lib/types'
    link to one, and a link sent on WhatsApp opened the whole
    marketplace instead. How a listing states its size and price now
    lives in lib/listing.ts, shared with that page. */
-
-/** The short area name a listing is grouped under: its corridor/belt
-    (capitalised, since the seed fallback stores one in lowercase), or
-    its zone when no corridor is set. */
-function placeOf(p: Property): string {
-  const corridor = (p.corridor ?? '').trim()
-  if (corridor) return corridor.charAt(0).toUpperCase() + corridor.slice(1)
-  return `${p.zone} Bengaluru`
-}
 
 export default function MarketplaceBrowser({
   properties,
@@ -149,22 +140,16 @@ export default function MarketplaceBrowser({
       ) : (
         <div className="grid g3">
           {filtered.map((p) => {
-            const t = getPropertyType(p.property_type)
-            const s = size(p)
             const pr = price(p)
             return (
               <Link key={p.code} href={listingHref(p)} className="mkCard">
                 <span className="mkCard__photo">
-                  <img src={p.img_url} alt="" loading="lazy" width={800} height={520} />
+                  <img src={p.img_url} alt={p.title} loading="lazy" width={800} height={520} />
                 </span>
                 <span className="mkCard__body">
-                  <span className="mkCard__meta">
-                    {[t?.shortName, p.location].filter(Boolean).join(' · ')}
-                  </span>
-                  <span className="mkCard__title">{p.title}</span>
-                  {(s || pr) && (
-                    <span className="mkCard__figures">{[s, pr].filter(Boolean).join(' · ')}</span>
-                  )}
+                  <span className="mkCard__meta">{placeOf(p)}</span>
+                  <span className="mkCard__title">{cardTitle(p)}</span>
+                  {pr && <span className="mkCard__figures">{pr}</span>}
                 </span>
               </Link>
             )

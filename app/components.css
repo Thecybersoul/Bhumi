@@ -1102,6 +1102,7 @@ a.contactLines__row:hover { color: var(--gold-deep); }
 .mkCard__title {
   font-family: var(--serif); font-size: 1.1rem; font-weight: 600;
   line-height: 1.34; color: var(--navy);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .mkCard__figures { font-size: .88rem; color: var(--ink-2); }
 
