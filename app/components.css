@@ -1070,6 +1070,15 @@ a.contactLines__row:hover { color: var(--gold-deep); }
   border-radius: var(--r); font-size: .9rem; outline: none; transition: .16s var(--ease);
 }
 .mkFilters__search:focus { border-color: var(--navy); box-shadow: var(--ring); }
+.mkFilters__select {
+  flex: 1; min-width: 240px; max-width: 420px; padding: 11px 40px 11px 16px; border: 1px solid var(--line);
+  border-radius: var(--r); font-size: .9rem; color: var(--ink); background: #fff; outline: none; cursor: pointer;
+  transition: .16s var(--ease); appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%233D4A55'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+}
+.mkFilters__select:focus { border-color: var(--navy); box-shadow: var(--ring); }
+.mkFilters__select:hover { border-color: var(--gold); }
 
 /* ─── Marketplace listing card ────────────────────────────
    A photograph, where it is and what it is, and the two

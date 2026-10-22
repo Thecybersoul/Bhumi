@@ -10,17 +10,19 @@ import type { Property } from '@/lib/types'
 
 /* The marketplace browser.
 
-   Deliberately shallow: two rows of chips and a grid of cards. An
-   earlier version carried a search box, a verified-only toggle, six
-   type chips and six corridor chips over a card that changed its
-   headline metrics per asset class — a lot of apparatus for an
-   inventory you can count on one hand.
+   Deliberately shallow: a type chip row, a location dropdown, and a
+   grid of cards. An earlier version carried a search box, a
+   verified-only toggle, six type chips and six corridor chips over a
+   card that changed its headline metrics per asset class — a lot of
+   apparatus for an inventory you can count on one hand. Location was
+   chips too until there were enough corridors that the row wrapped
+   into a wall of pills; a dropdown holds the same list collapsed.
 
-   Both filter rows are built from the listings themselves rather than
-   from the full type and corridor registries. A chip only exists if
-   something is behind it, so the filters cannot offer a category that
-   returns nothing, and nothing needs pruning by hand as inventory
-   changes.
+   Both filters are built from the listings themselves rather than
+   from the full type and corridor registries. An option only exists
+   if something is behind it, so the filters cannot offer a category
+   that returns nothing, and nothing needs pruning by hand as
+   inventory changes.
 
    Cards link to /marketplace/[code]. They used to open a drawer,
    which meant a listing had no address of its own — nothing could
@@ -91,21 +93,22 @@ export default function MarketplaceBrowser({
 
         {places.length > 1 && (
           <div className="mkFilters__row">
-            <span className="mkFilters__label">Location</span>
-            <div className="chips">
-              <button className={`chip ${!place ? 'selected' : ''}`} onClick={() => setPlace('')}>
-                All
-              </button>
+            <label className="mkFilters__label" htmlFor="mkLocation">
+              Location
+            </label>
+            <select
+              id="mkLocation"
+              className="mkFilters__select"
+              value={place}
+              onChange={(e) => setPlace(e.target.value)}
+            >
+              <option value="">All locations</option>
               {places.map((l) => (
-                <button
-                  key={l}
-                  className={`chip ${place === l ? 'selected' : ''}`}
-                  onClick={() => setPlace(place === l ? '' : l)}
-                >
+                <option key={l} value={l}>
                   {l}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         )}
       </div>
