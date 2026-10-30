@@ -41,6 +41,8 @@ export const AUDITED: Record<string, string> = {
   meetings: 'meeting',
   documents: 'document',
   contacts: 'contact',
+  prospects: 'prospect',
+  crm_deals: 'crm_deal',
 }
 
 /** A human name for any record, from whichever fields it has. */
