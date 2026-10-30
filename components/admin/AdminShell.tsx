@@ -148,6 +148,9 @@ export default function AdminShell({ user, children }: { user: ShellUser | null;
                     {item.label}
                     {item.hint && <small>{item.hint}</small>}
                   </span>
+                  {item.href === '/admin/crm' ? (
+                    <span className="erpPill" style={{ background: 'var(--gold)', color: '#fff', letterSpacing: '.06em' }}>NEW</span>
+                  ) : null}
                   {item.href === '/admin/notifications' && unread ? (
                     <span className="erpPill" style={{ background: 'var(--gold)', color: '#fff' }}>{unread > 9 ? '9+' : unread}</span>
                   ) : null}
