@@ -3,10 +3,9 @@
 
    Pure data and functions with no server imports, so the API routes
    (validation) and the page (display, messages) agree on the stages,
-   the 1% commission and the forecast weights.
+   the forecast weights. Commission is never a fixed rate: it is agreed
+   per property and entered on the deal.
    ═══════════════════════════════════════════════════════════ */
-
-export const COMMISSION_RATE = 0.01
 
 export const STAGES = ['New', 'Contacted', 'Interested', 'Proposal', 'Won', 'Lost'] as const
 /** Forecast weight by stage: Interested 30%, Proposal 60%, Won 100%. */
@@ -68,7 +67,6 @@ export interface CrmDeal {
   updated_by?: string | null
 }
 
-export const commissionOn = (value: number | null | undefined) => Math.round((Number(value) || 0) * COMMISSION_RATE)
 export const today = () => new Date().toISOString().slice(0, 10)
 export const isOverdue = (r: { next_date: string | null; stage: number }) => !!r.next_date && r.next_date <= today() && r.stage < 4
 
@@ -149,8 +147,39 @@ Parcel brief attached. Shall I set up a site visit? — {Your name}, Bhumi Estat
     ['We have our own sourcing', 'Understood. When you can\'t find the right parcel, that\'s exactly when we step in: we specialise in the ones that are hard to find and already legal-clear.'],
     ['Send details on email', 'Will do. Which location and size are you actively looking at right now? (Set the next date before sending.)'],
     ['Not looking right now', 'When is your next project planned? I\'ll reach out two weeks before with what we have.'],
-    ['What\'s your commission?', '1% of the total deal price, charged once on closing. No retainer, no upfront fees.'],
+    ['What\'s your commission?', 'It is agreed per property and depends on the deal. It is charged only when the deal closes, with no retainer and no upfront fees. Which parcel are you looking at? I will give you the exact terms for that one.'],
     ['We don\'t work with intermediaries', 'We don\'t act as a typical broker. We hold direct mandates from landowners and do the legal work in-house. You talk to us and you talk to the land.'],
+  ],
+  readiness: [
+    ['Title chain', 'Sale deeds and a 30-year Encumbrance Certificate (Kaveri). The seller’s name runs unbroken to today.'],
+    ['Revenue record', 'Current RTC/Pahani and mutation extract (Bhoomi) in the seller’s name, with extent and classification matching the documents.'],
+    ['Every owner signs', 'All co-owners and legal heirs identified, and their authority to sell confirmed. Fragmented ownership is the commonest delay.'],
+    ['Khata', 'Khata type and number on file. Anything other than a clean khata is explained.'],
+    ['Conversion', 'Conversion order on file, or the status stated honestly: not converted, applied, or not needed in the master plan area.'],
+    ['Zoning', 'Land-use zone checked against the master plan for that survey number, in writing.'],
+    ['Survey and boundary', 'Survey sketch and a measured boundary that matches the documents, with the extent in acres and guntas.'],
+    ['Access', 'Approach road, its width and who owns it. Nothing is landlocked.'],
+    ['Litigation and liens', 'Court, mortgage and acquisition-notice checks done.'],
+    ['Price and structure', 'What the owner wants, and whether they will take outright, JD or JV.'],
+  ],
+  sixQuestions: [
+    ['Who decides?', 'The owner, the land acquisition head, or a committee. Get the name.'],
+    ['What exactly do they need?', 'Acres, place, approvals in hand or not, plotted or villas or apartments.'],
+    ['What structure suits them?', 'Outright, JD, JV, or an option. Ask how much cash they want to commit upfront.'],
+    ['When is their next project?', 'The date that makes this urgent. If there is none, set a date to ask again.'],
+    ['How do they decide?', 'Site visit, legal review, board or family sign-off, and how long each takes.'],
+    ['Who else are they talking to?', 'Their own sourcing, other brokers, other parcels. Ask plainly.'],
+  ],
+  siteVisit: [
+    ['Before', 'Confirm the date in writing. Send the location pin and who is coming. Have the brief and the legal pack ready, and walk the boundary yourself first.'],
+    ['During', 'Show the boundary, the access road and the corners. Let them walk it. Note every question; do not guess answers. Ask what they would need to see to decide.'],
+    ['After', 'Within a day: send a thank-you, answers to every question, and the documents they asked for. Log the visit under Meetings, update the stage, set the next date.'],
+  ],
+  rules: [
+    ['Agents', 'If we facilitate sales of plots or units in a RERA-registered project we must be registered as an agent with K-RERA, show the number on cards and ads, and never make false claims.'],
+    ['Personal data', 'Contact people in their business role. Note where you found their details. Stop the moment someone asks. Do not buy lists.'],
+    ['Calls and WhatsApp', 'One-to-one, human-written messages only. No bulk blasts. Respect Do Not Disturb and stop on request.'],
+    ['Honesty', 'Say only what we can prove: title work done, documents on request. Never promise approvals or conversions we do not hold.'],
   ],
   sectors: [
     ['Plotted layouts', 'Kanakapura Road, Mysore Road, Devanahalli, Sarjapura Road'],

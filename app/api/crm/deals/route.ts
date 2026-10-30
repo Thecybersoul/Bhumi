@@ -7,6 +7,7 @@ const h = crmRoutes(
   {
     name: 'text',
     value: 'num',
+    commission: 'num',
     stage: 'int',
     parcel: 'text',
     property_code: 'text',

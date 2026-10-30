@@ -107,6 +107,20 @@ export default function CrmPlaybook({ me }: { me: string }) {
       <Fold n={8} title="Sector angles">
         <Table head={['Development type', 'Where to look']} rows={PLAYBOOK.sectors} />
       </Fold>
+      <Fold n={9} title="Is the parcel ready to sell?">
+        <p className="crmSub" style={{ marginBottom: 8 }}>Developers check title first, then zoning, then physical risk. A parcel that can answer all of these is a parcel that sells.</p>
+        <Table head={['Check', 'What good looks like']} rows={PLAYBOOK.readiness} />
+      </Fold>
+      <Fold n={10} title="Six things to learn before a site visit">
+        <Table head={['Ask', 'Why']} rows={PLAYBOOK.sixQuestions} />
+      </Fold>
+      <Fold n={11} title="Site visit protocol">
+        <Table head={['When', 'What to do']} rows={PLAYBOOK.siteVisit} />
+      </Fold>
+      <Fold n={12} title="Rules of the road">
+        <Table head={['Topic', 'Rule']} rows={PLAYBOOK.rules} />
+        <p className="crmSub">Guidance for the team, not legal advice. Check specifics with our lawyer.</p>
+      </Fold>
     </div>
   )
 }

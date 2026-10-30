@@ -3,7 +3,6 @@ import { assertAdmin, currentUser } from '@/lib/auth'
 import { insertReturningId, update, remove } from '@/lib/db'
 import { logActivity } from '@/lib/activity'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
-import { COMMISSION_RATE } from '@/lib/crm'
 
 /* The CRM's two tables share one set of routes (GET list, POST one or a
    CSV import, PATCH ?id, DELETE ?id). Each table says which fields it
@@ -41,8 +40,8 @@ function clean(spec: Spec, body: Record<string, unknown>, partial: boolean): { d
 
 export function crmRoutes(table: string, spec: Spec, opts: { deal?: boolean } = {}) {
   const prepare = (data: Record<string, unknown>) => {
-    // A deal's commission is always 1% of its value, never typed in.
-    if (opts.deal && 'value' in data) data.commission = Math.round((Number(data.value) || 0) * COMMISSION_RATE)
+    // A deal's value and commission are NOT NULL: an emptied box means 0, not a failed save.
+    if (opts.deal) for (const k of ['value', 'commission']) if (k in data && data[k] == null) data[k] = 0
     return data
   }
 

@@ -7,7 +7,7 @@ import { api, telHref, waHref } from './lib'
 import { Banner, Card, Empty, Field, Loading, Pill } from './ui'
 import CrmPlaybook, { CopyBtn } from './CrmPlaybook'
 import {
-  COMMISSION_RATE, DEAL_TYPES, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, SOURCES, STAGES, STAGE_WEIGHT, addDays, commissionOn, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
+  DEAL_TYPES, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, SOURCES, STAGES, STAGE_WEIGHT, addDays, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
   type CrmDeal, type ListKey, type Parcel, type Prospect,
 } from '@/lib/crm'
 
@@ -123,6 +123,8 @@ export default function CrmView() {
   const overdue = [...all.filter(isOverdue), ...deals.filter(isOverdue)]
   const openDeals = deals.filter((d) => d.stage === 2 || d.stage === 3)
   const weighted = openDeals.reduce((s, d) => s + d.value * (STAGE_WEIGHT[d.stage] ?? 0), 0)
+  const weightedCommission = openDeals.reduce((s, d) => s + d.commission * (STAGE_WEIGHT[d.stage] ?? 0), 0)
+  const noCommission = openDeals.filter((d) => d.value > 0 && !d.commission).length
   const first = me.split(/\s+/)[0] || 'there'
 
   return (
@@ -130,7 +132,7 @@ export default function CrmView() {
       <div className="erpHead">
         <div>
           <h1>Sales CRM</h1>
-          <p>Who to contact today, what to say, and what happens next. Close the land deals; 1% commission on each.</p>
+          <p>Who to contact today, what to say, and what happens next. Close the land deals; commission is agreed for each property.</p>
         </div>
         <div className="erpHead__actions">
           <button className="erpBtn primary" onClick={() => setEdit(blank(list))}>
@@ -159,7 +161,7 @@ export default function CrmView() {
             </span>
           </p>
           <div className="crmKpis">
-            <Kpi label="Commission pipeline" value={rupees(weighted * COMMISSION_RATE)} note="weighted, at 1%" />
+            <Kpi label="Commission pipeline" value={rupees(weightedCommission)} note="weighted, from each deal’s terms" />
             <Kpi label="Deals won" value={String(deals.filter((d) => d.stage === 4).length)} note={rupees(deals.filter((d) => d.stage === 4).reduce((s, d) => s + d.commission, 0)) + ' commission'} />
             <Kpi label="Interested" value={String(all.filter((p) => p.stage === 2).length)} note="prospects" />
             <Kpi label="Overdue" value={String(overdue.length)} note="follow-ups" alert={overdue.length > 0} />
@@ -268,7 +270,7 @@ export default function CrmView() {
           <div className="crmKpis">
             <Kpi label="Open pipeline" value={rupees(openDeals.reduce((s, d) => s + d.value, 0))} note="Interested + Proposal" />
             <Kpi label="Weighted forecast" value={rupees(weighted)} note="30% interested · 60% proposal" />
-            <Kpi label="Projected commission" value={rupees(weighted * COMMISSION_RATE)} note="forecast × 1%" />
+            <Kpi label="Projected commission" value={rupees(weightedCommission)} note={noCommission ? `${noCommission} open deal${noCommission > 1 ? 's' : ''} without commission set` : 'weighted, from each deal’s terms'} />
             <Kpi label="Won" value={rupees(deals.filter((d) => d.stage === 4).reduce((s, d) => s + d.value, 0))} note={rupees(deals.filter((d) => d.stage === 4).reduce((s, d) => s + d.commission, 0)) + ' commission'} />
           </div>
           <div className="erpHead__actions" style={{ margin: '14px 0' }}>
@@ -292,7 +294,7 @@ export default function CrmView() {
                       {d.deal_type || d.expected_close ? <div className="crmSub">{[d.deal_type, d.expected_close ? `close ${d.expected_close}` : ''].filter(Boolean).join(' · ')}</div> : null}
                       <div className="crmMoney">
                         <b>{d.value ? rupees(d.value) : 'Value not set'}</b>
-                        <span>{d.value ? `${rupees(d.commission)} commission` : ''}</span>
+                        <span>{d.commission ? `${rupees(d.commission)} commission` : d.value ? 'Commission not set' : ''}</span>
                       </div>
                       {d.next_date ? <div className={`crmSub ${isOverdue(d) ? 'is-late' : ''}`}>Next: {d.next_date}</div> : null}
                       <div className="crmMove">
@@ -464,7 +466,7 @@ function ProspectPanel({ p, me, listings, onPipeline, onClose, onSave, onDelete 
         <Field label="Next action date" hint="No date means it is not in the funnel.">
           <input type="date" className="erpInput" value={d.next_date ?? ''} onChange={(e) => set('next_date', e.target.value || null)} />
         </Field>
-        <Field label="Deal value (₹)" hint={d.value ? `Commission at 1%: ${rupees(commissionOn(d.value))}` : 'Excluding commission.'}>
+        <Field label="Deal value (₹)" hint="Excluding commission.">
           <input type="number" className="erpInput" value={d.value ?? ''} onChange={(e) => set('value', e.target.value === '' ? null : Number(e.target.value))} />
         </Field>
         {text('owner', 'Owner')}
@@ -534,8 +536,14 @@ function DealPanel({ d: init, listings, onClose, onSave, onDelete }: { d: CrmDea
         <Field label="Expected close">
           <input type="date" className="erpInput" value={d.expected_close ?? ''} onChange={(e) => set('expected_close', e.target.value || null)} />
         </Field>
-        <Field label="Deal value (₹)" hint={`Commission at 1%: ${rupees(commissionOn(d.value))}`}>
+        <Field label="Deal value (₹)">
           <input type="number" className="erpInput" value={d.value || ''} onChange={(e) => set('value', Number(e.target.value) || 0)} />
+        </Field>
+        <Field label="Commission (₹)" hint="Agreed for this property. Leave empty until it is agreed.">
+          <input type="number" className="erpInput" value={d.commission || ''} onChange={(e) => set('commission', Number(e.target.value) || 0)} />
+        </Field>
+        <Field label="Or work it out from a %" hint={d.value && d.commission ? `That is ${(Math.round((d.commission / d.value) * 10000) / 100).toString()}% of the deal value.` : 'Type a percentage to fill in the amount above.'}>
+          <input type="number" step="0.01" className="erpInput" placeholder="e.g. 1.5" onChange={(e) => { const pc = Number(e.target.value); if (d.value && pc > 0) set('commission', Math.round((d.value * pc) / 100)) }} />
         </Field>
         <Field label="Stage">
           <select className="erpInput" value={d.stage} onChange={(e) => set('stage', Number(e.target.value))}>

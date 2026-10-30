@@ -6,7 +6,7 @@
 --               we go to, one row each, with the funnel stage, next
 --               action date, owner and deal value on the row itself;
 --   crm_deals   the open sales pipeline (Interested → Proposal →
---               Won / Lost), with the 1% commission worked out.
+--               Won / Lost), with the commission agreed for that property.
 -- Stage: 0 New · 1 Contacted · 2 Interested · 3 Proposal · 4 Won · 5 Lost.
 -- List:  P partner · D developer · B builder · I investor.
 -- Access goes through the ERP's own API with the service role, so RLS
