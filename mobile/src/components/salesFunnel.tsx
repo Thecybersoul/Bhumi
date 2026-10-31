@@ -5,13 +5,15 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useApi } from '@/lib/api'
 import { useSession } from '@/lib/auth'
 import { telUrl, waUrl } from '@/lib/leads'
+import { openUrl } from '@/lib/links'
 import { ourCommissionLakh } from '@/lib/agents'
 import type { PropertyTransaction } from '@/lib/types'
 import { colors, radius, space, text } from '@/lib/theme'
 import { ErrorBanner, LoadingScreen } from '@/components/ui'
+import { ContactRows, PhoneActions } from '@/components/prospectContacts'
 import {
   DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, PLAYBOOK, STAGES, addDays, isOverdue, openingMessage, rupees, today,
-  type ListKey, type Prospect,
+  ROLE_TYPES, type ListKey, type Prospect, type ProspectContact, type RoleType,
 } from '@/lib/crm'
 
 /* The outbound half of the Sales tab, the same as /admin/crm on the web:
@@ -36,12 +38,18 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
   const [list, setList] = useState<ListKey>('B')
   const [prio, setPrio] = useState('')
   const [q, setQ] = useState('')
+  const [pcs, setPcs] = useState<ProspectContact[]>([])
+  const [roleF, setRoleF] = useState<'' | RoleType>('')
 
   const load = useCallback(async () => {
     try {
-      const p = await api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects')
+      const [p, pc] = await Promise.all([
+        api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects'),
+        api.get<{ data: ProspectContact[] }>('/api/crm/prospect-contacts').catch(() => ({ data: [] as ProspectContact[] })),
+      ])
       setError(p.error || null)
       setProspects(p.data)
+      setPcs(pc.data ?? [])
     } catch (e) {
       setError((e as Error).message)
       setProspects((cur) => cur ?? [])
@@ -68,13 +76,17 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
     patchProspect(p.id, { last_contacted: today(), next_date: addDays(FOLLOW_UP_DAYS[Math.max(1, p.stage)] ?? 3), stage: Math.max(1, p.stage) })
 
   const all = useMemo(() => prospects ?? [], [prospects])
+  const linesOf = useCallback(
+    (id: string) => pcs.filter((c) => c.prospect_id === id && (!roleF || c.role_type === roleF)),
+    [pcs, roleF]
+  )
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return all
-      .filter((p) => p.list === list && (!prio || p.prio === prio))
+      .filter((p) => p.list === list && (!prio || p.prio === prio) && (!roleF || linesOf(p.id).length > 0))
       .filter((p) => !needle || [p.name, p.kind, p.sector, p.area, p.requirement].join(' ').toLowerCase().includes(needle))
       .sort((a, b) => (a.prio ?? 'Z').localeCompare(b.prio ?? 'Z') || a.name.localeCompare(b.name))
-  }, [all, list, prio, q])
+  }, [all, list, prio, q, roleF, linesOf])
 
   if (prospects === null) return <LoadingScreen />
 
@@ -164,6 +176,12 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
               ))}
             </ScrollView>
             <TextInput style={s.search} placeholder="Search name, area, requirement…" placeholderTextColor={colors.muted} value={q} onChangeText={setQ} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
+              <Chip on={!roleF} label="Any contact" onPress={() => setRoleF('')} />
+              {ROLE_TYPES.filter((r) => r !== 'Generic').map((r) => (
+                <Chip key={r} on={roleF === r} label={`${r} · ${pcs.filter((c) => c.role_type === r).length}`} onPress={() => setRoleF(roleF === r ? '' : r)} />
+              ))}
+            </ScrollView>
             <View style={[s.chips, { marginBottom: space.md }]}>
               {PRIOS.map((x) => <Chip key={x} on={prio === x} label={`Priority ${x}`} onPress={() => setPrio(prio === x ? '' : x)} />)}
               <Chip on={false} label="+ Prospect" onPress={() => router.push({ pathname: '/crm/prospect/[id]', params: { id: 'new', list } })} gold />
@@ -171,7 +189,7 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
             {shown.length === 0 ? (
               <Text style={s.empty}>{all.some((p) => p.list === list) ? 'No prospects match.' : `No ${LISTS[list].label.toLowerCase()} yet. Tap + Prospect to add one.`}</Text>
             ) : (
-              shown.map((p) => <ProspectCard key={p.id} p={p} me={me} onOpen={() => openProspect(p.id)} onStage={(st) => setStage(p, st)} onFollowedUp={() => followedUp(p)} />)
+              shown.map((p) => <ProspectCard key={p.id} p={p} me={me} lines={linesOf(p.id)} onOpen={() => openProspect(p.id)} onStage={(st) => setStage(p, st)} onFollowedUp={() => followedUp(p)} />)
             )}
           </>
         ) : (
@@ -248,7 +266,7 @@ function Small({ icon, label, onPress }: { icon: IconName; label: string; onPres
   )
 }
 
-function ProspectCard({ p, me, onOpen, onStage, onFollowedUp }: { p: Prospect; me: string; onOpen: () => void; onStage: (st: number) => void; onFollowedUp: () => void }) {
+function ProspectCard({ p, me, lines, onOpen, onStage, onFollowedUp }: { p: Prospect; me: string; lines: ProspectContact[]; onOpen: () => void; onStage: (st: number) => void; onFollowedUp: () => void }) {
   const msg = openingMessage(p, me)
   // Inline, not an Alert: Android alerts hold at most three buttons.
   const [picking, setPicking] = useState(false)
@@ -260,13 +278,13 @@ function ProspectCard({ p, me, onOpen, onStage, onFollowedUp }: { p: Prospect; m
         <Ionicons name="chevron-forward" size={16} color={colors.muted} />
       </TouchableOpacity>
       {[p.kind, p.sector, p.deal_band].filter(Boolean).length ? <Text style={s.rowSub}>{[p.kind, p.sector, p.deal_band].filter(Boolean).join(' · ')}</Text> : null}
-      {p.contact_person ? <Text style={s.rowSub}>Ask for: {p.contact_person}</Text> : null}
+      {p.contact_person && lines.length === 0 ? <Text style={s.rowSub}>Ask for: {p.contact_person}</Text> : null}
       {p.requirement ? <Text style={s.line}><Text style={s.b}>Needs: </Text>{p.requirement}</Text> : null}
       {p.trigger_why ? <Text style={s.line} numberOfLines={4}><Text style={s.b}>Why now: </Text>{p.trigger_why}</Text> : null}
+      <ContactRows contacts={lines} message={msg} />
       <View style={s.actions}>
         {p.email ? <Small icon="mail-outline" label="Email" onPress={() => Linking.openURL(`mailto:${p.email}?subject=${encodeURIComponent('Verified land parcels near Bengaluru')}&body=${encodeURIComponent(msg)}`)} /> : null}
-        {p.phone ? <Small icon="call-outline" label="Call" onPress={() => Linking.openURL(telUrl(p.phone))} /> : null}
-        {p.phone ? <Small icon="logo-whatsapp" label="WhatsApp" onPress={() => Linking.openURL(waUrl(p.phone, msg))} /> : null}
+        <PhoneActions phone={p.phone} message={msg} />
         <Small icon="swap-vertical" label={STAGES[p.stage]} onPress={() => setPicking((v) => !v)} />
         <Small icon="checkmark-done" label="Followed up" onPress={onFollowedUp} />
       </View>

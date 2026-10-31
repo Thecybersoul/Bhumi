@@ -20,7 +20,7 @@ export async function syncFollowUp(opts: {
   id: string
   label: string
   date: string | null | undefined
-  owner?: string | null
+  assignee?: string | null
   /** The record is finished (won, lost, closed): nothing left to chase. */
   done?: boolean
 }): Promise<void> {
@@ -58,7 +58,7 @@ export async function syncFollowUp(opts: {
       due_at: due,
       status: 'Open',
       priority: 'Normal',
-      assignee: (opts.owner ?? '').slice(0, 80),
+      assignee: (opts.assignee ?? '').slice(0, 80),
       created_at: new Date().toISOString(),
     })
   } catch {

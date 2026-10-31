@@ -4,6 +4,7 @@ import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 import { useApi, ApiError } from '@/lib/api'
 import { colors, radius, space, text } from '@/lib/theme'
 import { budget, CONTACT_ROLES, stageLabel, TYPE_LABEL, waUrl } from '@/lib/leads'
+import { openUrl } from '@/lib/links'
 import { AGENT_SPECIALTIES, AGENT_STATUSES, agentShareLakh, lakh, type DealMoney, type Involvement } from '@/lib/agents'
 import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { Contact, Lead, Property } from '@/lib/types'
@@ -290,7 +291,7 @@ export default function ContactScreen() {
                             if (!v.entity_id) return
                             const all = await api.get<{ data: Property[] }>('/api/properties?admin=1')
                             const p = all.data.find((x) => x.id === v.entity_id)
-                            if (p) Linking.openURL(waUrl(c.phone, listingMessage(c.name, p).replace("that fits what you're looking for", 'for your buyers')))
+                            if (p) openUrl(waUrl(c.phone, listingMessage(c.name, p).replace("that fits what you're looking for", 'for your buyers')))
                             // Remember who has it: tagged as a co-broker on the listing.
                             await api.post('/api/contact-links', { contact_id: c.id, entity_type: 'property', entity_id: v.entity_id, entity_label: v.entity_label, role: 'Co-broker' }).catch(() => {})
                             setSharing(false)

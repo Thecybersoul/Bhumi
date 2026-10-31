@@ -3404,3 +3404,5 @@ a.erpChat__step:hover { text-decoration: underline; }
 .crmObj p { margin: 4px 0 8px; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.6; }
 @media (max-width: 900px) { .crmKpis { grid-template-columns: repeat(2, 1fr); } .crmCards { grid-template-columns: 1fr; } }
 .crmMatch { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; margin: 6px 0; background: var(--cream); }
+.crmContacts { display: grid; gap: 8px; margin: 8px 0; }
+.crmContacts .crmMatch { padding: 8px 10px; }

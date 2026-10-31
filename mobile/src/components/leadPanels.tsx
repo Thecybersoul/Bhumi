@@ -4,6 +4,7 @@ import { router } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useApi } from '@/lib/api'
 import { budget, cr, isSelling, SHOWN_STATUSES, stageLabel, TYPE_LABEL, waUrl, whenShort } from '@/lib/leads'
+import { openUrl } from '@/lib/links'
 import { colors, radius, space, text } from '@/lib/theme'
 import type { Contact, Lead, MatchItem, Property, Shown, Task } from '@/lib/types'
 import { timeAgo } from './people'
@@ -149,7 +150,7 @@ export function ShownPanel({ lead, onChange }: { lead: Lead; onChange?: () => vo
                         <Button
                           label="WhatsApp it"
                           onPress={() => {
-                            Linking.openURL(waUrl(lead.phone, listingMessage(lead.name, p)))
+                            openUrl(waUrl(lead.phone, listingMessage(lead.name, p)))
                             if (r.status === 'Shortlisted') setStatus(r, 'Shared')
                           }}
                         />

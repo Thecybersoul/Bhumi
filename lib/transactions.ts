@@ -85,7 +85,7 @@ export async function createTransaction(body: Record<string, unknown>) {
   // Every deal gets its own Drive folder the moment it exists.
   if (result.id) {
     const id = result.id
-    if (row.next_date) await syncFollowUp({ type: 'transaction', id, label: propertyLabel, date: row.next_date as string, owner: row.advisor as string })
+    if (row.next_date) await syncFollowUp({ type: 'transaction', id, label: propertyLabel, date: row.next_date as string, assignee: row.advisor as string })
     after(() => ensureRecordFolder({ section: 'Deals', entityType: 'transaction', entityId: id, label: `${reference} · ${propertyLabel}` }).catch(() => null))
   }
   return { ok: true as const, id: result.id, reference, persisted: result.persisted }

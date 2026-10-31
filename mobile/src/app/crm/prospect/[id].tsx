@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -8,14 +8,16 @@ import { colors, radius, space, text } from '@/lib/theme'
 import { ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button, Chips, Field, TextField } from '@/components/form'
 import { DateChips } from '@/components/crmDate'
+import { ContactsPanel } from '@/components/prospectContacts'
 import {
   LISTS, LIST_KEYS, SOURCES, STAGES, addDays, matchParcels, openingMessage, prioFromScore, today,
   type ListKey, type Parcel, type Prospect,
+  type ProspectContact,
 } from '@/lib/crm'
 
 const blank = (list: ListKey): Prospect => ({
   id: '', list, name: '', kind: '', sector: '', prio: 'B', email: '', alt_emails: '', phone: '', area: '', requirement: '',
-  trigger_why: '', history: '', stage: 0, next_date: addDays(1), value: null, owner: '', note: '', contact_person: '', website: '',
+  trigger_why: '', history: '', stage: 0, next_date: addDays(1), value: null, note: '', contact_person: '', website: '',
   source: '', source_url: '', deal_band: '', score: null, last_contacted: null, updated_at: '',
 })
 
@@ -29,8 +31,17 @@ export default function ProspectScreen() {
   const { user } = useSession()
   const me = user?.name ?? ''
   const nav = useNavigation()
-  const [d, setD] = useState<Prospect | null>(isNew ? { ...blank((LIST_KEYS.includes(list as ListKey) ? list : 'B') as ListKey), owner: me } : null)
+  const [d, setD] = useState<Prospect | null>(isNew ? blank((LIST_KEYS.includes(list as ListKey) ? list : 'B') as ListKey) : null)
   const [listings, setListings] = useState<Parcel[]>([])
+  const [lines, setLines] = useState<ProspectContact[]>([])
+  const loadLines = useCallback(() => {
+    if (!isNew)
+      api
+        .get<{ data: ProspectContact[] }>('/api/crm/prospect-contacts')
+        .then((r) => setLines(r.data.filter((c) => c.prospect_id === id)))
+        .catch(() => {})
+  }, [api, id, isNew])
+  useEffect(loadLines, [loadLines])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -40,7 +51,7 @@ export default function ProspectScreen() {
         .get<{ data: Prospect[] }>('/api/crm/prospects')
         .then((r) => {
           const p = r.data.find((x) => x.id === id)
-          if (p) setD({ ...p, owner: p.owner || me })
+          if (p) setD(p)
           else setError('This prospect no longer exists.')
         })
         .catch((e) => setError((e as Error).message))
@@ -206,6 +217,8 @@ export default function ProspectScreen() {
             </View>
           ) : null}
 
+          {!isNew ? <ContactsPanel prospectId={d.id} contacts={lines} message={msg} onChanged={loadLines} onError={setError} /> : null}
+
           <Chips label="List" options={LIST_KEYS.map((k) => LISTS[k].one)} value={LISTS[d.list].one} onChange={(v) => set('list', LIST_KEYS.find((k) => LISTS[k].one === v) ?? 'B')} />
           {str('name', 'Company / name')}
           {str('contact_person', 'Decision-maker (name, role)')}
@@ -228,14 +241,13 @@ export default function ProspectScreen() {
           {str('trigger_why', 'Why they should buy now', { multiline: true })}
           {str('kind', 'Kind')}
           {str('sector', 'Sector')}
-          {str('phone', 'Phone', { keyboard: 'phone-pad' })}
+          {str('phone', 'Phone', { keyboard: 'phone-pad', hint: 'One number. Other lines go under People and lines, each with its own buttons.' })}
           {str('email', 'Email', { keyboard: 'email-address' })}
           {str('alt_emails', 'Other emails', { keyboard: 'email-address' })}
           {str('website', 'Website', { keyboard: 'url' })}
           <Chips label="Source" options={SOURCES} value={(d.source as (typeof SOURCES)[number]) || ''} onChange={(v) => set('source', v)} />
           {str('source_url', 'Source link', { keyboard: 'url' })}
           <TextField label="Deal value (₹)" value={d.value == null ? '' : String(d.value)} keyboard="numeric" hint="Excluding commission." onChange={(v) => set('value', v.trim() === '' ? null : Number(v.replace(/\D/g, '')) || 0)} />
-          {str('owner', 'Owner')}
           {str('history', 'Previous contact', { multiline: true })}
           {str('note', 'Notes', { multiline: true })}
 

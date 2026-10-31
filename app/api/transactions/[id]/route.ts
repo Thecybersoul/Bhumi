@@ -91,7 +91,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const r = row as { property_label: string; next_date: string | null; outcome: string; advisor: string; prospect_id: string | null } | null
     // A closed deal means the prospect it came from is won.
     if (r?.prospect_id && patch.outcome === 'Closed') await update('prospects', r.prospect_id, { stage: 4, next_date: null })
-    if (r) await syncFollowUp({ type: 'transaction', id, label: r.property_label, date: r.next_date, owner: r.advisor, done: r.outcome !== 'In progress' })
+    if (r) await syncFollowUp({ type: 'transaction', id, label: r.property_label, date: r.next_date, assignee: r.advisor, done: r.outcome !== 'In progress' })
   }
 
   // A closed deal makes its agents' shares payable.

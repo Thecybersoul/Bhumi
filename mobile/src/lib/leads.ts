@@ -1,3 +1,4 @@
+import { telLink, waLink } from '@/lib/phone'
 import type { Lead } from './types'
 
 /* The lead vocabulary — the same lists as the web admin's
@@ -38,14 +39,10 @@ export function budget(min?: number | null, max?: number | null) {
 }
 
 /** A bare ten-digit Indian mobile gets +91, so tel: and WhatsApp both work. */
-export function phoneE164(p?: string | null) {
-  const d = String(p ?? '').replace(/\D/g, '')
-  if (d.length === 10) return `91${d}`
-  if (d.length === 11 && d.startsWith('0')) return `91${d.slice(1)}`
-  return d
-}
-export const telUrl = (p?: string | null) => `tel:+${phoneE164(p)}`
-export const waUrl = (p?: string | null, text?: string) => `https://wa.me/${phoneE164(p)}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+/* Phone links come from lib/phone.ts (the same rules as the website).
+   null means there is nothing safe to open: hide or disable the button. */
+export const telUrl = (p?: string | null): string | null => telLink(p)
+export const waUrl = (p?: string | null, text?: string): string | null => waLink(p, text)
 
 export const followUpDue = (l: Pick<Lead, 'next_follow_up_at' | 'stage'>) =>
   !!l.next_follow_up_at && leadIsOpen(l.stage) && new Date(l.next_follow_up_at).getTime() < new Date().setHours(23, 59, 59, 999)
