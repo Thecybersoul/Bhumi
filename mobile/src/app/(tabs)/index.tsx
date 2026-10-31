@@ -11,6 +11,7 @@ import { ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Avatar, timeAgo } from '@/components/people'
 import { ActivityRow } from '@/components/activity'
 import { KIND_ICON, KIND_TINT, dayLabel, needsOutcome, timeOf } from '@/lib/meetings'
+import { isOverdue, type Prospect as CrmProspect } from '@/lib/crm'
 import type { Activity, ApiResult, Lead, Meeting, Property, PropertyTransaction, Task, TransactionStage } from '@/lib/types'
 
 type IconName = keyof typeof Ionicons.glyphMap
@@ -184,6 +185,8 @@ export default function HomeScreen() {
             <Quick icon="briefcase-outline" label="Deal" onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: 'new' } })} />
             <Quick icon="map-outline" label="Listing" onPress={() => router.push({ pathname: '/property/[id]', params: { id: 'new' } })} />
           </View>
+
+          <FunnelCard />
 
           {view ? (
             <>
@@ -375,6 +378,44 @@ function Stat({ icon, value, label, alert, onPress }: { icon: IconName; value: n
   )
 }
 
+/* The Sales CRM's front door: today's overdue follow-ups and untouched
+   Priority A prospects, one tap from Home. */
+function FunnelCard() {
+  const api = useApi()
+  const [n, setN] = useState<{ due: number; startHere: number } | null>(null)
+  useFocusEffect(
+    useCallback(() => {
+      api
+        .get<{ data: CrmProspect[] }>('/api/crm/prospects')
+        .then((r) => setN({ due: r.data.filter(isOverdue).length, startHere: r.data.filter((p) => p.prio === 'A' && p.stage === 0).length }))
+        .catch(() => {})
+    }, [api])
+  )
+  return (
+    <TouchableOpacity style={s.funnel} onPress={() => router.push('/crm')} activeOpacity={0.85}>
+      <View style={s.funnelIcon}>
+        <Ionicons name="funnel" size={20} color={colors.goldSoft} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={s.funnelTitle}>Sales Funnel</Text>
+          <View style={s.newTag}>
+            <Text style={s.newTagText}>NEW</Text>
+          </View>
+        </View>
+        <Text style={s.funnelSub}>
+          {n == null
+            ? 'Prospects, pipeline and playbook'
+            : n.due
+              ? `${n.due} follow-up${n.due > 1 ? 's' : ''} due · ${n.startHere} Priority A to start`
+              : `Nothing overdue · ${n.startHere} Priority A to start`}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={colors.goldSoft} />
+    </TouchableOpacity>
+  )
+}
+
 function Quick({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   return (
     <TouchableOpacity style={s.quickItem} onPress={onPress}>
@@ -412,6 +453,12 @@ function Empty({ text: msg }: { text: string }) {
 }
 
 const s = StyleSheet.create({
+  funnel: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.navy, borderRadius: radius.lg, padding: space.md, marginBottom: space.md, borderWidth: 1, borderColor: colors.gold },
+  funnelIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.navy700, alignItems: 'center', justifyContent: 'center' },
+  funnelTitle: { color: colors.white, fontSize: text.lg, fontWeight: '800' },
+  funnelSub: { color: colors.goldTint, fontSize: text.sm, marginTop: 2 },
+  newTag: { backgroundColor: colors.gold, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  newTagText: { color: colors.white, fontSize: text['2xs'], fontWeight: '800', letterSpacing: 0.6 },
   hero: { backgroundColor: colors.navy, paddingHorizontal: space.lg, paddingTop: 4, paddingBottom: 46 },
   hello: { color: colors.white, fontSize: text.xl, fontWeight: '800' },
   date: { color: 'rgba(255,255,255,0.65)', fontSize: text.sm, marginTop: 2 },
