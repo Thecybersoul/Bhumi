@@ -135,6 +135,12 @@ and the note's "Other published lines" (named by the label printed with each num
 Prospects have **no owner** in the UI or API (Bhumi Estates owns them all); the `prospects.owner` column is kept,
 unused. A prospect's follow-up task goes to whoever saved it.
 
+**The funnel prefers mid to large developers.** `developerSize()` in `lib/crm.ts` (copied to `mobile/src/lib/crm.ts`; `scripts/test-developer-size.ts`
+fails on drift) reads size from the words in `prospects.kind` and the top of `deal_band`, with a reason shown on the card.
+`byPreference()` orders every prospect list and "Start here": large, mid, developers of unrecorded size, small, then
+non-developers (operators, funds, institutions), each by priority then score. Lists open on Developers, ordered
+Developers, Builders, Investors, Partners. A "Mid–large developers" size filter sits beside the contact-role filter.
+
 ### The web admin and the app are one ERP with one structure
 
 The web admin (`/admin`) mirrors the mobile app screen for screen:
