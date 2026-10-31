@@ -41,6 +41,7 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
   const [pcs, setPcs] = useState<ProspectContact[]>([])
   const [roleF, setRoleF] = useState<'' | RoleType>('')
   const [sizeF, setSizeF] = useState<SizeFilter>('')
+  const [showLost, setShowLost] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -84,10 +85,10 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return all
-      .filter((p) => p.list === list && (!prio || p.prio === prio) && (!roleF || linesOf(p.id).length > 0) && matchesSize(p, sizeF))
+      .filter((p) => p.list === list && (!prio || p.prio === prio) && (showLost ? p.stage === 5 : p.stage !== 5) && (!roleF || linesOf(p.id).length > 0) && matchesSize(p, sizeF))
       .filter((p) => !needle || [p.name, p.kind, p.sector, p.area, p.requirement].join(' ').toLowerCase().includes(needle))
       .sort(byPreference)
-  }, [all, list, prio, q, roleF, sizeF, linesOf])
+  }, [all, list, prio, q, roleF, sizeF, showLost, linesOf])
 
   if (prospects === null) return <LoadingScreen />
 
@@ -164,7 +165,7 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
                     <Text style={s.rowTitle}>{LISTS[k].label}</Text>
                     <Text style={s.rowSub}>{LISTS[k].hint}</Text>
                   </View>
-                  <Text style={s.rowRight}>{all.filter((p) => p.list === k).length}</Text>
+                  <Text style={s.rowRight}>{all.filter((p) => p.list === k && p.stage !== 5).length}</Text>
                 </TouchableOpacity>
               ))}
             </Block>
@@ -173,7 +174,7 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
           <>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
               {LIST_KEYS.map((k) => (
-                <Chip key={k} on={list === k} label={`${LISTS[k].label} · ${all.filter((p) => p.list === k).length}`} onPress={() => setList(k)} />
+                <Chip key={k} on={list === k} label={`${LISTS[k].label} · ${all.filter((p) => p.list === k && p.stage !== 5).length}`} onPress={() => setList(k)} />
               ))}
             </ScrollView>
             <TextInput style={s.search} placeholder="Search name, area, requirement…" placeholderTextColor={colors.muted} value={q} onChangeText={setQ} />
@@ -188,6 +189,7 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
             </ScrollView>
             <View style={[s.chips, { marginBottom: space.md }]}>
               {PRIOS.map((x) => <Chip key={x} on={prio === x} label={`Priority ${x}`} onPress={() => setPrio(prio === x ? '' : x)} />)}
+              <Chip on={showLost} label={`Lost · ${all.filter((p) => p.list === list && p.stage === 5).length}`} onPress={() => setShowLost((v) => !v)} />
               <Chip on={false} label="+ Prospect" onPress={() => router.push({ pathname: '/crm/prospect/[id]', params: { id: 'new', list } })} gold />
             </View>
             {shown.length === 0 ? (

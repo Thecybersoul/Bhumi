@@ -142,7 +142,7 @@ export default function CrmView() {
       .filter((p) => p.list === list)
       .filter((p) => !roleF || linesOf(p.id).length > 0)
       .filter((p) => matchesSize(p, sizeF))
-      .filter((p) => (!prio || p.prio === prio) && (stageF === '' || p.stage === Number(stageF)) && (!areaF || p.area === areaF) && (!hasEmail || p.email))
+      .filter((p) => (!prio || p.prio === prio) && (stageF === '' ? p.stage !== 5 : p.stage === Number(stageF)) && (!areaF || p.area === areaF) && (!hasEmail || p.email))
       .filter((p) => !needle || [p.name, p.kind, p.sector, p.area, p.requirement, p.email, p.phone].join(' ').toLowerCase().includes(needle))
       .sort(byPreference)
   }, [all, list, prio, stageF, areaF, hasEmail, q, roleF, sizeF, byProspect])
@@ -243,7 +243,7 @@ export default function CrmView() {
                       <div className="erpRow__title">{LISTS[k].label}</div>
                       <div className="erpRow__sub">{LISTS[k].hint}</div>
                     </div>
-                    <div className="erpRow__right">{all.filter((p) => p.list === k).length}</div>
+                    <div className="erpRow__right">{all.filter((p) => p.list === k && p.stage !== 5).length}</div>
                   </button>
                 ))}
               </Card>
@@ -255,7 +255,7 @@ export default function CrmView() {
           <div className="erpSeg">
             {LIST_KEYS.map((k) => (
               <button key={k} className={list === k ? 'is-on' : ''} onClick={() => { setList(k); setAreaF('') }}>
-                {LISTS[k].label} · {all.filter((p) => p.list === k).length}
+                {LISTS[k].label} · {all.filter((p) => p.list === k && p.stage !== 5).length}
               </button>
             ))}
           </div>
@@ -276,7 +276,7 @@ export default function CrmView() {
               {ROLE_TYPES.filter((r) => r !== 'Generic').map((r) => <option key={r} value={r}>{r} contacts · {pcs.filter((c) => c.role_type === r).length}</option>)}
             </select>
             <select className="erpInput" value={stageF} onChange={(e) => setStageF(e.target.value)}>
-              <option value="">Any stage</option>
+              <option value="">Any open stage</option>
               {STAGES.map((s, i) => (
                 <option key={s} value={i}>{s}</option>
               ))}
