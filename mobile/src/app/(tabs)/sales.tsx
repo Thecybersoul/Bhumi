@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useApi, ApiError } from '@/lib/api'
 import { colors, radius, space, text } from '@/lib/theme'
 import { budget, followUpDue, isSelling, LEAD_PIPELINE, leadIsOpen, stageLabel, telUrl, TYPE_LABEL, waUrl, whenShort } from '@/lib/leads'
+import { openUrl } from '@/lib/links'
 import { lakh } from '@/lib/agents'
 import { Badge, EmptyState, ErrorBanner, LoadingScreen, Screen } from '@/components/ui'
 import { Button } from '@/components/form'
@@ -279,10 +280,10 @@ export default function SalesScreen() {
                 <View style={s.actions}>
                   {l.phone ? (
                     <>
-                      <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(telUrl(l.phone))}>
+                      <TouchableOpacity style={s.iconBtn} onPress={() => openUrl(telUrl(l.phone))}>
                         <Ionicons name="call" size={16} color={colors.navy} />
                       </TouchableOpacity>
-                      <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(waUrl(l.phone, `Hello ${l.name.split(' ')[0]}, this is Bhumi Estates.`))}>
+                      <TouchableOpacity style={s.iconBtn} onPress={() => openUrl(waUrl(l.phone, `Hello ${l.name.split(' ')[0]}, this is Bhumi Estates.`))}>
                         <Ionicons name="logo-whatsapp" size={16} color={colors.navy} />
                       </TouchableOpacity>
                     </>
@@ -336,7 +337,7 @@ export default function SalesScreen() {
                   ) : null}
                 </View>
                 {c.phone ? (
-                  <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(telUrl(c.phone))}>
+                  <TouchableOpacity style={s.iconBtn} onPress={() => openUrl(telUrl(c.phone))}>
                     <Ionicons name="call" size={16} color={colors.navy} />
                   </TouchableOpacity>
                 ) : null}
@@ -394,7 +395,7 @@ export default function SalesScreen() {
                   </Text>
                 </View>
                 {a.phone ? (
-                  <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(telUrl(a.phone))}>
+                  <TouchableOpacity style={s.iconBtn} onPress={() => openUrl(telUrl(a.phone))}>
                     <Ionicons name="call" size={16} color={colors.navy} />
                   </TouchableOpacity>
                 ) : null}

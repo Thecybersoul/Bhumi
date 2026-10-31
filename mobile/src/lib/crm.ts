@@ -41,7 +41,6 @@ export interface Prospect {
   stage: number
   next_date: string | null
   value: number | null
-  owner: string
   note: string
   contact_person: string
   website: string
@@ -54,6 +53,24 @@ export interface Prospect {
   lead_id?: string | null
   updated_at: string
   updated_by?: string | null
+}
+
+export const ROLE_TYPES = ['Leadership', 'Land', 'Marketing', 'IR', 'Sales', 'Generic'] as const
+export type RoleType = (typeof ROLE_TYPES)[number]
+
+/** One person or phone line at a prospect (migration 023). The prospect's own
+ *  `phone` stays its primary number; these are the others, each with a name. */
+export interface ProspectContact {
+  id: string
+  prospect_id: string
+  name: string
+  role: string
+  role_type: RoleType
+  phone: string
+  email: string
+  source_url: string
+  verified_on: string | null
+  origin: 'manual' | 'contact_person' | 'note_line'
 }
 
 export const today = () => new Date().toISOString().slice(0, 10)

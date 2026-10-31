@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ApiError, useApi } from '@/lib/api'
 import { CONTACT_ROLES, telUrl, waUrl } from '@/lib/leads'
+import { openUrl } from '@/lib/links'
 import { AGENT_LINK_ROLES, isAgent } from '@/lib/agents'
 import { colors, radius, space, text } from '@/lib/theme'
 import type { Contact } from '@/lib/types'
@@ -31,8 +32,8 @@ export function ContactActions({
     <View style={s.actions}>
       {phone ? (
         <>
-          <ActionBtn icon="call" label="Call" onPress={() => Linking.openURL(telUrl(phone))} />
-          <ActionBtn icon="logo-whatsapp" label="WhatsApp" onPress={() => Linking.openURL(waUrl(phone, greeting ?? `Hello ${first}, this is Bhumi Estates.`))} />
+          <ActionBtn icon="call" label="Call" onPress={() => openUrl(telUrl(phone))} />
+          <ActionBtn icon="logo-whatsapp" label="WhatsApp" onPress={() => openUrl(waUrl(phone, greeting ?? `Hello ${first}, this is Bhumi Estates.`))} />
         </>
       ) : null}
       {email ? (
@@ -312,7 +313,7 @@ export function PeoplePanel({
                 <Text style={s.optSub}>{[r.role, r.contact.phone, r.contact.company].filter(Boolean).join(' · ')}</Text>
               </TouchableOpacity>
               {r.contact.phone ? (
-                <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(telUrl(r.contact!.phone))}>
+                <TouchableOpacity style={s.iconBtn} onPress={() => openUrl(telUrl(r.contact!.phone))}>
                   <Ionicons name="call" size={15} color={colors.navy} />
                 </TouchableOpacity>
               ) : null}

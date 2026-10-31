@@ -17,6 +17,7 @@ import {
   type Involvement,
 } from '@/lib/agents'
 import { telUrl, waUrl } from '@/lib/leads'
+import { openUrl } from '@/lib/links'
 import { colors, radius, space, text } from '@/lib/theme'
 import type { Contact } from '@/lib/types'
 import { Badge } from './ui'
@@ -125,13 +126,13 @@ export function InvolvementRow({
         {onDeal && payable ? <Badge label={r.payout_status || 'Not due'} tone={payoutTone(r.payout_status)} /> : null}
         {!record && c?.phone ? (
           <>
-            <TouchableOpacity style={s.iconBtn} onPress={() => Linking.openURL(telUrl(c.phone))} accessibilityLabel={`Call ${c.name}`}>
+            <TouchableOpacity style={s.iconBtn} onPress={() => openUrl(telUrl(c.phone))} accessibilityLabel={`Call ${c.name}`}>
               <Ionicons name="call" size={15} color={colors.navy} />
             </TouchableOpacity>
             <TouchableOpacity
               style={s.iconBtn}
               accessibilityLabel={`WhatsApp ${c.name}`}
-              onPress={() => Linking.openURL(waUrl(c.phone, `Hello ${c.name.split(' ')[0]}, this is Bhumi Estates regarding ${r.entity_label}.`))}
+              onPress={() => openUrl(waUrl(c.phone, `Hello ${c.name.split(' ')[0]}, this is Bhumi Estates regarding ${r.entity_label}.`))}
             >
               <Ionicons name="logo-whatsapp" size={15} color={colors.navy} />
             </TouchableOpacity>

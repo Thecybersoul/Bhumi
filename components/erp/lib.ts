@@ -9,6 +9,8 @@
    the same activity trail.
    ═══════════════════════════════════════════════════════════ */
 
+import { telLink, waLink } from '@/lib/phone'
+
 export class ApiError extends Error {}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -368,16 +370,12 @@ export function budget(min?: number | null, max?: number | null) {
   return ''
 }
 
-/* Phone links. Numbers are stored as typed; these add +91 to a bare
-   ten-digit Indian mobile so tel: and WhatsApp both work. */
-export function phoneE164(p?: string | null) {
-  const d = String(p ?? '').replace(/\D/g, '')
-  if (d.length === 10) return `91${d}`
-  if (d.length === 11 && d.startsWith('0')) return `91${d.slice(1)}`
-  return d
-}
-export const telHref = (p?: string | null) => `tel:+${phoneE164(p)}`
-export const waHref = (p?: string | null, text?: string) => `https://wa.me/${phoneE164(p)}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+/* Phone links come from lib/phone.ts, shared with the app. They are
+   undefined (an <a> with no href) when the number is missing, is really
+   several numbers, or can't take WhatsApp (a landline), so a bad value
+   renders a dead link instead of a broken dial. */
+export const telHref = (p?: string | null): string | undefined => telLink(p) ?? undefined
+export const waHref = (p?: string | null, text?: string): string | undefined => waLink(p, text) ?? undefined
 
 /** A follow-up that is due today or already late. */
 export const followUpDue = (l: Pick<Lead, 'next_follow_up_at' | 'stage'>) =>

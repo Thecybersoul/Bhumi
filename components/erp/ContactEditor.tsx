@@ -407,7 +407,8 @@ export default function ContactEditor({ id, agent }: { id: string; agent?: boole
                                 if (!v.entity_id) return
                                 const all = await api.get<{ data: { id: string; code: string; title: string; location: string; status: string }[] }>('/api/properties?admin=1')
                                 const p = all.data.find((x) => x.id === v.entity_id)
-                                if (p) window.open(waHref(c.phone, listingMessage(c.name, p).replace("that fits what you're looking for", 'for your buyers')), '_blank')
+                                const link = p ? waHref(c.phone, listingMessage(c.name, p).replace("that fits what you're looking for", 'for your buyers')) : undefined
+                                if (link) window.open(link, '_blank')
                                 // Remember who has it: tagged as a co-broker on the listing.
                                 await api
                                   .post('/api/contact-links', { contact_id: c.id, entity_type: 'property', entity_id: v.entity_id, entity_label: v.entity_label, role: 'Co-broker' })

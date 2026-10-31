@@ -42,6 +42,7 @@ export const AUDITED: Record<string, string> = {
   documents: 'document',
   contacts: 'contact',
   prospects: 'prospect',
+  prospect_contacts: 'prospect_contact',
   crm_deals: 'crm_deal',
 }
 

@@ -8,9 +8,10 @@ import { ArrowLeft, ArrowRight, Check, Mail, MessageCircle, Phone, Plus, Trash2,
 import { api, followUpDue, leadIsOpen, ourCommissionLakh, telHref, waHref } from './lib'
 import { Banner, Card, Empty, Field, Loading, Pill } from './ui'
 import CrmPlaybook, { CopyBtn } from './CrmPlaybook'
+import { ContactEditor, ContactList, PhoneButtons } from './ProspectContacts'
 import {
-  DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, SOURCES, STAGES, addDays, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
-  type ListKey, type Parcel, type Prospect,
+  DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, ROLE_TYPES, SOURCES, STAGES, addDays, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
+  type ListKey, type Parcel, type Prospect, type ProspectContact, type RoleType,
 } from '@/lib/crm'
 
 /* The sales funnel, inside the ERP: who to contact today, what to say,
@@ -31,7 +32,7 @@ const PIPE_LABEL: Record<number, string> = { 2: 'Interested', 3: 'Proposal sent'
 const PRIOS = ['A', 'B', 'C'] as const
 const blank = (list: ListKey): Prospect => ({
   id: '', list, name: '', kind: '', sector: '', prio: 'B', email: '', alt_emails: '', phone: '', area: '', requirement: '',
-  trigger_why: '', history: '', stage: 0, next_date: null, value: null, owner: '', note: '', contact_person: '', website: '',
+  trigger_why: '', history: '', stage: 0, next_date: null, value: null, note: '', contact_person: '', website: '',
   source: '', source_url: '', deal_band: '', score: null, last_contacted: null, updated_at: '',
 })
 
@@ -53,6 +54,8 @@ export default function CrmView() {
   const [areaF, setAreaF] = useState('')
   const [hasEmail, setHasEmail] = useState(false)
   const [q, setQ] = useState('')
+  const [pcs, setPcs] = useState<ProspectContact[]>([])
+  const [roleF, setRoleF] = useState<'' | RoleType>('')
   // Inbound side of the funnel, shown on the Funnel tab: open leads and deals in progress.
   const [inbound, setInbound] = useState({ leads: 0, due: 0 })
 
@@ -60,8 +63,9 @@ export default function CrmView() {
 
   const load = useCallback(async () => {
     try {
-      const [p, t, l, m, ls] = await Promise.all([
+      const [p, pc, t, l, m, ls] = await Promise.all([
         api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects'),
+        api.get<{ data: ProspectContact[] }>('/api/crm/prospect-contacts').catch(() => ({ data: [] as ProspectContact[] })),
         api.get<{ data: Txn[]; source: string }>('/api/transactions').catch(() => null),
         api.get<{ data: { stage: string; next_follow_up_at?: string | null }[]; source: string }>('/api/leads').catch(() => null),
         api.get<{ user: { name: string } }>('/api/admin/me').catch(() => null),
@@ -73,6 +77,7 @@ export default function CrmView() {
       if (ls.source === 'live') setListings(ls.data)
       setError(p.error || null)
       setProspects(p.data)
+      setPcs(pc.data ?? [])
       if (m) setMe(m.user.name)
     } catch (e) {
       setError((e as Error).message)
@@ -123,15 +128,22 @@ export default function CrmView() {
     })
 
   const all = prospects ?? []
+  const byProspect = useMemo(() => {
+    const m = new Map<string, ProspectContact[]>()
+    for (const c of pcs) m.set(c.prospect_id, [...(m.get(c.prospect_id) ?? []), c])
+    return m
+  }, [pcs])
+  const linesOf = (id: string) => (byProspect.get(id) ?? []).filter((c) => !roleF || c.role_type === roleF)
   const areas = useMemo(() => [...new Set(all.filter((p) => p.list === list).map((p) => p.area).filter(Boolean))].sort(), [all, list])
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return all
       .filter((p) => p.list === list)
+      .filter((p) => !roleF || linesOf(p.id).length > 0)
       .filter((p) => (!prio || p.prio === prio) && (stageF === '' || p.stage === Number(stageF)) && (!areaF || p.area === areaF) && (!hasEmail || p.email))
       .filter((p) => !needle || [p.name, p.kind, p.sector, p.area, p.requirement, p.email, p.phone].join(' ').toLowerCase().includes(needle))
       .sort((a, b) => (a.prio ?? 'Z').localeCompare(b.prio ?? 'Z') || a.name.localeCompare(b.name))
-  }, [all, list, prio, stageF, areaF, hasEmail, q])
+  }, [all, list, prio, stageF, areaF, hasEmail, q, roleF, byProspect])
 
   const openDeals = txns.filter((t) => t.outcome === 'In progress')
   const lakh = (t: Txn) => ourCommissionLakh({ deal_value_cr: t.deal_value_cr, commission_type: t.commission_type, commission_value: t.commission_value }) ?? 0
@@ -254,6 +266,10 @@ export default function CrmView() {
                 </button>
               ))}
             </div>
+            <select className="erpInput" value={roleF} onChange={(e) => setRoleF(e.target.value as '' | RoleType)} aria-label="Contact role">
+              <option value="">Any contact</option>
+              {ROLE_TYPES.filter((r) => r !== 'Generic').map((r) => <option key={r} value={r}>{r} contacts · {pcs.filter((c) => c.role_type === r).length}</option>)}
+            </select>
             <select className="erpInput" value={stageF} onChange={(e) => setStageF(e.target.value)}>
               <option value="">Any stage</option>
               {STAGES.map((s, i) => (
@@ -285,7 +301,7 @@ export default function CrmView() {
           ) : (
             <div className="crmCards">
               {shown.map((p) => (
-                <ProspectCard key={p.id} p={p} me={me} onOpen={() => setEdit(p)} onStage={(stage) => setStage(p, stage)} onFollowedUp={() => followedUp(p)} />
+                <ProspectCard key={p.id} p={p} me={me} lines={linesOf(p.id)} onOpen={() => setEdit(p)} onStage={(stage) => setStage(p, stage)} onFollowedUp={() => followedUp(p)} />
               ))}
             </div>
           )}
@@ -298,6 +314,9 @@ export default function CrmView() {
         <ProspectPanel
           p={edit}
           me={me}
+          lines={byProspect.get(edit.id) ?? []}
+          onLinesChanged={load}
+          onError={setError}
           listings={listings}
           onDeal={(l) => { openDeal(edit, l); setEdit(null) }}
           onLead={() => { makeLead(edit); setEdit(null) }}
@@ -339,7 +358,7 @@ function MiniRow({ p, onOpen }: { p: Prospect; onOpen: (p: Prospect) => void }) 
   )
 }
 
-function ProspectCard({ p, me, onOpen, onStage, onFollowedUp }: { p: Prospect; me: string; onOpen: () => void; onStage: (s: number) => void; onFollowedUp: () => void }) {
+function ProspectCard({ p, me, lines, onOpen, onStage, onFollowedUp }: { p: Prospect; me: string; lines: ProspectContact[]; onOpen: () => void; onStage: (s: number) => void; onFollowedUp: () => void }) {
   const msg = openingMessage(p, me)
   return (
     <div className="erpCard crmCard">
@@ -348,14 +367,14 @@ function ProspectCard({ p, me, onOpen, onStage, onFollowedUp }: { p: Prospect; m
         <button className="crmLink" onClick={onOpen}>{p.name}</button>
       </div>
       <div className="crmSub">{[p.kind, p.sector, p.deal_band].filter(Boolean).join(' · ')}</div>
-      {p.contact_person ? <div className="crmSub">Ask for: {p.contact_person}</div> : null}
+      {p.contact_person && lines.length === 0 ? <div className="crmSub">Ask for: {p.contact_person}</div> : null}
       {p.requirement ? <p className="crmLine"><b>Needs:</b> {p.requirement}</p> : null}
       {p.trigger_why ? <p className="crmLine"><b>Why now:</b> {p.trigger_why}</p> : null}
       <div className="crmSub">{[p.email, p.phone].filter(Boolean).join(' · ')}</div>
+      <ContactList contacts={lines} message={msg} />
       <div className="crmActions">
         {p.email ? <a className="erpBtn ghost sm" href={`mailto:${p.email}?subject=${encodeURIComponent('Verified land parcels near Bengaluru')}&body=${encodeURIComponent(msg)}`}><Mail size={13} /> Email</a> : null}
-        {p.phone ? <a className="erpBtn ghost sm" href={telHref(p.phone)}><Phone size={13} /> Call</a> : null}
-        {p.phone ? <a className="erpBtn ghost sm" href={waHref(p.phone, msg)} target="_blank" rel="noopener noreferrer"><MessageCircle size={13} /> WhatsApp</a> : null}
+        <PhoneButtons phone={p.phone} message={msg} />
         <select className="erpInput crmStage" value={p.stage} onChange={(e) => onStage(Number(e.target.value))} aria-label="Stage">
           {STAGES.map((s, i) => (
             <option key={s} value={i}>{s}</option>
@@ -382,8 +401,8 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
   )
 }
 
-function ProspectPanel({ p, me, listings, onDeal, onLead, onClose, onSave, onDelete }: { p: Prospect; me: string; listings: Parcel[]; onDeal: (l?: Parcel) => void; onLead: () => void; onClose: () => void; onSave: (d: Prospect) => void; onDelete: (id: string) => void }) {
-  const [d, setD] = useState<Prospect>({ ...p, owner: p.owner || me })
+function ProspectPanel({ p, me, lines, onLinesChanged, onError, listings, onDeal, onLead, onClose, onSave, onDelete }: { p: Prospect; me: string; lines: ProspectContact[]; onLinesChanged: () => void; onError: (m: string) => void; listings: Parcel[]; onDeal: (l?: Parcel) => void; onLead: () => void; onClose: () => void; onSave: (d: Prospect) => void; onDelete: (id: string) => void }) {
+  const [d, setD] = useState<Prospect>(p)
   const set = <K extends keyof Prospect>(k: K, v: Prospect[K]) => setD((x) => ({ ...x, [k]: v }))
   const text = (k: keyof Prospect, label: string, full = false) => (
     <Field label={label} full={full}>
@@ -411,7 +430,9 @@ function ProspectPanel({ p, me, listings, onDeal, onLead, onClose, onSave, onDel
           </select>
         </Field>
         {text('email', 'Email')}
-        {text('phone', 'Phone')}
+        <Field label="Phone" hint="One number. Other lines go under People and lines, each with its own buttons.">
+          <input className="erpInput" inputMode="tel" value={d.phone} onChange={(e) => set('phone', e.target.value)} />
+        </Field>
         {text('alt_emails', 'Other emails', true)}
         {text('website', 'Website', true)}
         <Field label="Source">
@@ -441,10 +462,10 @@ function ProspectPanel({ p, me, listings, onDeal, onLead, onClose, onSave, onDel
         <Field label="Deal value (₹)" hint="Excluding commission.">
           <input type="number" className="erpInput" value={d.value ?? ''} onChange={(e) => set('value', e.target.value === '' ? null : Number(e.target.value))} />
         </Field>
-        {text('owner', 'Owner')}
         <Field label="Notes" full>
           <textarea className="erpInput" value={d.note} onChange={(e) => set('note', e.target.value)} />
         </Field>
+        {p.id ? <ContactEditor prospectId={p.id} contacts={lines} message={msg} onChanged={onLinesChanged} onError={onError} /> : <small className="erpField full">Save the prospect first, then add its other people and lines.</small>}
         {p.id ? (
           <Field label="Opening message" full>
             <textarea className="erpInput" readOnly value={msg} style={{ minHeight: 110 }} />
@@ -543,7 +564,7 @@ function ImportPanel({ list, onDone, onError }: { list: ListKey; onDone: () => v
     <div className="erpCard" style={{ marginTop: 12 }}>
       <div className="erpCard__title" style={{ marginBottom: 6 }}>Import prospects</div>
       <p className="crmSub" style={{ marginBottom: 8 }}>
-        Paste CSV or tab-separated rows with a header row. Columns: name (required), list (P/D/B/I, defaults to {LISTS[list].label}), kind, sector, prio (A/B/C), email, phone, area, requirement, trigger_why, owner.
+        Paste CSV or tab-separated rows with a header row. Columns: name (required), list (P/D/B/I, defaults to {LISTS[list].label}), kind, sector, prio (A/B/C), email, phone, area, requirement, trigger_why. Phone is one number per prospect; extra lines go on the prospect afterwards.
       </p>
       <textarea className="erpInput" style={{ minHeight: 140 }} value={text} onChange={(e) => setText(e.target.value)} placeholder="name,kind,prio,email,phone,area,requirement" />
       <div className="crmActions" style={{ marginTop: 10 }}>

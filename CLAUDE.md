@@ -78,7 +78,7 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`022`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`023`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
@@ -116,6 +116,24 @@ prospect Won.
 in step with its `next_date` (created, re-dated, or marked Done when the date is cleared or the record is won, lost or
 closed). It is called from the prospect routes and the transaction routes, never throws, and tasks can point at a
 `prospect`. Leads keep their own `next_follow_up_at`; they already show on Home and in reminders.
+
+### Phone numbers and the people at a prospect (migration 023)
+
+**Every Call and WhatsApp link is built by `lib/phone.ts`** (copied byte-for-byte to `mobile/src/lib/phone.ts`;
+`scripts/test-phone.ts` fails if they drift). One field holds ONE number: anything that is several numbers, has
+letters or isn't plausible yields `null`, and `null` means no button (never a guessed link). Indian 10-digit 6-9 and
+other `+country` numbers get Call and WhatsApp; landlines (`+91 80 …`, `+91 22 …`) and toll-free (`1800 …`, never given
+a +91) get Call only. `+91 80`/`79` is the one ambiguity: it is a landline only when the STD code is set apart
+(`+91 80 4145 6000`), a mobile when written 5+5 (`+91 80888 66000`). Web `telHref`/`waHref` return `undefined` and the
+app's `telUrl`/`waUrl` return `null`; use `openUrl()` (`mobile/src/lib/links.ts`) so a bad link never throws. The CRM
+API stores `phone` fields in tidy display form and rejects a multi-number value (CSV import blanks it instead).
+
+**`prospect_contacts`** (`/api/crm/prospect-contacts`) holds the other people and lines at a prospect, one row each with
+its own phone, `role_type` (Leadership/Land/Marketing/IR/Sales/Generic) and optional email/source. `prospects.phone` stays
+the primary number. 023 backfilled it from `contact_person` ("Name (Role)", no phone: we don't know whose line is whose)
+and the note's "Other published lines" (named by the label printed with each number, else "Other published line").
+Prospects have **no owner** in the UI or API (Bhumi Estates owns them all); the `prospects.owner` column is kept,
+unused. A prospect's follow-up task goes to whoever saved it.
 
 ### The web admin and the app are one ERP with one structure
 

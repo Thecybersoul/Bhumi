@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin } from '@/lib/auth'
+import { assertAdmin, currentUser } from '@/lib/auth'
 import { insertReturningId, update } from '@/lib/db'
 import { contactsReady, ensureContact, schemaHint } from '@/lib/contacts'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const p = data as (Prospect & { contact_id?: string | null; lead_id?: string | null }) | null
   if (!p) return NextResponse.json({ error: 'Prospect not found' }, { status: 404 })
 
+  const me = (await currentUser())?.name ?? ''
   const ready = await contactsReady()
   const contactId =
     p.contact_id ??
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       intent: 'Buy',
       locations: p.area.slice(0, 300),
       notes: [p.requirement, p.trigger_why, p.note].filter(Boolean).join('\n').slice(0, 2000),
-      assigned_to: p.owner,
+      assigned_to: me,
       last_contacted_at: new Date().toISOString(),
       next_follow_up_at: new Date(`${nextDate}T09:00:00+05:30`).toISOString(),
       payload: {},
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     next_date: nextDate,
     prospect_id: id,
     lead_id: p.lead_id ?? undefined,
-    advisor: p.owner,
+    advisor: me,
     notes: [p.requirement, p.trigger_why].filter(Boolean).join('\n'),
   })
   if (!deal.ok) return NextResponse.json({ error: deal.error }, { status: deal.status })
