@@ -1,13 +1,14 @@
 /* Checks the Sales CRM API (/api/crm/*) against a running dev server:
-   signed-out requests are refused, a deal's commission is whatever was
-   agreed for it (never a fixed rate), bad input is rejected, a CSV import lands, and the parcel
-   matcher puts the Hoskote parcel in front of the Hoskote plotted builder.
-   Creates throwaway rows and deletes them.
+   signed-out requests are refused, a prospect's next date becomes a task,
+   a prospect converts to a lead and then to a real deal (one contact, links
+   both ways), a CSV import lands, and the parcel matcher puts the Hoskote
+   parcel in front of the Hoskote plotted builder. Creates throwaway rows and
+   deletes them (the contact card it makes is left: delete it in Contacts).
 
      npx tsx --env-file=.env.local scripts/test-crm.ts        (ORIGIN=… to override) */
 import { listUsers } from '../lib/users'
 import { createSessionToken } from '../lib/session'
-import { matchParcels, type Prospect, type CrmDeal } from '../lib/crm'
+import { matchParcels, type Prospect } from '../lib/crm'
 
 const ORIGIN = process.env.ORIGIN || 'http://localhost:3000'
 const fails: string[] = []
@@ -24,26 +25,29 @@ async function main() {
     fetch(`${ORIGIN}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }).then(async (r) => ({ status: r.status, json: (await r.json().catch(() => ({}))) as Record<string, unknown> }))
 
   check('signed-out prospects request is refused', (await call('GET', '/api/crm/prospects', undefined, {})).status === 401)
-  check('signed-out deals request is refused', (await call('GET', '/api/crm/deals', undefined, {})).status === 401)
+  check('signed-out convert is refused', (await call('POST', '/api/crm/prospects/x/convert', { to: 'lead' }, {})).status === 401)
 
-  const deals = (await call('GET', '/api/crm/deals')).json.data as CrmDeal[]
-  check('the two seeded deals are in the pipeline', ['Devanahalli 10-gunta Parcel', 'Sarjapura 50-acre JD'].every((n) => deals.some((d) => d.name === n)))
+  const next = new Date(Date.now() + 3 * 86400e3).toISOString().slice(0, 10)
+  const made = await call('POST', '/api/crm/prospects', { name: 'TEST funnel — delete me', list: 'B', phone: '9000000001', next_date: next, requirement: 'test' })
+  check('a prospect can be created', made.status === 201, JSON.stringify(made.json))
+  const pid = String(made.json.id)
+  const tasks = async () => ((await call('GET', '/api/tasks')).json.data ?? []) as { entity_type: string; entity_id: string; status: string; due_at: string }[]
+  check('its next date is an open task', (await tasks()).some((t) => t.entity_type === 'prospect' && t.entity_id === pid && t.status === 'Open'))
 
-  const created = await call('POST', '/api/crm/deals', { name: 'TEST deal — delete me', value: 123456789, commission: 2000000, stage: 3 })
-  check('a deal can be created', created.status === 201, JSON.stringify(created.json))
-  const id = String(created.json.id)
-  let row = ((await call('GET', '/api/crm/deals')).json.data as CrmDeal[]).find((d) => d.id === id)
-  check('commission is stored exactly as agreed, not worked out from a rate', row?.commission === 2000000, String(row?.commission))
-  await call('PATCH', `/api/crm/deals?id=${id}`, { value: 50000000 })
-  row = ((await call('GET', '/api/crm/deals')).json.data as CrmDeal[]).find((d) => d.id === id)
-  check('changing the value leaves the agreed commission alone', row?.commission === 2000000, String(row?.commission))
-  await call('PATCH', `/api/crm/deals?id=${id}`, { commission: '' })
-  row = ((await call('GET', '/api/crm/deals')).json.data as CrmDeal[]).find((d) => d.id === id)
-  check('an emptied commission box saves as 0 rather than failing', row?.commission === 0, String(row?.commission))
-  check('a stage outside 0–5 is rejected', (await call('PATCH', `/api/crm/deals?id=${id}`, { stage: 9 })).status === 400)
-  check('a deal without a name is rejected', (await call('POST', '/api/crm/deals', { value: 1 })).status === 400)
-  check('an unknown structure is rejected', (await call('PATCH', `/api/crm/deals?id=${id}`, { deal_type: 'Barter' })).status === 400)
-  await call('DELETE', `/api/crm/deals?id=${id}`)
+  const lead = await call('POST', `/api/crm/prospects/${pid}/convert`, { to: 'lead' })
+  check('a prospect converts to a lead', lead.status === 201 && !!lead.json.lead_id, JSON.stringify(lead.json))
+  check('converting twice is refused', (await call('POST', `/api/crm/prospects/${pid}/convert`, { to: 'lead' })).status === 409)
+
+  const deal = await call('POST', `/api/crm/prospects/${pid}/convert`, { to: 'deal', deal_value_cr: 4.5 })
+  check('a prospect opens a real deal', deal.status === 201 && !!deal.json.id, JSON.stringify(deal.json))
+  const txns = ((await call('GET', '/api/transactions')).json.data ?? []) as { id: string; prospect_id?: string; deal_value_cr?: number }[]
+  const t = txns.find((x) => x.id === deal.json.id)
+  check('the deal points back at the prospect and carries its value', t?.prospect_id === pid && Number(t?.deal_value_cr) === 4.5, JSON.stringify(t))
+  const leads = ((await call('GET', '/api/leads')).json.data ?? []) as { id: string; stage: string; transaction_id?: string }[]
+  check('the lead is marked converted to that deal', leads.find((l) => l.id === lead.json.lead_id)?.transaction_id === deal.json.id)
+  await call('DELETE', `/api/transactions/${deal.json.id}`)
+  await call('DELETE', `/api/leads/${lead.json.lead_id}`)
+  await call('DELETE', `/api/crm/prospects?id=${pid}`)
 
   const imp = await call('POST', '/api/crm/prospects', { rows: [{ name: 'TEST import A', list: 'B', score: '90' }, { name: 'TEST import B', list: 'X' }, { list: 'B' }] })
   check('CSV import keeps valid rows and drops invalid ones', imp.status === 201 && imp.json.imported === 1, JSON.stringify(imp.json))

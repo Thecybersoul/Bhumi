@@ -42,6 +42,7 @@ export async function GET() {
       ['018', 'messages', 'id'],
       ['019', 'connector_tokens', 'id'],
       ['020', 'properties', 'register_snapshot'],
+      ['022', 'prospects', 'contact_id'],
     ]
     const results = await Promise.all(probes.map(([, t, c]) => sb.from(t).select(c).limit(1)))
     probes.forEach(([n], i) => (migrations[n] = !results[i].error))

@@ -1,26 +1,30 @@
 'use client'
 
+import Link from 'next/link'
 import DealsView from './DealsView'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Check, Mail, MessageCircle, Phone, Plus, Trash2, Upload, X } from 'lucide-react'
-import { api, followUpDue, leadIsOpen, telHref, waHref } from './lib'
+import { api, followUpDue, leadIsOpen, ourCommissionLakh, telHref, waHref } from './lib'
 import { Banner, Card, Empty, Field, Loading, Pill } from './ui'
 import CrmPlaybook, { CopyBtn } from './CrmPlaybook'
 import {
-  DEAL_TYPES, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, SOURCES, STAGES, STAGE_WEIGHT, addDays, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
-  type CrmDeal, type ListKey, type Parcel, type Prospect,
+  DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, SOURCES, STAGES, addDays, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
+  type ListKey, type Parcel, type Prospect,
 } from '@/lib/crm'
 
 /* The sales funnel, inside the ERP: who to contact today, what to say,
    and what happens next. Prospects are outbound targets (distinct from
    inbound leads); the pipeline holds the deals that have a value. */
 
-type Tab = 'home' | 'prospects' | 'pipeline' | 'leads' | 'deals' | 'contacts' | 'agents' | 'docs' | 'playbook'
+type Tab = 'home' | 'prospects' | 'leads' | 'deals' | 'contacts' | 'agents' | 'docs' | 'playbook'
 /* The whole sales motion in one place, in the order work moves:
    the funnel, outbound prospects and their pipeline, inbound leads and
    the deals they become, the people involved, then the playbook. */
-const TABS: [Tab, string][] = [['home', 'Funnel'], ['prospects', 'Prospects'], ['pipeline', 'Pipeline'], ['leads', 'Leads'], ['deals', 'Deals'], ['contacts', 'Contacts'], ['agents', 'Agents'], ['docs', 'Doc requests'], ['playbook', 'Playbook']]
+/** What the funnel needs from a deal; the full record lives in the Deals tab. */
+interface Txn { id: string; property_label: string; stage: string; outcome: string; deal_value_cr?: number | null; commission_type: 'Percentage' | 'Flat'; commission_value?: number | null; next_date?: string | null }
+
+const TABS: [Tab, string][] = [['home', 'Funnel'], ['prospects', 'Prospects'], ['leads', 'Leads'], ['deals', 'Deals'], ['contacts', 'Contacts'], ['agents', 'Agents'], ['docs', 'Doc requests'], ['playbook', 'Playbook']]
 const DEALS_TAB = { leads: 'leads', deals: 'pipeline', contacts: 'contacts', agents: 'agents', docs: 'docs' } as const
 const PIPE_STAGES = [2, 3, 4, 5] as const
 const PIPE_LABEL: Record<number, string> = { 2: 'Interested', 3: 'Proposal sent', 4: 'Won', 5: 'Lost' }
@@ -30,19 +34,17 @@ const blank = (list: ListKey): Prospect => ({
   trigger_why: '', history: '', stage: 0, next_date: null, value: null, owner: '', note: '', contact_person: '', website: '',
   source: '', source_url: '', deal_band: '', score: null, last_contacted: null, updated_at: '',
 })
-const blankDeal = (): CrmDeal => ({ id: '', name: '', value: 0, commission: 0, stage: 2, parcel: '', property_code: '', deal_type: '', prospect_id: null, expected_close: null, note: '', next_date: null, updated_at: '' })
 
 export default function CrmView() {
   const params = useSearchParams()
   const router = useRouter()
-  const tab = (TABS.find(([t]) => t === params.get('tab'))?.[0] ?? 'home') as Tab
+  const tab = (TABS.find(([t]) => t === (params.get('tab') === 'pipeline' ? 'deals' : params.get('tab')))?.[0] ?? 'home') as Tab
   const [prospects, setProspects] = useState<Prospect[] | null>(null)
-  const [deals, setDeals] = useState<CrmDeal[]>([])
+  const [txns, setTxns] = useState<Txn[]>([])
   const [me, setMe] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [list, setList] = useState<ListKey>('B')
   const [edit, setEdit] = useState<Prospect | null>(null)
-  const [dealEdit, setDealEdit] = useState<CrmDeal | null>(null)
   const [importing, setImporting] = useState(false)
   const [listings, setListings] = useState<Parcel[]>([])
 
@@ -52,34 +54,25 @@ export default function CrmView() {
   const [hasEmail, setHasEmail] = useState(false)
   const [q, setQ] = useState('')
   // Inbound side of the funnel, shown on the Funnel tab: open leads and deals in progress.
-  const [inbound, setInbound] = useState({ leads: 0, due: 0, deals: 0 })
+  const [inbound, setInbound] = useState({ leads: 0, due: 0 })
 
   const go = (t: Tab) => router.replace(`/admin/crm${t === 'home' ? '' : `?tab=${t}`}`)
 
   const load = useCallback(async () => {
     try {
-      api
-        .get<{ data: { stage: string; next_follow_up_at?: string | null }[]; source: string }>('/api/leads')
-        .then(async (l) => {
-          const t = await api.get<{ data: { outcome: string }[]; source: string }>('/api/transactions').catch(() => null)
-          const open = l.source === 'live' ? l.data.filter((x) => leadIsOpen(x.stage) && x.stage !== 'Nurture') : []
-          setInbound({
-            leads: open.length,
-            due: open.filter((x) => followUpDue(x as never)).length,
-            deals: t && t.source === 'live' ? t.data.filter((x) => x.outcome === 'In progress').length : 0,
-          })
-        })
-        .catch(() => {})
-      const [p, d, m, ls] = await Promise.all([
+      const [p, t, l, m, ls] = await Promise.all([
         api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects'),
-        api.get<{ data: CrmDeal[]; error?: string }>('/api/crm/deals'),
+        api.get<{ data: Txn[]; source: string }>('/api/transactions').catch(() => null),
+        api.get<{ data: { stage: string; next_follow_up_at?: string | null }[]; source: string }>('/api/leads').catch(() => null),
         api.get<{ user: { name: string } }>('/api/admin/me').catch(() => null),
         api.get<{ data: Parcel[]; source?: string }>('/api/properties?admin=1').catch(() => ({ data: [] as Parcel[], source: 'fallback' })),
       ])
+      const openLeads = l && l.source === 'live' ? l.data.filter((x) => leadIsOpen(x.stage) && x.stage !== 'Nurture') : []
+      setInbound({ leads: openLeads.length, due: openLeads.filter((x) => followUpDue(x as never)).length })
+      setTxns(t && t.source === 'live' ? t.data : [])
       if (ls.source === 'live') setListings(ls.data)
-      setError(p.error || d.error || null)
+      setError(p.error || null)
       setProspects(p.data)
-      setDeals(d.data)
       if (m) setMe(m.user.name)
     } catch (e) {
       setError((e as Error).message)
@@ -112,21 +105,22 @@ export default function CrmView() {
   }
   const followedUp = (p: Prospect) =>
     patchProspect(p.id, { last_contacted: today(), next_date: addDays(FOLLOW_UP_DAYS[Math.max(1, p.stage)] ?? 3), stage: Math.max(1, p.stage) })
-  const addToPipeline = (p: Prospect, l?: Parcel) =>
+  // Opens a real deal (same record as Deals) on the prospect, then goes to it.
+  const openDeal = (p: Prospect, l?: Parcel) =>
     run(async () => {
-      const value = l?.price_total_cr ? Math.round(l.price_total_cr * 1e7) : 0
-      await api.post('/api/crm/deals', {
-        name: l ? `${p.name} · ${l.code}` : p.name,
-        parcel: l ? `${l.code}: ${l.title}` : p.requirement,
-        property_code: l?.code ?? '',
-        prospect_id: p.id,
-        value,
-        stage: 2,
-        next_date: addDays(3),
+      const r = await api.post<{ id: string }>(`/api/crm/prospects/${p.id}/convert`, {
+        to: 'deal',
+        property_id: (l as (Parcel & { id?: string }) | undefined)?.id,
+        property_label: l ? `${l.code}: ${l.title}` : undefined,
+        deal_value_cr: l?.price_total_cr,
       })
-      if (p.stage < 2) await api.patch(`/api/crm/prospects?id=${p.id}`, { stage: 2, next_date: p.next_date && p.next_date > today() ? p.next_date : addDays(3) })
+      router.push(`/admin/deals/${r.id}`)
     })
-  const patchDeal = (id: string, patch: Partial<CrmDeal>) => run(() => api.patch(`/api/crm/deals?id=${id}`, patch))
+  const makeLead = (p: Prospect) =>
+    run(async () => {
+      const r = await api.post<{ lead_id: string | null }>(`/api/crm/prospects/${p.id}/convert`, { to: 'lead' })
+      if (r.lead_id) router.push(`/admin/deals/leads/${r.lead_id}`)
+    })
 
   const all = prospects ?? []
   const areas = useMemo(() => [...new Set(all.filter((p) => p.list === list).map((p) => p.area).filter(Boolean))].sort(), [all, list])
@@ -139,11 +133,14 @@ export default function CrmView() {
       .sort((a, b) => (a.prio ?? 'Z').localeCompare(b.prio ?? 'Z') || a.name.localeCompare(b.name))
   }, [all, list, prio, stageF, areaF, hasEmail, q])
 
-  const overdue = [...all.filter(isOverdue), ...deals.filter(isOverdue)]
-  const openDeals = deals.filter((d) => d.stage === 2 || d.stage === 3)
-  const weighted = openDeals.reduce((s, d) => s + d.value * (STAGE_WEIGHT[d.stage] ?? 0), 0)
-  const weightedCommission = openDeals.reduce((s, d) => s + d.commission * (STAGE_WEIGHT[d.stage] ?? 0), 0)
-  const noCommission = openDeals.filter((d) => d.value > 0 && !d.commission).length
+  const openDeals = txns.filter((t) => t.outcome === 'In progress')
+  const lakh = (t: Txn) => ourCommissionLakh({ deal_value_cr: t.deal_value_cr, commission_type: t.commission_type, commission_value: t.commission_value }) ?? 0
+  const crore = (t: Txn) => (t.deal_value_cr ?? 0) * 1e7
+  const weightedCommission = openDeals.reduce((s, t) => s + lakh(t) * 1e5 * (DEAL_WEIGHT[t.stage] ?? 0), 0)
+  const noCommission = openDeals.filter((t) => t.commission_value == null).length
+  const won = txns.filter((t) => t.outcome === 'Closed')
+  const dealsOverdue = openDeals.filter((t) => !!t.next_date && t.next_date <= today())
+  const overdue = [...all.filter(isOverdue), ...dealsOverdue]
   const first = me.split(/\s+/)[0] || 'there'
 
   return (
@@ -185,14 +182,14 @@ export default function CrmView() {
           </p>
           <div className="crmKpis">
             <Kpi label="Commission pipeline" value={rupees(weightedCommission)} note="weighted, from each deal’s terms" />
-            <Kpi label="Deals won" value={String(deals.filter((d) => d.stage === 4).length)} note={rupees(deals.filter((d) => d.stage === 4).reduce((s, d) => s + d.commission, 0)) + ' commission'} />
+            <Kpi label="Deals won" value={String(won.length)} note={rupees(won.reduce((s, t) => s + lakh(t) * 1e5, 0)) + ' commission'} onClick={() => go('deals')} />
             <Kpi label="Interested" value={String(all.filter((p) => p.stage === 2).length)} note="prospects" />
             <Kpi label="Overdue" value={String(overdue.length)} note="follow-ups" alert={overdue.length > 0} />
           </div>
           <div className="crmKpis" style={{ marginTop: 12 }}>
             <Kpi label="Open leads" value={String(inbound.leads)} note="inbound enquiries" onClick={() => go('leads')} />
             <Kpi label="Leads due" value={String(inbound.due)} note="follow-up today or late" alert={inbound.due > 0} onClick={() => go('leads')} />
-            <Kpi label="Deals in progress" value={String(inbound.deals)} note="enquiry to registration" onClick={() => go('deals')} />
+            <Kpi label="Open pipeline" value={rupees(openDeals.reduce((s, t) => s + crore(t), 0))} note={`${openDeals.length} deal${openDeals.length === 1 ? '' : 's'}${noCommission ? ` · ${noCommission} without commission` : ''}`} alert={noCommission > 0} onClick={() => go('deals')} />
           </div>
           <div className="erpGrid main" style={{ marginTop: 16 }}>
             <div className="erpCol">
@@ -293,51 +290,6 @@ export default function CrmView() {
             </div>
           )}
         </>
-      ) : tab === 'pipeline' ? (
-        <>
-          <div className="crmKpis">
-            <Kpi label="Open pipeline" value={rupees(openDeals.reduce((s, d) => s + d.value, 0))} note="Interested + Proposal" />
-            <Kpi label="Weighted forecast" value={rupees(weighted)} note="30% interested · 60% proposal" />
-            <Kpi label="Projected commission" value={rupees(weightedCommission)} note={noCommission ? `${noCommission} open deal${noCommission > 1 ? 's' : ''} without commission set` : 'weighted, from each deal’s terms'} />
-            <Kpi label="Won" value={rupees(deals.filter((d) => d.stage === 4).reduce((s, d) => s + d.value, 0))} note={rupees(deals.filter((d) => d.stage === 4).reduce((s, d) => s + d.commission, 0)) + ' commission'} />
-          </div>
-          <div className="erpHead__actions" style={{ margin: '14px 0' }}>
-            <button className="erpBtn primary" onClick={() => setDealEdit(blankDeal())}>
-              <Plus size={15} /> Add a deal
-            </button>
-          </div>
-          <div className="erpBoard" style={{ gridTemplateColumns: 'repeat(4, minmax(220px, 1fr))' }}>
-            {PIPE_STAGES.map((s) => {
-              const col = deals.filter((d) => d.stage === s)
-              return (
-                <div key={s} className="erpBoard__col">
-                  <div className="erpBoard__head">
-                    {PIPE_LABEL[s]} <b>{col.length}</b>
-                  </div>
-                  {col.length === 0 ? <div className="erpBoard__empty">No deals</div> : null}
-                  {col.map((d) => (
-                    <div key={d.id} className="erpLeadCard">
-                      <button className="crmLink" onClick={() => setDealEdit(d)}>{d.name}</button>
-                      {d.parcel ? <div className="crmSub">{d.parcel}</div> : null}
-                      {d.deal_type || d.expected_close ? <div className="crmSub">{[d.deal_type, d.expected_close ? `close ${d.expected_close}` : ''].filter(Boolean).join(' · ')}</div> : null}
-                      <div className="crmMoney">
-                        <b>{d.value ? rupees(d.value) : 'Value not set'}</b>
-                        <span>{d.commission ? `${rupees(d.commission)} commission` : d.value ? 'Commission not set' : ''}</span>
-                      </div>
-                      {d.next_date ? <div className={`crmSub ${isOverdue(d) ? 'is-late' : ''}`}>Next: {d.next_date}</div> : null}
-                      <div className="crmMove">
-                        {s > 2 && s < 5 ? <button className="erpBtn ghost sm" title="Back" onClick={() => patchDeal(d.id, { stage: s - 1 })}><ArrowLeft size={13} /></button> : null}
-                        {s < 4 ? <button className="erpBtn ghost sm" title="Forward" onClick={() => patchDeal(d.id, { stage: s + 1 })}><ArrowRight size={13} /></button> : null}
-                        {s < 4 ? <button className="erpBtn ghost sm" onClick={() => patchDeal(d.id, { stage: 5 })}>Lost</button> : null}
-                        {s === 5 ? <button className="erpBtn ghost sm" onClick={() => patchDeal(d.id, { stage: 2 })}>Reopen</button> : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            })}
-          </div>
-        </>
       ) : (
         <CrmPlaybook me={me} />
       )}
@@ -347,19 +299,11 @@ export default function CrmView() {
           p={edit}
           me={me}
           listings={listings}
-          onPipeline={(l) => { addToPipeline(edit, l); setEdit(null) }}
+          onDeal={(l) => { openDeal(edit, l); setEdit(null) }}
+          onLead={() => { makeLead(edit); setEdit(null) }}
           onClose={() => setEdit(null)}
           onSave={(d) => run(async () => { await (d.id ? api.patch(`/api/crm/prospects?id=${d.id}`, d) : api.post('/api/crm/prospects', d)); setEdit(null) })}
           onDelete={(id) => run(async () => { await api.del(`/api/crm/prospects?id=${id}`); setEdit(null) })}
-        />
-      ) : null}
-      {dealEdit ? (
-        <DealPanel
-          d={dealEdit}
-          listings={listings}
-          onClose={() => setDealEdit(null)}
-          onSave={(d) => run(async () => { await (d.id ? api.patch(`/api/crm/deals?id=${d.id}`, d) : api.post('/api/crm/deals', d)); setDealEdit(null) })}
-          onDelete={(id) => run(async () => { await api.del(`/api/crm/deals?id=${id}`); setDealEdit(null) })}
         />
       ) : null}
     </div>
@@ -438,7 +382,7 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
   )
 }
 
-function ProspectPanel({ p, me, listings, onPipeline, onClose, onSave, onDelete }: { p: Prospect; me: string; listings: Parcel[]; onPipeline: (l?: Parcel) => void; onClose: () => void; onSave: (d: Prospect) => void; onDelete: (id: string) => void }) {
+function ProspectPanel({ p, me, listings, onDeal, onLead, onClose, onSave, onDelete }: { p: Prospect; me: string; listings: Parcel[]; onDeal: (l?: Parcel) => void; onLead: () => void; onClose: () => void; onSave: (d: Prospect) => void; onDelete: (id: string) => void }) {
   const [d, setD] = useState<Prospect>({ ...p, owner: p.owner || me })
   const set = <K extends keyof Prospect>(k: K, v: Prospect[K]) => setD((x) => ({ ...x, [k]: v }))
   const text = (k: keyof Prospect, label: string, full = false) => (
@@ -520,12 +464,26 @@ function ProspectPanel({ p, me, listings, onPipeline, onClose, onSave, onDelete 
                   <div className="crmSub">{reasons.join(' · ')}</div>
                   <div className="crmActions">
                     <CopyBtn text={`${l.code}: ${l.title}. ${l.extent_acres} acres, ${l.location}.${l.price_total_cr ? ` ₹${l.price_total_cr} Cr.` : ''} Legally verified; title work done in-house.`} />
-                    <button className="erpBtn ghost sm" onClick={() => onPipeline(l)}><Plus size={13} /> Add to pipeline</button>
+                    <button className="erpBtn ghost sm" onClick={() => onDeal(l)}><Plus size={13} /> Open deal on this</button>
                   </div>
                 </div>
               ))
             )}
-            <button className="erpBtn ghost sm" style={{ marginTop: 6 }} onClick={() => onPipeline()}><Plus size={13} /> Add to pipeline without a parcel</button>
+            <button className="erpBtn ghost sm" style={{ marginTop: 6 }} onClick={() => onDeal()}><Plus size={13} /> Open a deal without a parcel</button>
+          </div>
+        ) : null}
+        {p.id ? (
+          <div className="erpField full">
+            <span>Next step</span>
+            <div className="crmActions">
+              {p.lead_id ? (
+                <Link href={`/admin/deals/leads/${p.lead_id}`} className="erpBtn ghost sm">Open their lead</Link>
+              ) : (
+                <button className="erpBtn ghost sm" onClick={onLead}>{p.list === 'P' ? 'Save as agent contact' : 'Convert to lead'}</button>
+              )}
+              {p.contact_id ? <Link href={`/admin/deals/contacts/${p.contact_id}`} className="erpBtn ghost sm">Contact card</Link> : null}
+            </div>
+            <small>A lead keeps their requirement and viewings; a deal tracks the price and commission. Either way it is the same person, and the next date becomes a task.</small>
           </div>
         ) : null}
         <div className="crmActions">
@@ -537,65 +495,6 @@ function ProspectPanel({ p, me, listings, onPipeline, onClose, onSave, onDelete 
   )
 }
 
-function DealPanel({ d: init, listings, onClose, onSave, onDelete }: { d: CrmDeal; listings: Parcel[]; onClose: () => void; onSave: (d: CrmDeal) => void; onDelete: (id: string) => void }) {
-  const [d, setD] = useState(init)
-  const set = <K extends keyof CrmDeal>(k: K, v: CrmDeal[K]) => setD((x) => ({ ...x, [k]: v }))
-  return (
-    <Drawer title={init.id ? init.name : 'Add a deal'} onClose={onClose}>
-      <div className="erpForm">
-        <Field label="Company / deal name" full>
-          <input className="erpInput" value={d.name} onChange={(e) => set('name', e.target.value)} />
-        </Field>
-        <Field label="Parcel or property" full>
-          <textarea className="erpInput" value={d.parcel} onChange={(e) => set('parcel', e.target.value)} />
-        </Field>
-        <Field label="Listing (from the ERP)">
-          <select className="erpInput" value={d.property_code} onChange={(e) => set('property_code', e.target.value)}>
-            <option value="">None</option>
-            {listings.map((l) => <option key={l.code} value={l.code}>{l.code} · {l.extent_acres} ac</option>)}
-          </select>
-        </Field>
-        <Field label="Structure">
-          <select className="erpInput" value={d.deal_type} onChange={(e) => set('deal_type', e.target.value as CrmDeal['deal_type'])}>
-            <option value="">Not decided</option>
-            {DEAL_TYPES.map((x) => <option key={x}>{x}</option>)}
-          </select>
-        </Field>
-        <Field label="Expected close">
-          <input type="date" className="erpInput" value={d.expected_close ?? ''} onChange={(e) => set('expected_close', e.target.value || null)} />
-        </Field>
-        <Field label="Deal value (₹)">
-          <input type="number" className="erpInput" value={d.value || ''} onChange={(e) => set('value', Number(e.target.value) || 0)} />
-        </Field>
-        <Field label="Commission (₹)" hint="Agreed for this property. Leave empty until it is agreed.">
-          <input type="number" className="erpInput" value={d.commission || ''} onChange={(e) => set('commission', Number(e.target.value) || 0)} />
-        </Field>
-        <Field label="Or work it out from a %" hint={d.value && d.commission ? `That is ${(Math.round((d.commission / d.value) * 10000) / 100).toString()}% of the deal value.` : 'Type a percentage to fill in the amount above.'}>
-          <input type="number" step="0.01" className="erpInput" placeholder="e.g. 1.5" onChange={(e) => { const pc = Number(e.target.value); if (d.value && pc > 0) set('commission', Math.round((d.value * pc) / 100)) }} />
-        </Field>
-        <Field label="Stage">
-          <select className="erpInput" value={d.stage} onChange={(e) => set('stage', Number(e.target.value))}>
-            {PIPE_STAGES.map((s) => <option key={s} value={s}>{PIPE_LABEL[s]}</option>)}
-          </select>
-        </Field>
-        <Field label="Next step date">
-          <input type="date" className="erpInput" value={d.next_date ?? ''} min={today()} onChange={(e) => set('next_date', e.target.value || null)} />
-        </Field>
-        <Field label="Notes" full>
-          <textarea className="erpInput" value={d.note} onChange={(e) => set('note', e.target.value)} />
-        </Field>
-        <div className="crmActions">
-          <button className="erpBtn primary" onClick={() => d.name.trim() && onSave(d)} disabled={!d.name.trim()}>Save</button>
-          {init.id ? <button className="erpBtn ghost" onClick={() => confirm(`Delete ${init.name}?`) && onDelete(init.id)}><Trash2 size={14} /> Delete</button> : null}
-        </div>
-      </div>
-    </Drawer>
-  )
-}
-
-/* Pasted CSV with a header row. Columns it understands: name (required),
-   list, kind, sector, prio, email, alt_emails, phone, area, requirement,
-   trigger_why, history, owner. */
 function parseCsv(text: string): string[][] {
   const rows: string[][] = []
   let row: string[] = []

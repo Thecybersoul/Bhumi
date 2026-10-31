@@ -14,11 +14,11 @@ import type { ApiResult, Contact, DataRoomRequest, Lead, PropertyTransaction } f
 
 /* One tab for the whole sales motion: the funnel and its outbound
    prospects, then inbound leads and the deals they become, the people
-   and agents involved, and document requests. 'opps' is the outbound
-   pipeline (crm_deals); 'pipeline' is the deals in progress. */
-type View_ = 'funnel' | 'prospects' | 'opps' | 'leads' | 'pipeline' | 'contacts' | 'agents' | 'requests' | 'playbook'
-const VIEW_IDS: View_[] = ['funnel', 'prospects', 'opps', 'leads', 'pipeline', 'contacts', 'agents', 'requests', 'playbook']
-const ALIAS: Record<string, View_> = { deals: 'pipeline', docs: 'requests', home: 'funnel' }
+   and agents involved, and document requests. 'pipeline' is the deals
+   (outbound builders and inbound buyers alike: one list). */
+type View_ = 'funnel' | 'prospects' | 'leads' | 'pipeline' | 'contacts' | 'agents' | 'requests' | 'playbook'
+const VIEW_IDS: View_[] = ['funnel', 'prospects', 'leads', 'pipeline', 'contacts', 'agents', 'requests', 'playbook']
+const ALIAS: Record<string, View_> = { deals: 'pipeline', opps: 'pipeline', docs: 'requests', home: 'funnel' }
 const AGENT_FILTERS = ['All', 'Preferred', 'Owed', 'On open deals'] as const
 const LEAD_FILTERS = ['Open', 'Due now', ...LEAD_PIPELINE, 'Nurture', 'Converted', 'Lost'] as const
 const ROLE_FILTERS = ['All', 'Buyer', 'Seller', 'Landowner', 'Investor', 'Lawyer'] as const
@@ -180,7 +180,6 @@ export default function SalesScreen() {
   const tabs = [
     { id: 'funnel', label: 'Funnel' },
     { id: 'prospects', label: 'Prospects' },
-    { id: 'opps', label: 'Pipeline' },
     { id: 'leads', label: `Leads${leads ? ` ${(leads ?? []).filter((l) => leadIsOpen(l.stage)).length}` : ''}` },
     { id: 'pipeline', label: `Deals${txns ? ` ${txns.filter((t) => t.outcome === 'In progress').length}` : ''}` },
     { id: 'contacts', label: `People${contacts ? ` ${contacts.length}` : ''}` },
@@ -191,9 +190,8 @@ export default function SalesScreen() {
   const inbound = {
     leads: (leads ?? []).filter((l) => leadIsOpen(l.stage) && l.stage !== 'Nurture').length,
     due: (leads ?? []).filter(followUpDue).length,
-    deals: (txns ?? []).filter((t) => t.outcome === 'In progress').length,
   }
-  const funnelTab = view === 'funnel' || view === 'prospects' || view === 'opps' || view === 'playbook'
+  const funnelTab = view === 'funnel' || view === 'prospects' || view === 'playbook'
 
   const rc = <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.navy} />
   const search = (placeholder: string) => (
@@ -222,7 +220,7 @@ export default function SalesScreen() {
       {error && <ErrorBanner message={error} />}
 
       {funnelTab ? (
-        <SalesFunnel tab={view as FunnelTab} go={(v) => setView((ALIAS[v] ?? v) as View_)} inbound={inbound} />
+        <SalesFunnel tab={view as FunnelTab} go={(v) => setView((ALIAS[v] ?? v) as View_)} inbound={inbound} txns={txns ?? []} />
       ) : loading ? (
         <LoadingScreen />
       ) : view === 'leads' ? (
@@ -420,6 +418,11 @@ export default function SalesScreen() {
               </View>
               <Text style={s.meta}>{t.reference} · {cr(t.deal_value_cr)} · {fmtDate(t.opened_at)}</Text>
               <Text style={s.meta}>{[t.buyer_name, t.seller_name].filter(Boolean).join(' ↔ ') || '—'}</Text>
+              {t.deal_type || (t.outcome === 'In progress' && t.next_date) ? (
+                <Text style={[s.meta, t.outcome === 'In progress' && t.next_date && t.next_date <= new Date().toISOString().slice(0, 10) ? { color: colors.flagged, fontWeight: '700' } : null]}>
+                  {[t.deal_type, t.outcome === 'In progress' && t.next_date ? `Next: ${t.next_date}` : ''].filter(Boolean).join(' · ')}
+                </Text>
+              ) : null}
               <ByLine record={t} createdAt={t.opened_at} compact />
             </TouchableOpacity>
           )}

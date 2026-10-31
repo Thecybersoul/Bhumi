@@ -140,7 +140,6 @@ function RootNavigator() {
         <Stack.Screen name="meeting/[id]" options={{ title: 'Meeting' }} />
         <Stack.Screen name="crm/index" options={{ title: 'Sales CRM' }} />
         <Stack.Screen name="crm/prospect/[id]" options={{ title: 'Prospect' }} />
-        <Stack.Screen name="crm/deal/[id]" options={{ title: 'Deal' }} />
         <Stack.Screen name="activity" options={{ title: 'Team activity' }} />
         <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
         <Stack.Screen name="search" options={{ title: 'Search' }} />

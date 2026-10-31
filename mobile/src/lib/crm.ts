@@ -12,8 +12,8 @@
    ═══════════════════════════════════════════════════════════ */
 
 export const STAGES = ['New', 'Contacted', 'Interested', 'Proposal', 'Won', 'Lost'] as const
-/** Forecast weight by stage: Interested 30%, Proposal 60%, Won 100%. */
-export const STAGE_WEIGHT: Record<number, number> = { 2: 0.3, 3: 0.6, 4: 1 }
+/** How likely a deal is to close, by its stage, for the weighted forecast. */
+export const DEAL_WEIGHT: Record<string, number> = { Enquiry: 0.3, Negotiation: 0.6, Agreement: 0.85, Registration: 0.95, Closed: 1 }
 
 export const LISTS = {
   P: { label: 'Partners', one: 'Partner', hint: 'Channel partners, referrers, agents' },
@@ -50,23 +50,8 @@ export interface Prospect {
   deal_band: string
   score: number | null
   last_contacted: string | null
-  updated_at: string
-  updated_by?: string | null
-}
-
-export interface CrmDeal {
-  id: string
-  name: string
-  value: number
-  commission: number
-  stage: number
-  parcel: string
-  property_code: string
-  deal_type: '' | 'Outright' | 'JD' | 'JV' | 'Mandate'
-  prospect_id: string | null
-  expected_close: string | null
-  note: string
-  next_date: string | null
+  contact_id?: string | null
+  lead_id?: string | null
   updated_at: string
   updated_by?: string | null
 }
@@ -197,7 +182,6 @@ Parcel brief attached. Shall I set up a site visit? — {Your name}, Bhumi Estat
 /* ─── Priority, follow-up rhythm, parcel matching ─────────── */
 
 export const SOURCES = ['RERA Karnataka', 'CREDAI', 'LinkedIn', 'Referral', 'News / launch', 'Company website', 'Existing contact', 'Other'] as const
-export const DEAL_TYPES = ['Outright', 'JD', 'JV', 'Mandate'] as const
 
 /** Fit 40% · trigger 35% · contactability 25% rolled into one score:
  *  A at 85+, B at 70–84, C below. */

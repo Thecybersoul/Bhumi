@@ -5,11 +5,13 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useApi } from '@/lib/api'
 import { useSession } from '@/lib/auth'
 import { telUrl, waUrl } from '@/lib/leads'
+import { ourCommissionLakh } from '@/lib/agents'
+import type { PropertyTransaction } from '@/lib/types'
 import { colors, radius, space, text } from '@/lib/theme'
 import { ErrorBanner, LoadingScreen } from '@/components/ui'
 import {
-  FOLLOW_UP_DAYS, LISTS, LIST_KEYS, PLAYBOOK, STAGES, STAGE_WEIGHT, addDays, isOverdue, openingMessage, rupees, today,
-  type CrmDeal, type ListKey, type Prospect,
+  DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, PLAYBOOK, STAGES, addDays, isOverdue, openingMessage, rupees, today,
+  type ListKey, type Prospect,
 } from '@/lib/crm'
 
 /* The outbound half of the Sales tab, the same as /admin/crm on the web:
@@ -18,18 +20,17 @@ import {
    Sales screen, which passes the current one in. Same /api/crm routes, so
    both surfaces always agree. */
 
-export type FunnelTab = 'funnel' | 'prospects' | 'opps' | 'playbook'
-export interface Inbound { leads: number; due: number; deals: number }
+export type FunnelTab = 'funnel' | 'prospects' | 'playbook'
+export interface Inbound { leads: number; due: number }
 export const PIPE_STAGES = [2, 3, 4, 5] as const
 export const PIPE_LABEL: Record<number, string> = { 2: 'Interested', 3: 'Proposal', 4: 'Won', 5: 'Lost' }
 const PRIOS = ['A', 'B', 'C'] as const
 
-export default function SalesFunnel({ tab, go, inbound }: { tab: FunnelTab; go: (v: string) => void; inbound: Inbound }) {
+export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab; go: (v: string) => void; inbound: Inbound; txns: PropertyTransaction[] }) {
   const api = useApi()
   const { user } = useSession()
   const me = user?.name ?? ''
   const [prospects, setProspects] = useState<Prospect[] | null>(null)
-  const [deals, setDeals] = useState<CrmDeal[]>([])
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [list, setList] = useState<ListKey>('B')
@@ -38,13 +39,9 @@ export default function SalesFunnel({ tab, go, inbound }: { tab: FunnelTab; go: 
 
   const load = useCallback(async () => {
     try {
-      const [p, d] = await Promise.all([
-        api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects'),
-        api.get<{ data: CrmDeal[]; error?: string }>('/api/crm/deals'),
-      ])
-      setError(p.error || d.error || null)
+      const p = await api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects')
+      setError(p.error || null)
       setProspects(p.data)
-      setDeals(d.data)
     } catch (e) {
       setError((e as Error).message)
       setProspects((cur) => cur ?? [])
@@ -69,15 +66,6 @@ export default function SalesFunnel({ tab, go, inbound }: { tab: FunnelTab; go: 
   }
   const followedUp = (p: Prospect) =>
     patchProspect(p.id, { last_contacted: today(), next_date: addDays(FOLLOW_UP_DAYS[Math.max(1, p.stage)] ?? 3), stage: Math.max(1, p.stage) })
-  const moveDeal = async (d: CrmDeal, stage: number) => {
-    setDeals((cur) => cur.map((x) => (x.id === d.id ? { ...x, stage } : x)))
-    try {
-      await api.patch(`/api/crm/deals?id=${d.id}`, { stage })
-    } catch (e) {
-      setError((e as Error).message)
-      load()
-    }
-  }
 
   const all = useMemo(() => prospects ?? [], [prospects])
   const shown = useMemo(() => {
@@ -91,13 +79,14 @@ export default function SalesFunnel({ tab, go, inbound }: { tab: FunnelTab; go: 
   if (prospects === null) return <LoadingScreen />
 
   const overdueP = all.filter(isOverdue).sort((a, b) => (a.next_date ?? '').localeCompare(b.next_date ?? ''))
-  const overdue = overdueP.length + deals.filter(isOverdue).length
+  const openDeals = txns.filter((t) => t.outcome === 'In progress')
+  const commissionRs = (t: PropertyTransaction) => (ourCommissionLakh(t) ?? 0) * 1e5
+  const weightedCommission = openDeals.reduce((a, t) => a + commissionRs(t) * (DEAL_WEIGHT[t.stage] ?? 0), 0)
+  const pipelineValue = openDeals.reduce((a, t) => a + (t.deal_value_cr ?? 0) * 1e7, 0)
+  const won = txns.filter((t) => t.outcome === 'Closed')
+  const dealsDue = openDeals.filter((t) => !!t.next_date && t.next_date <= today()).length
+  const overdue = overdueP.length + dealsDue
   const startHere = all.filter((p) => p.prio === 'A' && p.stage === 0)
-  const openDeals = deals.filter((d) => d.stage === 2 || d.stage === 3)
-  const weighted = openDeals.reduce((s, d) => s + d.value * (STAGE_WEIGHT[d.stage] ?? 0), 0)
-  const weightedCommission = openDeals.reduce((s, d) => s + d.commission * (STAGE_WEIGHT[d.stage] ?? 0), 0)
-  const noCommission = openDeals.filter((d) => d.value > 0 && !d.commission).length
-  const won = deals.filter((d) => d.stage === 4)
   const openProspect = (id: string) => router.push({ pathname: '/crm/prospect/[id]', params: { id } })
 
   return (
@@ -116,7 +105,7 @@ export default function SalesFunnel({ tab, go, inbound }: { tab: FunnelTab; go: 
             </Text>
             <View style={s.kpis}>
               <Kpi label="Commission pipeline" value={rupees(weightedCommission)} note="weighted, per deal" />
-              <Kpi label="Deals won" value={String(won.length)} note={`${rupees(won.reduce((a, d) => a + d.commission, 0))} commission`} />
+              <Kpi label="Deals won" value={String(won.length)} note={`${rupees(won.reduce((a, t) => a + commissionRs(t), 0))} commission`} />
               <Kpi label="Interested" value={String(all.filter((p) => p.stage === 2).length)} note="prospects" />
               <Kpi label="Overdue" value={String(overdue)} note="follow-ups" alert={overdue > 0} />
             </View>
@@ -131,9 +120,9 @@ export default function SalesFunnel({ tab, go, inbound }: { tab: FunnelTab; go: 
               <TouchableOpacity style={s.row} onPress={() => go('deals')}>
                 <View style={{ flex: 1 }}>
                   <Text style={s.rowTitle}>Deals in progress</Text>
-                  <Text style={s.rowSub}>Enquiry to registration</Text>
+                  <Text style={s.rowSub}>{pipelineValue ? `${rupees(pipelineValue)} open · ` : ''}Enquiry to registration{dealsDue ? ` · ${dealsDue} due` : ''}</Text>
                 </View>
-                <Text style={s.rowRight}>{inbound.deals}</Text>
+                <Text style={s.rowRight}>{openDeals.length}</Text>
               </TouchableOpacity>
             </Block>
             <Block title="Follow up now" icon="alarm-outline">
@@ -184,47 +173,6 @@ export default function SalesFunnel({ tab, go, inbound }: { tab: FunnelTab; go: 
             ) : (
               shown.map((p) => <ProspectCard key={p.id} p={p} me={me} onOpen={() => openProspect(p.id)} onStage={(st) => setStage(p, st)} onFollowedUp={() => followedUp(p)} />)
             )}
-          </>
-        ) : tab === 'opps' ? (
-          <>
-            <View style={s.kpis}>
-              <Kpi label="Open pipeline" value={rupees(openDeals.reduce((a, d) => a + d.value, 0))} note="Interested + Proposal" />
-              <Kpi label="Weighted forecast" value={rupees(weighted)} note="30% / 60%" />
-              <Kpi label="Projected commission" value={rupees(weightedCommission)} note={noCommission ? `${noCommission} without commission set` : 'from each deal’s terms'} alert={noCommission > 0} />
-              <Kpi label="Won" value={rupees(won.reduce((a, d) => a + d.value, 0))} note={`${rupees(won.reduce((a, d) => a + d.commission, 0))} commission`} />
-            </View>
-            <TouchableOpacity style={s.primary} onPress={() => router.push({ pathname: '/crm/deal/[id]', params: { id: 'new' } })}>
-              <Ionicons name="add" size={18} color={colors.white} />
-              <Text style={s.primaryText}>Add a deal</Text>
-            </TouchableOpacity>
-            {PIPE_STAGES.map((st) => {
-              const col = deals.filter((d) => d.stage === st)
-              return (
-                <Block key={st} title={`${PIPE_LABEL[st]} · ${col.length}`} icon={st === 4 ? 'trophy-outline' : st === 5 ? 'close-circle-outline' : 'briefcase-outline'}>
-                  {col.length === 0 ? <Text style={s.empty}>No deals</Text> : null}
-                  {col.map((d) => (
-                    <View key={d.id} style={s.deal}>
-                      <TouchableOpacity onPress={() => router.push({ pathname: '/crm/deal/[id]', params: { id: d.id } })}>
-                        <Text style={s.rowTitle}>{d.name}</Text>
-                        {d.parcel ? <Text style={s.rowSub} numberOfLines={2}>{d.parcel}</Text> : null}
-                        {d.deal_type || d.expected_close ? <Text style={s.rowSub}>{[d.deal_type, d.expected_close ? `close ${d.expected_close}` : ''].filter(Boolean).join(' · ')}</Text> : null}
-                        <Text style={s.money}>{d.value ? rupees(d.value) : 'Value not set'}</Text>
-                        <Text style={[s.rowSub, d.value && !d.commission ? { color: colors.flagged } : null]}>
-                          {d.commission ? `${rupees(d.commission)} commission` : d.value ? 'Commission not set' : ''}
-                        </Text>
-                        {d.next_date ? <Text style={[s.rowSub, isOverdue(d) && { color: colors.flagged, fontWeight: '700' }]}>Next: {d.next_date}</Text> : null}
-                      </TouchableOpacity>
-                      <View style={s.actions}>
-                        {st === 3 || st === 4 ? <Small icon="arrow-back" label="Back" onPress={() => moveDeal(d, st - 1)} /> : null}
-                        {st < 4 ? <Small icon="arrow-forward" label={st === 2 ? 'Proposal' : 'Won'} onPress={() => moveDeal(d, st + 1)} /> : null}
-                        {st < 4 ? <Small icon="close" label="Lost" onPress={() => moveDeal(d, 5)} /> : null}
-                        {st === 5 ? <Small icon="refresh" label="Reopen" onPress={() => moveDeal(d, 2)} /> : null}
-                      </View>
-                    </View>
-                  ))}
-                </Block>
-              )
-            })}
           </>
         ) : (
           <Playbook me={me} />

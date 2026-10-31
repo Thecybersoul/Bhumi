@@ -3,7 +3,7 @@ import { createEventWithMeet, deleteEvent, isConnected, updateEvent } from './go
 import type { Meeting, MeetingEntityType, MeetingKind } from './types'
 
 export const MEETING_KINDS: MeetingKind[] = ['In person', 'Site visit', 'Call', 'Video call', 'Discussion']
-export const MEETING_ENTITY_TYPES: MeetingEntityType[] = ['property', 'transaction', 'task', 'lead', 'verification', 'contact', 'general']
+export const MEETING_ENTITY_TYPES: MeetingEntityType[] = ['property', 'transaction', 'task', 'lead', 'verification', 'contact', 'prospect', 'general']
 
 function describeFor(m: Partial<Meeting>) {
   return [

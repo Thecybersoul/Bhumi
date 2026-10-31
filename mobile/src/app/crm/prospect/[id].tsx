@@ -21,7 +21,7 @@ const blank = (list: ListKey): Prospect => ({
 
 /* One prospect: everything the web drawer has, phone-shaped. Scoring
    sets the priority; Parcels to pitch shows live listings that fit, each
-   with its reason, and turns one into a pipeline deal. */
+   with its reason, and carries the prospect on to a lead or a deal. */
 export default function ProspectScreen() {
   const { id, list } = useLocalSearchParams<{ id: string; list?: string }>()
   const isNew = id === 'new'
@@ -78,22 +78,34 @@ export default function ProspectScreen() {
     }
   }
 
-  async function addToPipeline(l?: Parcel) {
+  // A real deal, the same record as in Sales → Deals, with this prospect as the buyer.
+  async function openDeal(l?: Parcel) {
     if (!d) return
     setBusy(true)
     setError(null)
     try {
-      await api.post('/api/crm/deals', {
-        name: l ? `${d.name} · ${l.code}` : d.name,
-        parcel: l ? `${l.code}: ${l.title}` : d.requirement,
-        property_code: l?.code ?? '',
-        prospect_id: d.id,
-        value: l?.price_total_cr ? Math.round(l.price_total_cr * 1e7) : 0,
-        stage: 2,
-        next_date: addDays(3),
+      const r = await api.post<{ id: string }>(`/api/crm/prospects/${d.id}/convert`, {
+        to: 'deal',
+        property_id: (l as (Parcel & { id?: string }) | undefined)?.id,
+        property_label: l ? `${l.code}: ${l.title}` : undefined,
+        deal_value_cr: l?.price_total_cr,
       })
-      if (d.stage < 2) await api.patch(`/api/crm/prospects?id=${d.id}`, { stage: 2, next_date: d.next_date && d.next_date > today() ? d.next_date : addDays(3) })
-      router.replace({ pathname: '/sales', params: { view: 'opps' } })
+      router.replace({ pathname: '/transaction/[id]', params: { id: r.id } })
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function makeLead() {
+    if (!d) return
+    setBusy(true)
+    setError(null)
+    try {
+      const r = await api.post<{ lead_id: string | null }>(`/api/crm/prospects/${d.id}/convert`, { to: 'lead' })
+      if (r.lead_id) router.replace({ pathname: '/lead/[id]', params: { id: r.lead_id } })
+      else router.back()
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -154,19 +166,43 @@ export default function ProspectScreen() {
                           <Ionicons name="share-outline" size={14} color={colors.navy} />
                           <Text style={s.pillText}>Share brief</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={s.pill} onPress={() => addToPipeline(l)} disabled={busy}>
+                        <TouchableOpacity style={s.pill} onPress={() => openDeal(l)} disabled={busy}>
                           <Ionicons name="add" size={14} color={colors.navy} />
-                          <Text style={s.pillText}>Add to pipeline</Text>
+                          <Text style={s.pillText}>Open deal</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                   )
                 })
               )}
-              <TouchableOpacity style={[s.pill, { marginTop: 8 }]} onPress={() => addToPipeline()} disabled={busy}>
+              <TouchableOpacity style={[s.pill, { marginTop: 8 }]} onPress={() => openDeal()} disabled={busy}>
                 <Ionicons name="add" size={14} color={colors.navy} />
-                <Text style={s.pillText}>Add to pipeline without a parcel</Text>
+                <Text style={s.pillText}>Open a deal without a parcel</Text>
               </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {!isNew ? (
+            <View style={s.panel}>
+              <Text style={s.panelTitle}>Next step</Text>
+              <View style={s.row}>
+                {d.lead_id ? (
+                  <TouchableOpacity style={s.pill} onPress={() => router.push({ pathname: '/lead/[id]', params: { id: d.lead_id! } })}>
+                    <Text style={s.pillText}>Open their lead</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={s.pill} onPress={makeLead} disabled={busy}>
+                    <Ionicons name="person-add-outline" size={14} color={colors.navy} />
+                    <Text style={s.pillText}>{d.list === 'P' ? 'Save as agent contact' : 'Convert to lead'}</Text>
+                  </TouchableOpacity>
+                )}
+                {d.contact_id ? (
+                  <TouchableOpacity style={s.pill} onPress={() => router.push({ pathname: '/contact/[id]', params: { id: d.contact_id! } })}>
+                    <Text style={s.pillText}>Contact card</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+              <Text style={s.muted}>The next date becomes a task. A lead keeps their requirement; a deal tracks price and commission. Same person either way.</Text>
             </View>
           ) : null}
 
