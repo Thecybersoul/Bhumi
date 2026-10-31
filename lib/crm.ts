@@ -12,10 +12,10 @@ export const STAGES = ['New', 'Contacted', 'Interested', 'Proposal', 'Won', 'Los
 export const DEAL_WEIGHT: Record<string, number> = { Enquiry: 0.3, Negotiation: 0.6, Agreement: 0.85, Registration: 0.95, Closed: 1 }
 
 export const LISTS = {
-  P: { label: 'Partners', one: 'Partner', hint: 'Channel partners, referrers, agents' },
-  D: { label: 'Developers', one: 'Developer', hint: 'Large builder groups, land acquisition teams' },
-  B: { label: 'Builders', one: 'Builder', hint: 'Small and mid-size builders: the main target' },
+  D: { label: 'Developers', one: 'Developer', hint: 'Mid to large developers and land acquisition teams: the main target' },
+  B: { label: 'Builders', one: 'Builder', hint: 'Small and mid-size builders' },
   I: { label: 'Investors', one: 'Investor', hint: 'Individual investors and plot buyers' },
+  P: { label: 'Partners', one: 'Partner', hint: 'Local agencies that co-broker land' },
 } as const
 export type ListKey = keyof typeof LISTS
 export const LIST_KEYS = Object.keys(LISTS) as ListKey[]
@@ -67,6 +67,56 @@ export interface ProspectContact {
   source_url: string
   verified_on: string | null
   origin: 'manual' | 'contact_person' | 'note_line'
+}
+
+/* ─── Developer size: the funnel prefers mid to large developers ─────────
+   There is no size column, so size is read from what the research recorded:
+   the words in `kind` ("Listed developer", "Mid-size builder", "Small plotted
+   developer") and the top of the typical land ticket in `deal_band`. Every
+   answer carries its reason so the team can see why a name sits where it does. */
+
+export type DevTier = 'large' | 'mid' | 'unsized' | 'small'
+export interface DevSize { tier: DevTier; label: string; why: string }
+
+const NOT_A_DEVELOPER = /operator|reit|hotel|co-living|retail mall|data-centre|institutional|fund|university|hospital|seller|bank|authority/i
+const IS_A_DEVELOPER = /developer|builder|township/i
+
+/** null when the prospect is not a developer at all (an operator, fund, institution, land seller…). */
+export function developerSize(p: Pick<Prospect, 'kind' | 'deal_band'>): DevSize | null {
+  const kind = p.kind || ''
+  if (!IS_A_DEVELOPER.test(kind) || NOT_A_DEVELOPER.test(kind)) return null
+  const top = Number((p.deal_band.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)/) ?? [])[2])
+  if (/\bsmall\b|home construction/i.test(kind)) return { tier: 'small', label: 'Small developer', why: 'recorded as small' }
+  if (/\bmid\b|mid-size|mid-market/i.test(kind)) return { tier: 'mid', label: 'Mid-size developer', why: 'recorded as mid-size' }
+  if (/\b(listed|national|township|diversified)\b|(^|· )large\b/i.test(kind)) return { tier: 'large', label: 'Large developer', why: 'listed, national or large per the research' }
+  if (top >= 50) return { tier: 'large', label: 'Large developer', why: `buys up to ${top} acres` }
+  if (/\b(regional|premium|plotted-community|villa-plot|BDA)\b/i.test(kind)) return { tier: 'mid', label: 'Mid-size developer', why: 'regional or established per the research' }
+  if (top >= 15) return { tier: 'mid', label: 'Mid-size developer', why: `buys up to ${top} acres` }
+  return { tier: 'unsized', label: 'Developer', why: 'size not recorded' }
+}
+
+/** Lower sorts first: large, mid, developers of unknown size, small, then everyone else. */
+export const sizeRank = (p: Pick<Prospect, 'kind' | 'deal_band'>) => {
+  const t = developerSize(p)?.tier
+  return t === 'large' ? 0 : t === 'mid' ? 1 : t === 'unsized' ? 2 : t === 'small' ? 3 : 4
+}
+
+/** The funnel's order: bigger developers first, then priority, then score, then name. */
+export function byPreference(a: Prospect, b: Prospect) {
+  return (
+    sizeRank(a) - sizeRank(b) ||
+    (a.prio ?? 'Z').localeCompare(b.prio ?? 'Z') ||
+    (b.score ?? -1) - (a.score ?? -1) ||
+    a.name.localeCompare(b.name)
+  )
+}
+
+export type SizeFilter = '' | 'midlarge' | 'large' | 'mid'
+export const SIZE_FILTERS: [SizeFilter, string][] = [['', 'Any size'], ['midlarge', 'Mid–large developers'], ['large', 'Large only'], ['mid', 'Mid-size only']]
+export function matchesSize(p: Pick<Prospect, 'kind' | 'deal_band'>, f: SizeFilter) {
+  if (!f) return true
+  const t = developerSize(p)?.tier
+  return f === 'midlarge' ? t === 'large' || t === 'mid' : t === f
 }
 
 export const today = () => new Date().toISOString().slice(0, 10)

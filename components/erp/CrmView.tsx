@@ -10,8 +10,8 @@ import { Banner, Card, Empty, Field, Loading, Pill } from './ui'
 import CrmPlaybook, { CopyBtn } from './CrmPlaybook'
 import { ContactEditor, ContactList, PhoneButtons } from './ProspectContacts'
 import {
-  DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, ROLE_TYPES, SOURCES, STAGES, addDays, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
-  type ListKey, type Parcel, type Prospect, type ProspectContact, type RoleType,
+  DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, ROLE_TYPES, SIZE_FILTERS, SOURCES, STAGES, byPreference, developerSize, matchesSize, addDays, isOverdue, matchParcels, openingMessage, prioFromScore, rupees, today,
+  type ListKey, type Parcel, type Prospect, type ProspectContact, type RoleType, type SizeFilter,
 } from '@/lib/crm'
 
 /* The sales funnel, inside the ERP: who to contact today, what to say,
@@ -44,7 +44,7 @@ export default function CrmView() {
   const [txns, setTxns] = useState<Txn[]>([])
   const [me, setMe] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [list, setList] = useState<ListKey>('B')
+  const [list, setList] = useState<ListKey>('D')
   const [edit, setEdit] = useState<Prospect | null>(null)
   const [importing, setImporting] = useState(false)
   const [listings, setListings] = useState<Parcel[]>([])
@@ -56,6 +56,7 @@ export default function CrmView() {
   const [q, setQ] = useState('')
   const [pcs, setPcs] = useState<ProspectContact[]>([])
   const [roleF, setRoleF] = useState<'' | RoleType>('')
+  const [sizeF, setSizeF] = useState<SizeFilter>('')
   // Inbound side of the funnel, shown on the Funnel tab: open leads and deals in progress.
   const [inbound, setInbound] = useState({ leads: 0, due: 0 })
 
@@ -140,10 +141,11 @@ export default function CrmView() {
     return all
       .filter((p) => p.list === list)
       .filter((p) => !roleF || linesOf(p.id).length > 0)
+      .filter((p) => matchesSize(p, sizeF))
       .filter((p) => (!prio || p.prio === prio) && (stageF === '' || p.stage === Number(stageF)) && (!areaF || p.area === areaF) && (!hasEmail || p.email))
       .filter((p) => !needle || [p.name, p.kind, p.sector, p.area, p.requirement, p.email, p.phone].join(' ').toLowerCase().includes(needle))
-      .sort((a, b) => (a.prio ?? 'Z').localeCompare(b.prio ?? 'Z') || a.name.localeCompare(b.name))
-  }, [all, list, prio, stageF, areaF, hasEmail, q, roleF, byProspect])
+      .sort(byPreference)
+  }, [all, list, prio, stageF, areaF, hasEmail, q, roleF, sizeF, byProspect])
 
   const openDeals = txns.filter((t) => t.outcome === 'In progress')
   const lakh = (t: Txn) => ourCommissionLakh({ deal_value_cr: t.deal_value_cr, commission_type: t.commission_type, commission_value: t.commission_value }) ?? 0
@@ -216,7 +218,7 @@ export default function CrmView() {
                 {all.filter((p) => p.prio === 'A' && p.stage === 0).length === 0 ? (
                   <Empty>No priority-A prospects waiting to be contacted.</Empty>
                 ) : (
-                  all.filter((p) => p.prio === 'A' && p.stage === 0).slice(0, 8).map((p) => <MiniRow key={p.id} p={p} onOpen={setEdit} />)
+                  all.filter((p) => p.prio === 'A' && p.stage === 0).sort(byPreference).slice(0, 8).map((p) => <MiniRow key={p.id} p={p} onOpen={setEdit} />)
                 )}
               </Card>
             </div>
@@ -266,6 +268,9 @@ export default function CrmView() {
                 </button>
               ))}
             </div>
+            <select className="erpInput" value={sizeF} onChange={(e) => setSizeF(e.target.value as SizeFilter)} aria-label="Developer size">
+              {SIZE_FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
             <select className="erpInput" value={roleF} onChange={(e) => setRoleF(e.target.value as '' | RoleType)} aria-label="Contact role">
               <option value="">Any contact</option>
               {ROLE_TYPES.filter((r) => r !== 'Generic').map((r) => <option key={r} value={r}>{r} contacts · {pcs.filter((c) => c.role_type === r).length}</option>)}
@@ -367,6 +372,7 @@ function ProspectCard({ p, me, lines, onOpen, onStage, onFollowedUp }: { p: Pros
         <button className="crmLink" onClick={onOpen}>{p.name}</button>
       </div>
       <div className="crmSub">{[p.kind, p.sector, p.deal_band].filter(Boolean).join(' · ')}</div>
+      {(() => { const z = developerSize(p); return z && z.tier !== 'unsized' ? <div className="crmSub" title={z.why}><b>{z.label}</b> · {z.why}</div> : null })()}
       {p.contact_person && lines.length === 0 ? <div className="crmSub">Ask for: {p.contact_person}</div> : null}
       {p.requirement ? <p className="crmLine"><b>Needs:</b> {p.requirement}</p> : null}
       {p.trigger_why ? <p className="crmLine"><b>Why now:</b> {p.trigger_why}</p> : null}

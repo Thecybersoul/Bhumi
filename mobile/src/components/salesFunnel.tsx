@@ -13,7 +13,7 @@ import { ErrorBanner, LoadingScreen } from '@/components/ui'
 import { ContactRows, PhoneActions } from '@/components/prospectContacts'
 import {
   DEAL_WEIGHT, FOLLOW_UP_DAYS, LISTS, LIST_KEYS, PLAYBOOK, STAGES, addDays, isOverdue, openingMessage, rupees, today,
-  ROLE_TYPES, type ListKey, type Prospect, type ProspectContact, type RoleType,
+  ROLE_TYPES, SIZE_FILTERS, byPreference, developerSize, matchesSize, type SizeFilter, type ListKey, type Prospect, type ProspectContact, type RoleType,
 } from '@/lib/crm'
 
 /* The outbound half of the Sales tab, the same as /admin/crm on the web:
@@ -35,11 +35,12 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
   const [prospects, setProspects] = useState<Prospect[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
-  const [list, setList] = useState<ListKey>('B')
+  const [list, setList] = useState<ListKey>('D')
   const [prio, setPrio] = useState('')
   const [q, setQ] = useState('')
   const [pcs, setPcs] = useState<ProspectContact[]>([])
   const [roleF, setRoleF] = useState<'' | RoleType>('')
+  const [sizeF, setSizeF] = useState<SizeFilter>('')
 
   const load = useCallback(async () => {
     try {
@@ -83,10 +84,10 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return all
-      .filter((p) => p.list === list && (!prio || p.prio === prio) && (!roleF || linesOf(p.id).length > 0))
+      .filter((p) => p.list === list && (!prio || p.prio === prio) && (!roleF || linesOf(p.id).length > 0) && matchesSize(p, sizeF))
       .filter((p) => !needle || [p.name, p.kind, p.sector, p.area, p.requirement].join(' ').toLowerCase().includes(needle))
-      .sort((a, b) => (a.prio ?? 'Z').localeCompare(b.prio ?? 'Z') || a.name.localeCompare(b.name))
-  }, [all, list, prio, q, roleF, linesOf])
+      .sort(byPreference)
+  }, [all, list, prio, q, roleF, sizeF, linesOf])
 
   if (prospects === null) return <LoadingScreen />
 
@@ -98,7 +99,7 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
   const won = txns.filter((t) => t.outcome === 'Closed')
   const dealsDue = openDeals.filter((t) => !!t.next_date && t.next_date <= today()).length
   const overdue = overdueP.length + dealsDue
-  const startHere = all.filter((p) => p.prio === 'A' && p.stage === 0)
+  const startHere = all.filter((p) => p.prio === 'A' && p.stage === 0).sort(byPreference)
   const openProspect = (id: string) => router.push({ pathname: '/crm/prospect/[id]', params: { id } })
 
   return (
@@ -176,6 +177,9 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
               ))}
             </ScrollView>
             <TextInput style={s.search} placeholder="Search name, area, requirement…" placeholderTextColor={colors.muted} value={q} onChangeText={setQ} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
+              {SIZE_FILTERS.map(([v, l]) => <Chip key={v || 'any'} on={sizeF === v} label={l} onPress={() => setSizeF(v)} />)}
+            </ScrollView>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
               <Chip on={!roleF} label="Any contact" onPress={() => setRoleF('')} />
               {ROLE_TYPES.filter((r) => r !== 'Generic').map((r) => (
@@ -278,6 +282,7 @@ function ProspectCard({ p, me, lines, onOpen, onStage, onFollowedUp }: { p: Pros
         <Ionicons name="chevron-forward" size={16} color={colors.muted} />
       </TouchableOpacity>
       {[p.kind, p.sector, p.deal_band].filter(Boolean).length ? <Text style={s.rowSub}>{[p.kind, p.sector, p.deal_band].filter(Boolean).join(' · ')}</Text> : null}
+      {(() => { const z = developerSize(p); return z && z.tier !== 'unsized' ? <Text style={s.rowSub}><Text style={s.b}>{z.label}</Text> · {z.why}</Text> : null })()}
       {p.contact_person && lines.length === 0 ? <Text style={s.rowSub}>Ask for: {p.contact_person}</Text> : null}
       {p.requirement ? <Text style={s.line}><Text style={s.b}>Needs: </Text>{p.requirement}</Text> : null}
       {p.trigger_why ? <Text style={s.line} numberOfLines={4}><Text style={s.b}>Why now: </Text>{p.trigger_why}</Text> : null}
