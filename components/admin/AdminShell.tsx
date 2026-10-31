@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   Activity,
   Bell,
-  Briefcase,
   Target,
   CircleCheck,
   ExternalLink,
@@ -44,10 +43,9 @@ const nav: { group: string; items: Item[] }[] = [
     group: 'Workspace',
     items: [
       { href: '/admin/dashboard', label: 'Home', icon: House },
-      { href: '/admin/deals', label: 'Deals', icon: Briefcase, hint: 'Leads, deals, contacts & document requests', match: '/admin/deals' },
+      { href: '/admin/crm', label: 'Sales funnel', icon: Target, hint: 'Prospects, leads, deals & playbook', match: '/admin/crm' },
       { href: '/admin/properties', label: 'Listings', icon: Map, hint: 'Marketplace & verification', match: '/admin/properties' },
       { href: '/admin/meetings', label: 'Meetings', icon: Users, hint: 'Visits, calls & discussions', match: '/admin/meetings' },
-      { href: '/admin/crm', label: 'Sales CRM', icon: Target, hint: 'Prospects, pipeline & playbook', match: '/admin/crm' },
       { href: '/admin/notes-tasks', label: 'Tasks & notes', icon: CircleCheck },
       { href: '/admin/messages', label: 'Messages', icon: MessagesSquare, hint: 'Team chat' },
     ],
@@ -97,7 +95,8 @@ export default function AdminShell({ user, children }: { user: ShellUser | null;
       .catch(() => {})
   }, [pathname])
 
-  const active = (i: Item) => (i.match ? pathname.startsWith(i.match) : pathname === i.href)
+  // Deal, lead and contact records open under /admin/deals/…: they still belong to the Sales funnel.
+  const active = (i: Item) => (i.match ? pathname.startsWith(i.match) || (i.match === '/admin/crm' && pathname.startsWith('/admin/deals')) : pathname === i.href)
 
   // ⌘K / Ctrl+K opens search from anywhere in the admin.
   const [searching, setSearching] = useState(false)

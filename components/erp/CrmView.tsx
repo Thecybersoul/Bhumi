@@ -1,9 +1,10 @@
 'use client'
 
+import DealsView from './DealsView'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Check, Mail, MessageCircle, Phone, Plus, Trash2, Upload, X } from 'lucide-react'
-import { api, telHref, waHref } from './lib'
+import { api, followUpDue, leadIsOpen, telHref, waHref } from './lib'
 import { Banner, Card, Empty, Field, Loading, Pill } from './ui'
 import CrmPlaybook, { CopyBtn } from './CrmPlaybook'
 import {
@@ -15,8 +16,12 @@ import {
    and what happens next. Prospects are outbound targets (distinct from
    inbound leads); the pipeline holds the deals that have a value. */
 
-type Tab = 'home' | 'prospects' | 'pipeline' | 'playbook'
-const TABS: [Tab, string][] = [['home', 'Home'], ['prospects', 'Prospects'], ['pipeline', 'Pipeline'], ['playbook', 'Playbook']]
+type Tab = 'home' | 'prospects' | 'pipeline' | 'leads' | 'deals' | 'contacts' | 'agents' | 'docs' | 'playbook'
+/* The whole sales motion in one place, in the order work moves:
+   the funnel, outbound prospects and their pipeline, inbound leads and
+   the deals they become, the people involved, then the playbook. */
+const TABS: [Tab, string][] = [['home', 'Funnel'], ['prospects', 'Prospects'], ['pipeline', 'Pipeline'], ['leads', 'Leads'], ['deals', 'Deals'], ['contacts', 'Contacts'], ['agents', 'Agents'], ['docs', 'Doc requests'], ['playbook', 'Playbook']]
+const DEALS_TAB = { leads: 'leads', deals: 'pipeline', contacts: 'contacts', agents: 'agents', docs: 'docs' } as const
 const PIPE_STAGES = [2, 3, 4, 5] as const
 const PIPE_LABEL: Record<number, string> = { 2: 'Interested', 3: 'Proposal sent', 4: 'Won', 5: 'Lost' }
 const PRIOS = ['A', 'B', 'C'] as const
@@ -46,11 +51,25 @@ export default function CrmView() {
   const [areaF, setAreaF] = useState('')
   const [hasEmail, setHasEmail] = useState(false)
   const [q, setQ] = useState('')
+  // Inbound side of the funnel, shown on the Funnel tab: open leads and deals in progress.
+  const [inbound, setInbound] = useState({ leads: 0, due: 0, deals: 0 })
 
   const go = (t: Tab) => router.replace(`/admin/crm${t === 'home' ? '' : `?tab=${t}`}`)
 
   const load = useCallback(async () => {
     try {
+      api
+        .get<{ data: { stage: string; next_follow_up_at?: string | null }[]; source: string }>('/api/leads')
+        .then(async (l) => {
+          const t = await api.get<{ data: { outcome: string }[]; source: string }>('/api/transactions').catch(() => null)
+          const open = l.source === 'live' ? l.data.filter((x) => leadIsOpen(x.stage) && x.stage !== 'Nurture') : []
+          setInbound({
+            leads: open.length,
+            due: open.filter((x) => followUpDue(x as never)).length,
+            deals: t && t.source === 'live' ? t.data.filter((x) => x.outcome === 'In progress').length : 0,
+          })
+        })
+        .catch(() => {})
       const [p, d, m, ls] = await Promise.all([
         api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects'),
         api.get<{ data: CrmDeal[]; error?: string }>('/api/crm/deals'),
@@ -131,13 +150,15 @@ export default function CrmView() {
     <div className="erpPage">
       <div className="erpHead">
         <div>
-          <h1>Sales CRM</h1>
-          <p>Who to contact today, what to say, and what happens next. Close the land deals; commission is agreed for each property.</p>
+          <h1>Sales funnel</h1>
+          <p>Prospects and leads in, deals out: who to contact today, what to say, and what happens next. Commission is agreed for each property.</p>
         </div>
         <div className="erpHead__actions">
-          <button className="erpBtn primary" onClick={() => setEdit(blank(list))}>
-            <Plus size={15} /> Prospect
-          </button>
+          {tab in DEALS_TAB ? null : (
+            <button className="erpBtn primary" onClick={() => setEdit(blank(list))}>
+              <Plus size={15} /> Prospect
+            </button>
+          )}
         </div>
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
@@ -150,7 +171,9 @@ export default function CrmView() {
         ))}
       </div>
 
-      {prospects === null ? (
+      {tab in DEALS_TAB ? (
+        <DealsView embedded tab={DEALS_TAB[tab as keyof typeof DEALS_TAB]} />
+      ) : prospects === null ? (
         <Loading />
       ) : tab === 'home' ? (
         <>
@@ -165,6 +188,11 @@ export default function CrmView() {
             <Kpi label="Deals won" value={String(deals.filter((d) => d.stage === 4).length)} note={rupees(deals.filter((d) => d.stage === 4).reduce((s, d) => s + d.commission, 0)) + ' commission'} />
             <Kpi label="Interested" value={String(all.filter((p) => p.stage === 2).length)} note="prospects" />
             <Kpi label="Overdue" value={String(overdue.length)} note="follow-ups" alert={overdue.length > 0} />
+          </div>
+          <div className="crmKpis" style={{ marginTop: 12 }}>
+            <Kpi label="Open leads" value={String(inbound.leads)} note="inbound enquiries" onClick={() => go('leads')} />
+            <Kpi label="Leads due" value={String(inbound.due)} note="follow-up today or late" alert={inbound.due > 0} onClick={() => go('leads')} />
+            <Kpi label="Deals in progress" value={String(inbound.deals)} note="enquiry to registration" onClick={() => go('deals')} />
           </div>
           <div className="erpGrid main" style={{ marginTop: 16 }}>
             <div className="erpCol">
@@ -340,9 +368,9 @@ export default function CrmView() {
 
 /* ─── Pieces ───────────────────────────────────────────────── */
 
-function Kpi({ label, value, note, alert }: { label: string; value: string; note: string; alert?: boolean }) {
+function Kpi({ label, value, note, alert, onClick }: { label: string; value: string; note: string; alert?: boolean; onClick?: () => void }) {
   return (
-    <div className={`erpCard crmKpi ${alert ? 'is-alert' : ''}`}>
+    <div className={`erpCard crmKpi ${alert ? 'is-alert' : ''}`} onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
       <span>{label}</span>
       <b>{value}</b>
       <small>{note}</small>

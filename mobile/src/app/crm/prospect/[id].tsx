@@ -93,7 +93,7 @@ export default function ProspectScreen() {
         next_date: addDays(3),
       })
       if (d.stage < 2) await api.patch(`/api/crm/prospects?id=${d.id}`, { stage: 2, next_date: d.next_date && d.next_date > today() ? d.next_date : addDays(3) })
-      router.replace({ pathname: '/crm', params: { tab: 'pipeline' } })
+      router.replace({ pathname: '/sales', params: { view: 'opps' } })
     } catch (e) {
       setError((e as Error).message)
     } finally {

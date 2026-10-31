@@ -168,7 +168,7 @@ export default function HomeScreen() {
             <View style={s.stats}>
               <Stat icon="checkbox" value={view.dueToday.length + view.overdue.length} label="Tasks due" alert={view.overdue.length ? `${view.overdue.length} late` : undefined} onPress={() => router.push('/notes-tasks')} />
               <Stat icon="people" value={view.meetingsToday.length} label="Meetings" onPress={() => router.push('/meetings')} />
-              <Stat icon="briefcase" value={view.activeDeals.length} label="Open deals" onPress={() => router.push('/deals')} />
+              <Stat icon="briefcase" value={view.activeDeals.length} label="Open deals" onPress={() => router.push({ pathname: '/sales', params: { view: 'deals' } })} />
               <Stat icon="map" value={view.byStatus('Live')} label="Live listings" onPress={() => router.push('/properties')} />
             </View>
           ) : null}
@@ -212,7 +212,7 @@ export default function HomeScreen() {
                 {view.upcoming.length === 0 ? <Empty text="Nothing scheduled for the next 7 days." /> : view.upcoming.map((a) => <AgendaRow key={a.kind === 'meeting' ? `m${a.m.id}` : `t${a.t.id}`} a={a} withDay />)}
               </Section>
 
-              <Section title="Deals in motion" icon="briefcase-outline" action="Pipeline" onAction={() => router.push('/deals')}>
+              <Section title="Deals in motion" icon="briefcase-outline" action="Pipeline" onAction={() => router.push({ pathname: '/sales', params: { view: 'deals' } })}>
                 {view.activeDeals.length === 0 ? (
                   <Empty text="No open deals. Start one from a lead or listing." />
                 ) : (
@@ -279,7 +279,7 @@ export default function HomeScreen() {
               </Section>
 
               {view.followUps.length ? (
-                <Section title="Follow-ups due" icon="alarm-outline" action="Leads" onAction={() => router.push({ pathname: '/deals', params: { view: 'leads' } })}>
+                <Section title="Follow-ups due" icon="alarm-outline" action="Leads" onAction={() => router.push({ pathname: '/sales', params: { view: 'leads' } })}>
                   {view.followUps.slice(0, 5).map((l) => {
                     const late = new Date(l.next_follow_up_at!).getTime() < Date.now()
                     return (
@@ -300,7 +300,7 @@ export default function HomeScreen() {
               ) : null}
 
               {view.newLeads.length ? (
-                <Section title="New leads to contact" icon="person-add-outline" action="Leads" onAction={() => router.push({ pathname: '/deals', params: { view: 'leads' } })}>
+                <Section title="New leads to contact" icon="person-add-outline" action="Leads" onAction={() => router.push({ pathname: '/sales', params: { view: 'leads' } })}>
                   {view.newLeads.slice(0, 4).map((l) => (
                     <TouchableOpacity key={l.id} style={s.line} onPress={() => router.push({ pathname: '/lead/[id]', params: { id: l.id } })}>
                       <View style={s.leadDot} />
@@ -392,7 +392,7 @@ function FunnelCard() {
     }, [api])
   )
   return (
-    <TouchableOpacity style={s.funnel} onPress={() => router.push('/crm')} activeOpacity={0.85}>
+    <TouchableOpacity style={s.funnel} onPress={() => router.push({ pathname: '/sales', params: { view: 'funnel' } })} activeOpacity={0.85}>
       <View style={s.funnelIcon}>
         <Ionicons name="funnel" size={20} color={colors.goldSoft} />
       </View>

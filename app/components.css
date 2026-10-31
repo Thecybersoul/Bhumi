@@ -3357,7 +3357,7 @@ a.erpChat__step:hover { text-decoration: underline; }
 }
 
 /* ─── Sales CRM (/admin/crm) ─── */
-.crmKpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.crmKpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
 .crmKpi { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; }
 .crmKpi span { font-size: var(--text-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .crmKpi b { font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 500; color: var(--gold-deep); line-height: 1.1; }

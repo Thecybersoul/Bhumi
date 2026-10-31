@@ -101,8 +101,8 @@ reports `schema.current` (is 016 in?) and `schema.auto_migrate` (is a connection
 ### The web admin and the app are one ERP with one structure
 
 The web admin (`/admin`) mirrors the mobile app screen for screen:
-- **Workspace:** Home (`/admin/dashboard`), Deals (`/admin/deals`, with a `/admin/deals/[id]` editor),
-  Listings (`/admin/properties` plus `[id]`), Meetings (`/admin/meetings` plus `[id]`), and Tasks & notes.
+- **Workspace:** Home (`/admin/dashboard`), Sales funnel (`/admin/crm`), Listings (`/admin/properties` plus `[id]`),
+  Meetings (`/admin/meetings` plus `[id]`), and Tasks & notes.
 - **Records:** Notifications, Documents, Team activity.
 - **Website:** the content editors and Media.
 - **Profile** sits at the sidebar foot and covers the account, team, Google Workspace, Sheets and email
@@ -113,8 +113,12 @@ The pages are client components in `components/erp/` (`HomeView`, `DealsView`, `
 `RecordsViews`). They call the same `/api/*` routes as the app, with the session cookie instead of the
 bearer token, so both surfaces always agree and write the same activity trail. When you change a screen in
 one, change it in the other. Styles are the `.erp*` block at the end of `app/components.css`, and icons come
-from `lucide-react`, the same Ionicons-like set the app uses. `/admin/deals` keeps Pipeline, Leads and
-Document requests as tabs of one page, and `/admin/properties` keeps Listings and Verification together
+from `lucide-react`, the same Ionicons-like set the app uses. There is no separate Deals page: **Sales funnel is the one place for the
+whole sales motion**, as tabs of `/admin/crm` (`?tab=`): Funnel, Prospects, Pipeline (outbound `crm_deals`), Leads,
+Deals (`transactions`, rendered by `DealsView` with `embedded`), Contacts, Agents, Doc requests, Playbook. The app's
+Sales tab (`(tabs)/sales.tsx`, `?view=`) has the same set, with `components/salesFunnel.tsx` for the outbound half.
+`/admin/deals` only redirects (old links, notifications), `(tabs)/deals` and `crm/index` redirect into `/sales`, and the
+record editors still live at `/admin/deals/[id]`, `/leads/[id]`, `/contacts/[id]`. `/admin/properties` keeps Listings and Verification together
 (`?tab=` preselects). That consolidation is deliberate.
 
 Metrics and Business plan (`/admin/metrics`, `/admin/plan`) are static reference material tied to the

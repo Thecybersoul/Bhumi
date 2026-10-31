@@ -125,7 +125,7 @@ export default function ContactEditor({ id, agent }: { id: string; agent?: boole
       if (!res.ok) throw new Error(out.error ?? 'Could not save')
       if (isNew) {
         if (out.id && files.length) await uploadAll(files, { entity_type: 'contact', entity_id: out.id, entity_label: f.name.trim(), category: fileCat })
-        router.push(out.id ? `/admin/deals/contacts/${out.id}` : roles.includes('Agent') ? '/admin/deals?tab=agents' : '/admin/deals?tab=contacts')
+        router.push(out.id ? `/admin/deals/contacts/${out.id}` : roles.includes('Agent') ? '/admin/crm?tab=agents' : '/admin/crm?tab=contacts')
         return
       }
       await reload()
@@ -141,7 +141,7 @@ export default function ContactEditor({ id, agent }: { id: string; agent?: boole
   async function remove() {
     if (!c || !confirm(`Delete ${c.name}? Their leads and deals stay, unlinked.`)) return
     await api.del(`/api/contacts/${c.id}`)
-    router.push('/admin/deals?tab=contacts')
+    router.push('/admin/crm?tab=contacts')
   }
 
   if (loading) return <Loading />
@@ -149,7 +149,7 @@ export default function ContactEditor({ id, agent }: { id: string; agent?: boole
 
   return (
     <div className="erpPage">
-      <Link href={roles.includes('Agent') ? '/admin/deals?tab=agents' : '/admin/deals?tab=contacts'} className="erpCard__action" style={{ marginBottom: 12 }}>
+      <Link href={roles.includes('Agent') ? '/admin/crm?tab=agents' : '/admin/crm?tab=contacts'} className="erpCard__action" style={{ marginBottom: 12 }}>
         <ArrowLeft size={14} /> {roles.includes('Agent') ? 'Agents' : 'Contacts'}
       </Link>
       <div className="erpHead">

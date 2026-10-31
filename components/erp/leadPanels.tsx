@@ -422,7 +422,7 @@ export function ConvertPanel({ lead, preset, onCancel }: { lead: Lead; preset?: 
         counterpart_contact_id: other?.kind === 'contact' ? other.id : undefined,
         deal_value_cr: value.trim() ? Number(value) : undefined,
       })
-      router.push(r.id ? `/admin/deals/${r.id}` : '/admin/deals')
+      router.push(r.id ? `/admin/deals/${r.id}` : '/admin/crm?tab=deals')
     } catch (e) {
       setError((e as Error).message)
       setBusy(false)
