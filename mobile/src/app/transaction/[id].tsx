@@ -13,6 +13,7 @@ import { EmailButton, EmailLog, MeetNowButton } from '@/components/google'
 import { ContactPickerSheet, PeoplePanel } from '@/components/contacts'
 import { AgentsPanel } from '@/components/agents'
 import { PendingFiles, RelatedTasks } from '@/components/leadPanels'
+import { DateChips } from '@/components/crmDate'
 import { uploadDocument, type PickedFile } from '@/lib/documents'
 import type { ApiResult, CommissionType, PropertyTransaction, Representing, TransactionStage } from '@/lib/types'
 
@@ -59,6 +60,9 @@ export default function TransactionScreen() {
   const [ctype, setCtype] = useState<CommissionType>('Percentage')
   const [cvalue, setCvalue] = useState('')
   const [advisor, setAdvisor] = useState('')
+  const [dealType, setDealType] = useState<string>('')
+  const [nextDate, setNextDate] = useState<string | null>(null)
+  const [expectedClose, setExpectedClose] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
 
   const [losing, setLosing] = useState(false)
@@ -83,6 +87,9 @@ export default function TransactionScreen() {
     setCtype(x.commission_type)
     setCvalue(x.commission_value != null ? String(x.commission_value) : '')
     setAdvisor(x.advisor ?? '')
+    setDealType(x.deal_type ?? '')
+    setNextDate(x.next_date ?? null)
+    setExpectedClose(x.expected_close ?? null)
     setNotes(x.notes ?? '')
     setParty({ buyer: x.buyer_contact_id ?? null, seller: x.seller_contact_id ?? null })
   }, [])
@@ -131,6 +138,9 @@ export default function TransactionScreen() {
       commission_type: ctype,
       commission_value: cvalue.trim() === '' ? null : Number(cvalue),
       advisor: advisor.trim(),
+      deal_type: dealType,
+      next_date: nextDate,
+      expected_close: expectedClose,
       notes: notes.trim(),
       // Picked from contacts: sent as-is. Typed: matched by phone on the server.
       ...(party.buyer ? { buyer_contact_id: party.buyer } : {}),
@@ -232,6 +242,9 @@ export default function TransactionScreen() {
           <TextField label="Deal value (₹ crore)" value={value} onChange={setValue} keyboard="numeric" />
           <Chips label="Representing" options={REPRESENTING} value={representing} onChange={setRepresenting} />
           <TextField label="Advisor" value={advisor} onChange={setAdvisor} />
+          <Chips label="Structure" options={['Not decided', 'Outright', 'JD', 'JV', 'Mandate'] as const} value={(dealType || 'Not decided') as 'Not decided'} onChange={(v) => setDealType(v === 'Not decided' ? '' : v)} />
+          <DateChips label="Next action" value={nextDate} onChange={setNextDate} hint="Becomes a task until the deal is closed or lost." />
+          <DateChips label="Expected close" value={expectedClose} onChange={setExpectedClose} />
         </Card>
 
         <Card>

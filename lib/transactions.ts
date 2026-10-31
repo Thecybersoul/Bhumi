@@ -1,14 +1,17 @@
 import { after } from 'next/server'
 import { insertReturningId } from './db'
+import { syncFollowUp } from './followups'
 import { contactsReady, ensureContact } from './contacts'
 import { ensureRecordFolder } from './google'
 import type { CommissionType, Representing, TransactionStage } from './types'
 
 export const TRANSACTION_STAGES: TransactionStage[] = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
 export const REPRESENTING: Representing[] = ['Buyer', 'Seller', 'Both']
+export const DEAL_TYPES = ['Outright', 'JD', 'JV', 'Mandate'] as const
 export const COMMISSION_TYPES: CommissionType[] = ['Percentage', 'Flat']
 
 const str = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max)
+const day = (v: unknown) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v ?? '')) ? String(v) : null)
 const num = (v: unknown) => (v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null)
 
 /** Find or create the buyer's and seller's contact cards from what a
@@ -65,6 +68,9 @@ export async function createTransaction(body: Record<string, unknown>) {
     commission_value: num(body.commission_value),
     commission_collected: false,
     advisor: str(body.advisor, 80),
+    deal_type: (DEAL_TYPES as readonly string[]).includes(String(body.deal_type)) ? body.deal_type : '',
+    expected_close: day(body.expected_close),
+    next_date: day(body.next_date),
     meetings: [],
     documents: [],
     notes: str(body.notes, 1000),
@@ -72,12 +78,14 @@ export async function createTransaction(body: Record<string, unknown>) {
     ...(await partyContacts(body)),
   }
   if (body.lead_id && (await contactsReady())) row.lead_id = String(body.lead_id)
+  if (body.prospect_id) row.prospect_id = String(body.prospect_id)
 
   const result = await insertReturningId('transactions', row)
   if (!result.ok) return { ok: false as const, status: 502, error: result.error ?? 'Could not save the deal' }
   // Every deal gets its own Drive folder the moment it exists.
   if (result.id) {
     const id = result.id
+    if (row.next_date) await syncFollowUp({ type: 'transaction', id, label: propertyLabel, date: row.next_date as string, owner: row.advisor as string })
     after(() => ensureRecordFolder({ section: 'Deals', entityType: 'transaction', entityId: id, label: `${reference} · ${propertyLabel}` }).catch(() => null))
   }
   return { ok: true as const, id: result.id, reference, persisted: result.persisted }

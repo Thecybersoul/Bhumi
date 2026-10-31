@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { update, remove } from '@/lib/db'
 import { assertAdmin } from '@/lib/auth'
 import { schemaHint } from '@/lib/contacts'
-import { partyContacts } from '@/lib/transactions'
+import { DEAL_TYPES, partyContacts } from '@/lib/transactions'
+import { syncFollowUp } from '@/lib/followups'
 import { agentsReady } from '@/lib/agents'
 import { createServiceClient } from '@/lib/supabase'
 import type { TransactionStage } from '@/lib/types'
@@ -74,8 +75,24 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   // Editing a party's details keeps their contact card in step.
   if ('buyer_name' in body || 'seller_name' in body) Object.assign(patch, await partyContacts(body))
 
+  if ('deal_type' in patch && !(patch.deal_type === '' || (DEAL_TYPES as readonly string[]).includes(String(patch.deal_type)))) {
+    return NextResponse.json({ error: 'Unknown deal structure' }, { status: 400 })
+  }
+  for (const k of ['expected_close', 'next_date'] as const) {
+    if (k in patch) patch[k] = /^\d{4}-\d{2}-\d{2}$/.test(String(patch[k] ?? '')) ? patch[k] : null
+  }
+
   const result = await update('transactions', id, patch)
   if (!result.ok) return NextResponse.json({ error: schemaHint(result.error) }, { status: 502 })
+
+  // The deal's next date is also a task, until the deal is finished.
+  if (result.persisted && ('next_date' in patch || patch.outcome || 'property_label' in patch)) {
+    const { data: row } = await createServiceClient().from('transactions').select('property_label, next_date, outcome, advisor, prospect_id').eq('id', id).maybeSingle()
+    const r = row as { property_label: string; next_date: string | null; outcome: string; advisor: string; prospect_id: string | null } | null
+    // A closed deal means the prospect it came from is won.
+    if (r?.prospect_id && patch.outcome === 'Closed') await update('prospects', r.prospect_id, { stage: 4, next_date: null })
+    if (r) await syncFollowUp({ type: 'transaction', id, label: r.property_label, date: r.next_date, owner: r.advisor, done: r.outcome !== 'In progress' })
+  }
 
   // A closed deal makes its agents' shares payable.
   if (patch.outcome === 'Closed' && result.persisted && (await agentsReady())) {

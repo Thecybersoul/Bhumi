@@ -14,6 +14,8 @@ type Row = Record<string, unknown> & Audited
 interface Deal extends Row {
   id: string
   reference: string
+  deal_type?: string
+  next_date?: string | null
   property_label: string
   stage: string
   outcome: string
@@ -208,6 +210,11 @@ export default function DealsView({ tab: forced, embedded }: { tab?: DealsTab; e
                     <div className="erpListing__meta">
                       {[d.buyer_name, d.seller_name].filter(Boolean).join(' ↔ ') || 'No parties yet'} · {cr(d.deal_value_cr)}
                     </div>
+                    {d.deal_type || (d.outcome === 'In progress' && d.next_date) ? (
+                      <div className="erpListing__meta" style={d.next_date && d.next_date <= new Date().toISOString().slice(0, 10) && d.outcome === 'In progress' ? { color: 'var(--bad, #b3261e)', fontWeight: 700 } : undefined}>
+                        {[d.deal_type, d.outcome === 'In progress' && d.next_date ? `Next: ${d.next_date}` : ''].filter(Boolean).join(' · ')}
+                      </div>
+                    ) : null}
                     <div className="erpStages">
                       {STAGES.slice(0, 4).map((s, i) => (
                         <i key={s} className={i <= idx ? 'on' : ''} />

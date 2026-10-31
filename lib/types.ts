@@ -398,6 +398,10 @@ export interface PropertyTransaction {
   lost_reason?: string
   /* Migration 015. */
   lead_id?: string | null
+  deal_type?: '' | 'Outright' | 'JD' | 'JV' | 'Mandate'
+  expected_close?: string | null
+  next_date?: string | null
+  prospect_id?: string | null
   buyer_contact_id?: string | null
   seller_contact_id?: string | null
 }
@@ -428,7 +432,7 @@ export interface TransparencyStats {
    what something is about. Both are optional: a note or task with
    no entity is simply general — a reminder, not a record about
    anything in particular. */
-export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'contact' | 'general'
+export type LinkedEntityType = 'lead' | 'transaction' | 'property' | 'verification' | 'meeting' | 'contact' | 'prospect' | 'general'
 
 export interface Note {
   id: string
@@ -464,7 +468,7 @@ export interface Task {
 /* ─── Meetings (migration 012) ───────────────────────────── */
 
 export type MeetingKind = 'In person' | 'Site visit' | 'Call' | 'Video call' | 'Discussion'
-export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'contact' | 'general'
+export type MeetingEntityType = 'property' | 'transaction' | 'task' | 'lead' | 'verification' | 'contact' | 'prospect' | 'general'
 
 /** A meeting, call, site visit or discussion, optionally tied to the
     listing, deal, task or lead it was about. */

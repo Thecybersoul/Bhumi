@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assertAdmin, currentUser } from '@/lib/auth'
 import { insertReturningId, update, remove } from '@/lib/db'
+import { syncFollowUp } from '@/lib/followups'
 import { logActivity } from '@/lib/activity'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
 
@@ -23,7 +24,7 @@ function clean(spec: Spec, body: Record<string, unknown>, partial: boolean): { d
       if (v === '' || v == null) out[key] = kind.includes('') ? '' : null
       else if (kind.includes(String(v))) out[key] = String(v)
       else return { error: `${key} must be one of ${kind.join(', ')}` }
-    } else if (kind === 'text') out[key] = key === 'prospect_id' ? String(v ?? '').trim() || null : String(v ?? '').trim().slice(0, 2000)
+    } else if (kind === 'text') out[key] = String(v ?? '').trim().slice(0, 2000)
     else if (kind === 'int') {
       const n = Math.round(Number(v))
       if (!Number.isFinite(n) || n < 0 || n > 5) return { error: `${key} must be 0–5` }
@@ -38,12 +39,16 @@ function clean(spec: Spec, body: Record<string, unknown>, partial: boolean): { d
   return { data: out }
 }
 
-export function crmRoutes(table: string, spec: Spec, opts: { deal?: boolean } = {}) {
-  const prepare = (data: Record<string, unknown>) => {
-    // A deal's value and commission are NOT NULL: an emptied box means 0, not a failed save.
-    if (opts.deal) for (const k of ['value', 'commission']) if (k in data && data[k] == null) data[k] = 0
-    return data
-  }
+/** After a prospect is saved, keep its follow-up task in step with its next date. */
+async function followUpFor(id: string) {
+  const { data } = await createServiceClient().from('prospects').select('name, next_date, stage, owner').eq('id', id).maybeSingle()
+  if (!data) return
+  const r = data as { name: string; next_date: string | null; stage: number; owner: string }
+  await syncFollowUp({ type: 'prospect', id, label: r.name, date: r.next_date, owner: r.owner, done: r.stage >= 4 })
+}
+
+export function crmRoutes(table: string, spec: Spec) {
+  const prepare = (data: Record<string, unknown>) => data
 
   async function GET() {
     const denied = await assertAdmin()
@@ -74,7 +79,7 @@ export function crmRoutes(table: string, spec: Spec, opts: { deal?: boolean } = 
       if (!rows.length) return NextResponse.json({ error: 'No usable rows: each needs at least a name.' }, { status: 400 })
       const { error } = await createServiceClient().from(table).insert(rows as never)
       if (error) return NextResponse.json({ error: error.message }, { status: 502 })
-      await logActivity({ action: 'create', entity_type: table === 'prospects' ? 'prospect' : 'crm_deal', summary: `Imported ${rows.length} ${table === 'prospects' ? 'prospects' : 'deals'}` })
+      await logActivity({ action: 'create', entity_type: 'prospect', summary: `Imported ${rows.length} prospects` })
       return NextResponse.json({ ok: true, imported: rows.length }, { status: 201 })
     }
 
@@ -82,6 +87,7 @@ export function crmRoutes(table: string, spec: Spec, opts: { deal?: boolean } = 
     if (!c.data) return NextResponse.json({ error: c.error }, { status: 400 })
     const r = await insertReturningId(table, prepare(c.data))
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 502 })
+    if (r.id && hasSupabase()) await followUpFor(r.id)
     return NextResponse.json({ ok: true, id: r.id }, { status: 201 })
   }
 
@@ -95,6 +101,7 @@ export function crmRoutes(table: string, spec: Spec, opts: { deal?: boolean } = 
     if (!c.data) return NextResponse.json({ error: c.error }, { status: 400 })
     const r = await update(table, id, prepare(c.data))
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 502 })
+    if ('next_date' in c.data || 'stage' in c.data || 'name' in c.data) await followUpFor(id)
     return NextResponse.json({ ok: true })
   }
 
@@ -105,6 +112,7 @@ export function crmRoutes(table: string, spec: Spec, opts: { deal?: boolean } = 
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
     const r = await remove(table, id)
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 502 })
+    await syncFollowUp({ type: 'prospect', id, label: '', date: null })
     return NextResponse.json({ ok: true })
   }
 

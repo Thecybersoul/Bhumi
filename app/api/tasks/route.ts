@@ -6,7 +6,7 @@ import type { LinkedEntityType, TaskPriority } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'contact', 'general']
+const ENTITY_TYPES: LinkedEntityType[] = ['lead', 'transaction', 'property', 'verification', 'meeting', 'contact', 'prospect', 'general']
 const PRIORITIES: TaskPriority[] = ['Low', 'Normal', 'High']
 
 // GET /api/tasks — admin only, internal follow-ups

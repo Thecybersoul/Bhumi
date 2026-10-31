@@ -78,7 +78,7 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`016`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`022`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
@@ -98,6 +98,25 @@ first. It migrates only when `VERCEL_ENV=production`, because previews share the
 the build. Setup's **Apply pending updates** (`/api/admin/migrate`) does the same on demand. `/api/health`
 reports `schema.current` (is 016 in?) and `schema.auto_migrate` (is a connection string present?).
 
+### One funnel: prospect → lead → deal, follow-ups as tasks (migration 022)
+
+**There is one deal table, `transactions`.** The Sales CRM's `crm_deals` was folded into it by 022 (Interested → Enquiry,
+Proposal → Negotiation, Won → Closed, Lost → outcome Lost; value ₹ → crore, commission ₹ → a flat fee in lakh) and the
+old table is left in place, unread, to be dropped by hand once the copy is checked. `transactions` gained `deal_type`
+(Outright/JD/JV/Mandate), `expected_close`, `next_date`, `prospect_id` and `crm_origin`. `/api/crm/deals` no longer exists.
+The forecast weights are `DEAL_WEIGHT` in `lib/crm.ts` (kept in step with `mobile/src/lib/crm.ts`).
+
+**`POST /api/crm/prospects/:id/convert`** carries a prospect forward without retyping: `{to:'lead'}` finds or creates the
+contact (`ensureContact`, so one person keeps one card) and opens a lead (a Partner becomes an agent contact instead);
+`{to:'deal'}` opens a deal through `createTransaction()` with the prospect as buyer and converts the lead if there is one.
+`prospects.contact_id` / `lead_id` point forward, `transactions.prospect_id` points back, and closing the deal marks the
+prospect Won.
+
+**A next date is also a task.** `lib/followups.ts` `syncFollowUp()` keeps one open "Follow up: …" task per prospect or deal
+in step with its `next_date` (created, re-dated, or marked Done when the date is cleared or the record is won, lost or
+closed). It is called from the prospect routes and the transaction routes, never throws, and tasks can point at a
+`prospect`. Leads keep their own `next_follow_up_at`; they already show on Home and in reminders.
+
 ### The web admin and the app are one ERP with one structure
 
 The web admin (`/admin`) mirrors the mobile app screen for screen:
@@ -114,8 +133,8 @@ The pages are client components in `components/erp/` (`HomeView`, `DealsView`, `
 bearer token, so both surfaces always agree and write the same activity trail. When you change a screen in
 one, change it in the other. Styles are the `.erp*` block at the end of `app/components.css`, and icons come
 from `lucide-react`, the same Ionicons-like set the app uses. There is no separate Deals page: **Sales funnel is the one place for the
-whole sales motion**, as tabs of `/admin/crm` (`?tab=`): Funnel, Prospects, Pipeline (outbound `crm_deals`), Leads,
-Deals (`transactions`, rendered by `DealsView` with `embedded`), Contacts, Agents, Doc requests, Playbook. The app's
+whole sales motion**, as tabs of `/admin/crm` (`?tab=`): Funnel, Prospects, Leads,
+Deals (`transactions`, rendered by `DealsView` with `embedded`; the only deal table, see below), Contacts, Agents, Doc requests, Playbook. The app's
 Sales tab (`(tabs)/sales.tsx`, `?view=`) has the same set, with `components/salesFunnel.tsx` for the outbound half.
 `/admin/deals` only redirects (old links, notifications), `(tabs)/deals` and `crm/index` redirect into `/sales`, and the
 record editors still live at `/admin/deals/[id]`, `/leads/[id]`, `/contacts/[id]`. `/admin/properties` keeps Listings and Verification together

@@ -230,6 +230,10 @@ export interface PropertyTransaction extends Audited {
   commission_value?: number | null
   commission_collected: boolean
   advisor?: string
+  deal_type?: '' | 'Outright' | 'JD' | 'JV' | 'Mandate'
+  expected_close?: string | null
+  next_date?: string | null
+  prospect_id?: string | null
   meetings: TransactionMeeting[]
   notes?: string
   opened_at: string

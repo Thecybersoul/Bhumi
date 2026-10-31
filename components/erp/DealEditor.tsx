@@ -36,6 +36,9 @@ interface Deal extends Audited {
   commission_value?: number | null
   commission_collected: boolean
   advisor?: string
+  deal_type?: string
+  expected_close?: string | null
+  next_date?: string | null
   notes?: string
   lost_reason?: string
   opened_at: string
@@ -71,6 +74,8 @@ export default function DealEditor({ id }: { id: string }) {
     property_label: '',
     deal_value_cr: '',
     advisor: '',
+    expected_close: '',
+    next_date: '',
     buyer_name: '',
     buyer_phone: '',
     buyer_email: '',
@@ -81,6 +86,7 @@ export default function DealEditor({ id }: { id: string }) {
     notes: '',
   })
   const [representing, setRepresenting] = useState<Deal['representing']>('Both')
+  const [dealType, setDealType] = useState('')
   const [ctype, setCtype] = useState<Deal['commission_type']>('Percentage')
   const [listing, setListing] = useState<LinkValue>(NO_LINK)
   const [party, setParty] = useState<{ buyer: string | null; seller: string | null }>({ buyer: null, seller: null })
@@ -101,6 +107,8 @@ export default function DealEditor({ id }: { id: string }) {
       property_label: x.property_label,
       deal_value_cr: x.deal_value_cr != null ? String(x.deal_value_cr) : '',
       advisor: x.advisor ?? '',
+      expected_close: x.expected_close ?? '',
+      next_date: x.next_date ?? '',
       buyer_name: x.buyer_name ?? '',
       buyer_phone: x.buyer_phone ?? '',
       buyer_email: x.buyer_email ?? '',
@@ -112,6 +120,7 @@ export default function DealEditor({ id }: { id: string }) {
     })
     setRepresenting(x.representing)
     setCtype(x.commission_type)
+    setDealType(x.deal_type ?? '')
     setListing(x.property_id ? { entity_type: 'property', entity_id: x.property_id, entity_label: x.property_label } : NO_LINK)
     setParty({ buyer: x.buyer_contact_id ?? null, seller: x.seller_contact_id ?? null })
   }, [])
@@ -156,6 +165,7 @@ export default function DealEditor({ id }: { id: string }) {
       ...Object.fromEntries(Object.entries(f).map(([k, v]) => [k, v.trim()])),
       property_id: listing.entity_type === 'property' ? listing.entity_id : null,
       representing,
+      deal_type: dealType,
       commission_type: ctype,
       deal_value_cr: f.deal_value_cr.trim() === '' ? null : Number(f.deal_value_cr),
       commission_value: f.commission_value.trim() === '' ? null : Number(f.commission_value),
@@ -287,6 +297,18 @@ export default function DealEditor({ id }: { id: string }) {
               </Field>
               <Field label="Advisor">
                 <input className="erpInput" value={f.advisor} onChange={set('advisor')} />
+              </Field>
+              <Field label="Structure">
+                <select className="erpInput" value={dealType} onChange={(e) => setDealType(e.target.value)}>
+                  <option value="">Not decided</option>
+                  {['Outright', 'JD', 'JV', 'Mandate'].map((x) => <option key={x}>{x}</option>)}
+                </select>
+              </Field>
+              <Field label="Next action date" hint="Becomes a task until the deal is closed or lost.">
+                <input className="erpInput" type="date" value={f.next_date} onChange={set('next_date')} />
+              </Field>
+              <Field label="Expected close">
+                <input className="erpInput" type="date" value={f.expected_close} onChange={set('expected_close')} />
               </Field>
               <Field label="Representing" full>
                 <Chips options={REPRESENTING} value={representing} onChange={setRepresenting} />
