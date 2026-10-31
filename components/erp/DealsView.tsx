@@ -39,12 +39,18 @@ interface DocRequest extends Row {
 const STAGES = ['Enquiry', 'Negotiation', 'Agreement', 'Registration', 'Closed']
 const cr = (n?: number | null) => (n == null ? 'Value TBD' : `₹${n >= 10 ? Math.round(n) : n.toFixed(1)} Cr`)
 
-export default function DealsView() {
+type DealsTab = 'pipeline' | 'leads' | 'contacts' | 'agents' | 'docs'
+
+/* The leads, deals, people, agents and document requests behind the
+   Sales funnel. On /admin/crm the funnel's own tab bar drives `tab`
+   and `embedded` drops this view's header and tabs. */
+export default function DealsView({ tab: forced, embedded }: { tab?: DealsTab; embedded?: boolean } = {}) {
   const params = useSearchParams()
-  const [tab, setTab] = useState<'pipeline' | 'leads' | 'contacts' | 'agents' | 'docs'>(() => {
+  const [ownTab, setTab] = useState<DealsTab>(() => {
     const t = params.get('tab')
     return t === 'leads' ? 'leads' : t === 'contacts' ? 'contacts' : t === 'agents' ? 'agents' : t === 'documents' || t === 'docs' ? 'docs' : 'pipeline'
   })
+  const tab = forced ?? ownTab
   const [agents, setAgents] = useState<Contact[] | null>(null)
   const [agentsReady, setAgentsReady] = useState(true)
   const [aq, setAq] = useState('')
@@ -127,25 +133,34 @@ export default function DealsView() {
 
   const shown = (deals ?? []).filter((d) => filter === 'All' || d.outcome === filter)
 
+  const actions = (
+    <>
+      <Link href="/admin/deals/leads/new" className="erpBtn soft">
+        <UserPlus size={16} /> New lead
+      </Link>
+      <Link href="/admin/deals/new" className="erpBtn primary">
+        <Plus size={16} /> New deal
+      </Link>
+    </>
+  )
+
   return (
-    <div className="erpPage">
-      <div className="erpHead">
-        <div>
-          <h1>Deals</h1>
-          <p>Leads, the deals they become, the people behind both, and document requests from serious buyers.</p>
+    <div className={embedded ? undefined : 'erpPage'}>
+      {embedded ? (
+        <div className="erpHead__actions" style={{ margin: '0 0 14px' }}>{actions}</div>
+      ) : (
+        <div className="erpHead">
+          <div>
+            <h1>Deals</h1>
+            <p>Leads, the deals they become, the people behind both, and document requests from serious buyers.</p>
+          </div>
+          <div className="erpHead__actions">{actions}</div>
         </div>
-        <div className="erpHead__actions">
-          <Link href="/admin/deals/leads/new" className="erpBtn soft">
-            <UserPlus size={16} /> New lead
-          </Link>
-          <Link href="/admin/deals/new" className="erpBtn primary">
-            <Plus size={16} /> New deal
-          </Link>
-        </div>
-      </div>
+      )}
       {error ? <Banner tone="error">{error}</Banner> : null}
 
-      <div className="erpSeg">
+      {embedded ? null : (
+<div className="erpSeg">
         <button className={tab === 'leads' ? 'is-on' : ''} onClick={() => setTab('leads')}>
           Leads · {leads.filter((l) => !['Converted', 'Lost', 'Closed'].includes(l.stage)).length}
         </button>
@@ -162,6 +177,7 @@ export default function DealsView() {
           Document requests · {docs.filter((d) => d.status === 'Pending').length}
         </button>
       </div>
+      )}
 
       {deals === null ? (
         <Loading />

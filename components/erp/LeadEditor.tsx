@@ -162,7 +162,7 @@ export default function LeadEditor({ id, contactId }: { id: string; contactId?: 
       if (isNew) {
         const r = await api.post<{ id?: string }>('/api/leads', { ...body(), kind: intent === 'Sell' ? 'Listing request' : 'Enquiry', ...(contact ? { contact_id: contact.id } : {}) })
         if (r.id && files.length) await uploadAll(files, { entity_type: 'lead', entity_id: r.id, entity_label: f.name.trim(), category: fileCat })
-        router.push(r.id ? `/admin/deals/leads/${r.id}` : '/admin/deals?tab=leads')
+        router.push(r.id ? `/admin/deals/leads/${r.id}` : '/admin/crm?tab=leads')
         return
       }
       await api.put(`/api/leads/${id}`, body())
@@ -194,7 +194,7 @@ export default function LeadEditor({ id, contactId }: { id: string; contactId?: 
   async function remove() {
     if (!lead || !confirm(`Delete the lead for ${lead.name}? Their contact card stays.`)) return
     await api.del(`/api/leads/${lead.id}`)
-    router.push('/admin/deals?tab=leads')
+    router.push('/admin/crm?tab=leads')
   }
 
   if (loading) return <Loading />
@@ -324,7 +324,7 @@ export default function LeadEditor({ id, contactId }: { id: string; contactId?: 
 
   return (
     <div className="erpPage">
-      <Link href="/admin/deals?tab=leads" className="erpCard__action" style={{ marginBottom: 12 }}>
+      <Link href="/admin/crm?tab=leads" className="erpCard__action" style={{ marginBottom: 12 }}>
         <ArrowLeft size={14} /> Leads
       </Link>
       <div className="erpHead">

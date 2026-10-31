@@ -128,7 +128,8 @@ export default function TabsLayout() {
           tabBarIcon: tabIcon('home-outline', 'home'),
         }}
       />
-      <Tabs.Screen name="deals" options={{ title: 'Deals', tabBarIcon: tabIcon('briefcase-outline', 'briefcase') }} />
+      <Tabs.Screen name="sales" options={{ title: 'Sales', headerTitle: 'Sales funnel', tabBarIcon: tabIcon('funnel-outline', 'funnel') }} />
+      <Tabs.Screen name="deals" options={{ href: null }} />
       <Tabs.Screen name="properties" options={{ title: 'Listings', tabBarIcon: tabIcon('map-outline', 'map') }} />
       <Tabs.Screen name="meetings" options={{ title: 'Meetings', tabBarIcon: tabIcon('people-outline', 'people') }} />
       <Tabs.Screen name="notes-tasks" options={{ title: 'Tasks', headerTitle: 'Tasks & notes', tabBarIcon: tabIcon('checkmark-circle-outline', 'checkmark-circle') }} />

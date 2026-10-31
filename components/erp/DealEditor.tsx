@@ -168,7 +168,7 @@ export default function DealEditor({ id }: { id: string }) {
       if (isNew) {
         const r = await api.post<{ id?: string; reference?: string }>('/api/transactions', body)
         if (r.id && files.length) await uploadAll(files, { entity_type: 'transaction', entity_id: r.id, entity_label: `${r.reference ?? ''} · ${f.property_label.trim()}`, category: fileCat })
-        router.push(r.id ? `/admin/deals/${r.id}` : '/admin/deals')
+        router.push(r.id ? `/admin/deals/${r.id}` : '/admin/crm?tab=deals')
       } else {
         await api.put(`/api/transactions/${id}`, body)
         await reload()
@@ -185,14 +185,14 @@ export default function DealEditor({ id }: { id: string }) {
   async function remove() {
     if (!t || !confirm(`Delete ${t.reference}? This cannot be undone.`)) return
     await api.del(`/api/transactions/${t.id}`)
-    router.push('/admin/deals')
+    router.push('/admin/crm?tab=deals')
   }
 
   if (loading) return <Loading />
 
   return (
     <div className="erpPage">
-      <Link href="/admin/deals" className="erpCard__action" style={{ marginBottom: 12 }}>
+      <Link href="/admin/crm?tab=deals" className="erpCard__action" style={{ marginBottom: 12 }}>
         <ArrowLeft size={14} /> Deals
       </Link>
       <div className="erpHead">

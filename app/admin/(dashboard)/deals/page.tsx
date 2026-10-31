@@ -1,13 +1,12 @@
-import { Suspense } from 'react'
-import DealsView from '@/components/erp/DealsView'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Deals · Admin' }
 
-export default function AdminDeals() {
-  return (
-    <Suspense>
-      <DealsView />
-    </Suspense>
-  )
+/* Deals now live inside the Sales funnel. This keeps old links, saved
+   bookmarks and notification deep links working. */
+const TAB: Record<string, string> = { leads: 'leads', contacts: 'contacts', agents: 'agents', documents: 'docs', docs: 'docs', pipeline: 'deals' }
+
+export default async function AdminDeals({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams
+  redirect(`/admin/crm?tab=${TAB[tab ?? ''] ?? 'deals'}`)
 }

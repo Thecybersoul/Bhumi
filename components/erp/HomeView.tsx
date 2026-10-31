@@ -175,7 +175,7 @@ export default function HomeView({ firstName }: { firstName: string }) {
         <div className="erpHero__stats">
           <HeroStat href="/admin/notes-tasks" icon={SquareCheck} value={v ? v.dueToday.length + v.overdue.length : '–'} label="Tasks due" alert={v?.overdue.length ? `${v.overdue.length} overdue` : undefined} />
           <HeroStat href="/admin/meetings" icon={Users} value={v ? v.meetingsToday.length : '–'} label="Meetings today" />
-          <HeroStat href="/admin/deals" icon={Briefcase} value={v ? v.activeDeals.length : '–'} label="Open deals" />
+          <HeroStat href="/admin/crm?tab=deals" icon={Briefcase} value={v ? v.activeDeals.length : '–'} label="Open deals" />
           <HeroStat href="/admin/properties" icon={Map} value={v ? v.byStatus('Live') : '–'} label="Live listings" />
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function HomeView({ firstName }: { firstName: string }) {
               {v.upcoming.length === 0 ? <Empty>Nothing scheduled for the next 7 days.</Empty> : v.upcoming.map((a) => <AgendaRow key={a.kind === 'meeting' ? `m${a.m.id}` : `t${a.t.id}`} a={a} withDay />)}
             </Card>
 
-            <Card title="Deals in motion" icon={Briefcase} action="Pipeline" actionHref="/admin/deals">
+            <Card title="Deals in motion" icon={Briefcase} action="Pipeline" actionHref="/admin/crm?tab=deals">
               {v.activeDeals.length === 0 ? (
                 <Empty>No open deals. Start one from a lead or listing.</Empty>
               ) : (
@@ -276,7 +276,7 @@ export default function HomeView({ firstName }: { firstName: string }) {
             </Card>
 
             {v.followUps.length ? (
-              <Card title="Follow-ups due" icon={AlarmClock} action="Leads" actionHref="/admin/deals?tab=leads">
+              <Card title="Follow-ups due" icon={AlarmClock} action="Leads" actionHref="/admin/crm?tab=leads">
                 {v.followUps.slice(0, 6).map((l) => {
                   const late = new Date(l.next_follow_up_at!).getTime() < Date.now()
                   return (
@@ -297,7 +297,7 @@ export default function HomeView({ firstName }: { firstName: string }) {
             ) : null}
 
             {v.newLeads.length ? (
-              <Card title="New leads to contact" icon={UserPlus} action="Leads" actionHref="/admin/deals?tab=leads">
+              <Card title="New leads to contact" icon={UserPlus} action="Leads" actionHref="/admin/crm?tab=leads">
                 {v.newLeads.slice(0, 5).map((l) => (
                   <Link key={l.id} href={`/admin/deals/leads/${l.id}`} className="erpRow">
                     <span style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--gold)', margin: '0 8px' }} />

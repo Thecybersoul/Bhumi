@@ -51,14 +51,14 @@ const paths = (type: string, id: string | null): [string | null, string | null] 
     case 'task':
     case 'note':
       return ['/notes-tasks', '/admin/notes-tasks']
-    // The app path stays the Deals tab: builds installed before the lead
+    // The app path stays '/deals' (it redirects into the Sales tab): builds installed before the lead
     // page existed can still open it.
     case 'lead':
-      return ['/deals', id ? `/admin/deals/leads/${id}` : '/admin/deals?tab=leads']
+      return ['/deals', id ? `/admin/deals/leads/${id}` : '/admin/crm?tab=leads']
     case 'contact':
-      return ['/deals', id ? `/admin/deals/contacts/${id}` : '/admin/deals?tab=contacts']
+      return ['/deals', id ? `/admin/deals/contacts/${id}` : '/admin/crm?tab=contacts']
     case 'data_room':
-      return ['/deals', '/admin/deals?tab=leads']
+      return ['/deals', '/admin/crm?tab=docs']
     default:
       return [null, null]
   }
