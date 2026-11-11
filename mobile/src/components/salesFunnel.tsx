@@ -7,7 +7,7 @@ import { useSession } from '@/lib/auth'
 import { telUrl, waUrl } from '@/lib/leads'
 import { openUrl } from '@/lib/links'
 import { ourCommissionLakh } from '@/lib/agents'
-import type { PropertyTransaction } from '@/lib/types'
+import type { Lead, PropertyTransaction } from '@/lib/types'
 import { colors, radius, space, text } from '@/lib/theme'
 import { ErrorBanner, LoadingScreen } from '@/components/ui'
 import { ContactRows, PhoneActions } from '@/components/prospectContacts'
@@ -28,7 +28,7 @@ export const PIPE_STAGES = [2, 3, 4, 5] as const
 export const PIPE_LABEL: Record<number, string> = { 2: 'Interested', 3: 'Proposal', 4: 'Won', 5: 'Lost' }
 const PRIOS = ['A', 'B', 'C'] as const
 
-export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab; go: (v: string) => void; inbound: Inbound; txns: PropertyTransaction[] }) {
+export default function SalesFunnel({ tab, go, inbound, txns, leadsDue = [] }: { tab: FunnelTab; go: (v: string) => void; inbound: Inbound; txns: PropertyTransaction[]; leadsDue?: Lead[] }) {
   const api = useApi()
   const { user } = useSession()
   const me = user?.name ?? ''
@@ -98,8 +98,22 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
   const weightedCommission = openDeals.reduce((a, t) => a + commissionRs(t) * (DEAL_WEIGHT[t.stage] ?? 0), 0)
   const pipelineValue = openDeals.reduce((a, t) => a + (t.deal_value_cr ?? 0) * 1e7, 0)
   const won = txns.filter((t) => t.outcome === 'Closed')
-  const dealsDue = openDeals.filter((t) => !!t.next_date && t.next_date <= today()).length
-  const overdue = overdueP.length + dealsDue
+  const dealsOverdue = openDeals.filter((t) => !!t.next_date && t.next_date <= today())
+  const dealsNoDate = openDeals.filter((t) => !t.next_date)
+  const dealsDue = dealsOverdue.length
+  const overdue = overdueP.length + dealsDue + leadsDue.length
+  // One list of what needs doing today, whichever part of the funnel it is
+  // in: dated items oldest first, then open deals with no next date at all.
+  const doToday = [
+    ...overdueP.map((p) => ({ key: `p${p.id}`, kind: 'Prospect', title: p.name, sub: [LISTS[p.list].one, p.area, STAGES[p.stage]].filter(Boolean).join(' · '), when: p.next_date ?? '', open: () => openProspect(p.id) })),
+    ...leadsDue.map((l) => ({ key: `l${l.id}`, kind: 'Lead', title: l.name, sub: l.stage === 'Visit' ? 'Site visit' : l.stage, when: (l.next_follow_up_at ?? '').slice(0, 10), open: () => router.push({ pathname: '/lead/[id]', params: { id: l.id } }) })),
+    ...dealsOverdue.map((t) => ({ key: `d${t.id}`, kind: 'Deal', title: t.property_label, sub: t.stage, when: t.next_date ?? '', open: () => router.push({ pathname: '/transaction/[id]', params: { id: t.id } }) })),
+  ]
+    .sort((a, b) => a.when.localeCompare(b.when))
+    .concat(dealsNoDate.map((t) => ({ key: `n${t.id}`, kind: 'Deal', title: t.property_label, sub: t.stage, when: 'No next date', open: () => router.push({ pathname: '/transaction/[id]', params: { id: t.id } }) })))
+  // How many prospects got at least as far as each stage (Lost ones left
+  // out: we don't record how far they got), for the share that moved on.
+  const reached = STAGES.slice(0, 5).map((_, i) => all.filter((p) => p.stage !== 5 && p.stage >= i).length)
   const startHere = all.filter((p) => p.prio === 'A' && p.stage === 0).sort(byPreference)
   const openProspect = (id: string) => router.push({ pathname: '/crm/prospect/[id]', params: { id } })
 
@@ -139,8 +153,21 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
                 <Text style={s.rowRight}>{openDeals.length}</Text>
               </TouchableOpacity>
             </Block>
-            <Block title="Follow up now" icon="alarm-outline">
-              {overdueP.length === 0 ? <Text style={s.empty}>No follow-ups due. Keep a next date on every prospect.</Text> : overdueP.map((p) => <MiniRow key={p.id} p={p} onPress={() => openProspect(p.id)} />)}
+            <Block title="Do today" icon="alarm-outline">
+              {doToday.length === 0 ? (
+                <Text style={s.empty}>Nothing due across prospects, leads and deals. Keep a next date on everything.</Text>
+              ) : (
+                doToday.map((x) => (
+                  <TouchableOpacity key={x.key} style={s.row} onPress={x.open}>
+                    <Text style={s.kind}>{x.kind}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.rowTitle} numberOfLines={1}>{x.title}</Text>
+                      <Text style={s.rowSub} numberOfLines={1}>{x.sub}</Text>
+                    </View>
+                    <Text style={[s.rowRight, { color: colors.flagged }]}>{/^\d{4}-/.test(x.when) ? x.when.slice(5) : x.when}</Text>
+                  </TouchableOpacity>
+                ))
+              )}
             </Block>
             <Block title="Start here" icon="flag-outline">
               {startHere.length === 0 ? <Text style={s.empty}>No Priority A prospects waiting to be contacted.</Text> : startHere.slice(0, 8).map((p) => <MiniRow key={p.id} p={p} onPress={() => openProspect(p.id)} />)}
@@ -154,9 +181,11 @@ export default function SalesFunnel({ tab, go, inbound, txns }: { tab: FunnelTab
                     <Text style={s.barLabel}>{st}</Text>
                     <View style={s.barTrack}><View style={[s.barFill, { width: `${(n / max) * 100}%` }]} /></View>
                     <Text style={s.barN}>{n}</Text>
+                    <Text style={s.barPct}>{i < 4 && reached[i] ? `${Math.round((reached[i + 1] / reached[i]) * 100)}% on` : ''}</Text>
                   </View>
                 )
               })}
+              <Text style={[s.rowSub, { marginTop: 6 }]}>“% on” is the share of prospects reaching a stage that went further. Lost prospects are left out.</Text>
             </Block>
             <Block title="Your lists" icon="list-outline">
               {LIST_KEYS.map((k) => (
@@ -365,6 +394,8 @@ const s = StyleSheet.create({
   rowRight: { fontSize: text.sm, fontWeight: '700', color: colors.navy },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginVertical: 3 },
   barLabel: { width: 74, fontSize: text.xs, color: colors.ink2 },
+  barPct: { width: 52, textAlign: 'right', fontSize: text['2xs'], color: colors.muted },
+  kind: { width: 58, fontSize: text['2xs'], fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.4 },
   barTrack: { flex: 1, height: 10, borderRadius: 5, backgroundColor: colors.line2, overflow: 'hidden' },
   barFill: { height: 10, borderRadius: 5, backgroundColor: colors.navy600 },
   barN: { width: 26, textAlign: 'right', fontSize: text.xs, fontWeight: '700', color: colors.navy },

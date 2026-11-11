@@ -183,11 +183,19 @@ export default function SalesScreen() {
     { id: 'prospects', label: 'Prospects' },
     { id: 'leads', label: `Leads${leads ? ` ${(leads ?? []).filter((l) => leadIsOpen(l.stage)).length}` : ''}` },
     { id: 'pipeline', label: `Deals${txns ? ` ${txns.filter((t) => t.outcome === 'In progress').length}` : ''}` },
-    { id: 'contacts', label: `People${contacts ? ` ${contacts.length}` : ''}` },
-    { id: 'agents', label: `Agents${agents ? ` ${agents.length}` : ''}` },
-    { id: 'requests', label: `Docs${docs ? ` ${docs.filter((d) => d.status === 'Pending').length}` : ''}` },
+    { id: 'contacts', label: 'People' },
     { id: 'playbook', label: 'Playbook' },
   ] as const
+  // Six tabs: Doc requests sit inside Deals and Agents inside People, as a
+  // second row of chips, so the bar fits a phone without scrolling far.
+  const pendingDocs = docs ? docs.filter((d) => d.status === 'Pending').length : 0
+  const subs: { id: View_; label: string }[] | null =
+    view === 'pipeline' || view === 'requests'
+      ? [{ id: 'pipeline', label: 'Deals' }, { id: 'requests', label: `Doc requests${pendingDocs ? ` · ${pendingDocs}` : ''}` }]
+      : view === 'contacts' || view === 'agents'
+        ? [{ id: 'contacts', label: `Contacts${contacts ? ` · ${contacts.length}` : ''}` }, { id: 'agents', label: `Agents${agents ? ` · ${agents.length}` : ''}` }]
+        : null
+  const tabOn = (id: View_) => view === id || (id === 'pipeline' && view === 'requests') || (id === 'contacts' && view === 'agents')
   const inbound = {
     leads: (leads ?? []).filter((l) => leadIsOpen(l.stage) && l.stage !== 'Nurture').length,
     due: (leads ?? []).filter(followUpDue).length,
@@ -212,16 +220,25 @@ export default function SalesScreen() {
       <View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.switcher}>
           {tabs.map((t) => (
-            <TouchableOpacity key={t.id} style={[s.sw, view === t.id && s.swOn]} onPress={() => setView(t.id)}>
-              <Text style={[s.swText, view === t.id && s.swTextOn]}>{t.label}</Text>
+            <TouchableOpacity key={t.id} style={[s.sw, tabOn(t.id) && s.swOn]} onPress={() => setView(t.id)}>
+              <Text style={[s.swText, tabOn(t.id) && s.swTextOn]}>{t.label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
+        {subs ? (
+          <View style={s.subs}>
+            {subs.map((x) => (
+              <TouchableOpacity key={x.id} style={[s.chip, view === x.id && s.chipOn]} onPress={() => setView(x.id)}>
+                <Text style={[s.chipText, view === x.id && { color: colors.white }]}>{x.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
       </View>
       {error && <ErrorBanner message={error} />}
 
       {funnelTab ? (
-        <SalesFunnel tab={view as FunnelTab} go={(v) => setView((ALIAS[v] ?? v) as View_)} inbound={inbound} txns={txns ?? []} />
+        <SalesFunnel tab={view as FunnelTab} go={(v) => setView((ALIAS[v] ?? v) as View_)} inbound={inbound} txns={txns ?? []} leadsDue={(leads ?? []).filter(followUpDue)} />
       ) : loading ? (
         <LoadingScreen />
       ) : view === 'leads' ? (
@@ -460,6 +477,7 @@ export default function SalesScreen() {
 
 const s = StyleSheet.create({
   switcher: { flexDirection: 'row', gap: 6, padding: space.lg, paddingBottom: space.sm },
+  subs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: space.lg, paddingBottom: space.sm },
   sw: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, alignItems: 'center' },
   swOn: { backgroundColor: colors.navy, borderColor: colors.navy },
   swText: { fontSize: text.xs, fontWeight: '700', color: colors.ink2 },

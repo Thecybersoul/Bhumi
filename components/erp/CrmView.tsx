@@ -18,15 +18,26 @@ import {
    and what happens next. Prospects are outbound targets (distinct from
    inbound leads); the pipeline holds the deals that have a value. */
 
-type Tab = 'home' | 'prospects' | 'leads' | 'deals' | 'contacts' | 'agents' | 'docs' | 'playbook'
+type Tab = 'home' | 'prospects' | 'leads' | 'deals' | 'people' | 'playbook'
 /* The whole sales motion in one place, in the order work moves:
    the funnel, outbound prospects and their pipeline, inbound leads and
    the deals they become, the people involved, then the playbook. */
 /** What the funnel needs from a deal; the full record lives in the Deals tab. */
 interface Txn { id: string; property_label: string; stage: string; outcome: string; deal_value_cr?: number | null; commission_type: 'Percentage' | 'Flat'; commission_value?: number | null; next_date?: string | null }
+/** What the funnel needs from a lead, to list the ones due today. */
+interface LeadLite { id: string; name: string; stage: string; next_follow_up_at?: string | null }
 
-const TABS: [Tab, string][] = [['home', 'Funnel'], ['prospects', 'Prospects'], ['leads', 'Leads'], ['deals', 'Deals'], ['contacts', 'Contacts'], ['agents', 'Agents'], ['docs', 'Doc requests'], ['playbook', 'Playbook']]
-const DEALS_TAB = { leads: 'leads', deals: 'pipeline', contacts: 'contacts', agents: 'agents', docs: 'docs' } as const
+/* Six tabs. Doc requests sit inside Deals and Agents inside People (?sub=),
+   so the bar stays short on a phone. Old ?tab=contacts|agents|docs links
+   still land in the right place. */
+const TABS: [Tab, string][] = [['home', 'Funnel'], ['prospects', 'Prospects'], ['leads', 'Leads'], ['deals', 'Deals'], ['people', 'People'], ['playbook', 'Playbook']]
+const SUBS: Partial<Record<Tab, [string, string][]>> = {
+  deals: [['', 'Deals'], ['docs', 'Doc requests']],
+  people: [['', 'Contacts'], ['agents', 'Agents']],
+}
+const OLD_TAB: Record<string, [Tab, string]> = { pipeline: ['deals', ''], docs: ['deals', 'docs'], contacts: ['people', ''], agents: ['people', 'agents'] }
+const dealsTab = (tab: Tab, sub: string) => (tab === 'leads' ? 'leads' : tab === 'deals' ? (sub === 'docs' ? 'docs' : 'pipeline') : sub === 'agents' ? 'agents' : 'contacts')
+const inDealsView = (tab: Tab) => tab === 'leads' || tab === 'deals' || tab === 'people'
 const PIPE_STAGES = [2, 3, 4, 5] as const
 const PIPE_LABEL: Record<number, string> = { 2: 'Interested', 3: 'Proposal sent', 4: 'Won', 5: 'Lost' }
 const PRIOS = ['A', 'B', 'C'] as const
@@ -39,7 +50,9 @@ const blank = (list: ListKey): Prospect => ({
 export default function CrmView() {
   const params = useSearchParams()
   const router = useRouter()
-  const tab = (TABS.find(([t]) => t === (params.get('tab') === 'pipeline' ? 'deals' : params.get('tab')))?.[0] ?? 'home') as Tab
+  const rawTab = params.get('tab') ?? ''
+  const tab = (OLD_TAB[rawTab]?.[0] ?? TABS.find(([t]) => t === rawTab)?.[0] ?? 'home') as Tab
+  const sub = params.get('sub') ?? OLD_TAB[rawTab]?.[1] ?? ''
   const [prospects, setProspects] = useState<Prospect[] | null>(null)
   const [txns, setTxns] = useState<Txn[]>([])
   const [me, setMe] = useState('')
@@ -59,8 +72,9 @@ export default function CrmView() {
   const [sizeF, setSizeF] = useState<SizeFilter>('')
   // Inbound side of the funnel, shown on the Funnel tab: open leads and deals in progress.
   const [inbound, setInbound] = useState({ leads: 0, due: 0 })
+  const [leadsDue, setLeadsDue] = useState<LeadLite[]>([])
 
-  const go = (t: Tab) => router.replace(`/admin/crm${t === 'home' ? '' : `?tab=${t}`}`)
+  const go = (t: Tab, s = '') => router.replace(`/admin/crm${t === 'home' ? '' : `?tab=${t}${s ? `&sub=${s}` : ''}`}`)
 
   const load = useCallback(async () => {
     try {
@@ -68,12 +82,14 @@ export default function CrmView() {
         api.get<{ data: Prospect[]; error?: string }>('/api/crm/prospects'),
         api.get<{ data: ProspectContact[] }>('/api/crm/prospect-contacts').catch(() => ({ data: [] as ProspectContact[] })),
         api.get<{ data: Txn[]; source: string }>('/api/transactions').catch(() => null),
-        api.get<{ data: { stage: string; next_follow_up_at?: string | null }[]; source: string }>('/api/leads').catch(() => null),
+        api.get<{ data: LeadLite[]; source: string }>('/api/leads').catch(() => null),
         api.get<{ user: { name: string } }>('/api/admin/me').catch(() => null),
         api.get<{ data: Parcel[]; source?: string }>('/api/properties?admin=1').catch(() => ({ data: [] as Parcel[], source: 'fallback' })),
       ])
       const openLeads = l && l.source === 'live' ? l.data.filter((x) => leadIsOpen(x.stage) && x.stage !== 'Nurture') : []
-      setInbound({ leads: openLeads.length, due: openLeads.filter((x) => followUpDue(x as never)).length })
+      const due = openLeads.filter((x) => followUpDue(x as never))
+      setInbound({ leads: openLeads.length, due: due.length })
+      setLeadsDue(due)
       setTxns(t && t.source === 'live' ? t.data : [])
       if (ls.source === 'live') setListings(ls.data)
       setError(p.error || null)
@@ -154,7 +170,19 @@ export default function CrmView() {
   const noCommission = openDeals.filter((t) => t.commission_value == null).length
   const won = txns.filter((t) => t.outcome === 'Closed')
   const dealsOverdue = openDeals.filter((t) => !!t.next_date && t.next_date <= today())
-  const overdue = [...all.filter(isOverdue), ...dealsOverdue]
+  const dealsNoDate = openDeals.filter((t) => !t.next_date)
+  const overdue = [...all.filter(isOverdue), ...dealsOverdue, ...leadsDue]
+  // One list of what needs doing today, whichever part of the funnel it is in:
+  // dated items oldest first, then open deals that have no next date at all.
+  const doToday: { key: string; kind: string; title: string; sub: string; when: string; late: boolean; href?: string; open?: () => void }[] = [
+    ...all.filter(isOverdue).map((p) => ({ key: `p${p.id}`, kind: 'Prospect', title: p.name, sub: [LISTS[p.list].one, p.area, STAGES[p.stage]].filter(Boolean).join(' · '), when: p.next_date ?? '', late: true, open: () => setEdit(p) })),
+    ...leadsDue.map((l) => ({ key: `l${l.id}`, kind: 'Lead', title: l.name, sub: l.stage === 'Visit' ? 'Site visit' : l.stage, when: (l.next_follow_up_at ?? '').slice(0, 10), late: true, href: `/admin/deals/leads/${l.id}` })),
+    ...dealsOverdue.map((t) => ({ key: `d${t.id}`, kind: 'Deal', title: t.property_label, sub: t.stage, when: t.next_date ?? '', late: true, href: `/admin/deals/${t.id}` })),
+  ].sort((a, b) => a.when.localeCompare(b.when))
+  const undated: typeof doToday = dealsNoDate.map((t) => ({ key: `n${t.id}`, kind: 'Deal', title: t.property_label, sub: t.stage, when: 'No next date', late: true, href: `/admin/deals/${t.id}` }))
+  // How many prospects got at least as far as each stage (Lost ones left out:
+  // we don't record how far they got), and the share that moved on.
+  const reached = STAGES.slice(0, 5).map((_, i) => all.filter((p) => p.stage !== 5 && p.stage >= i).length)
   const first = me.split(/\s+/)[0] || 'there'
 
   return (
@@ -165,7 +193,7 @@ export default function CrmView() {
           <p>Prospects and leads in, deals out: who to contact today, what to say, and what happens next. Commission is agreed for each property.</p>
         </div>
         <div className="erpHead__actions">
-          {tab in DEALS_TAB ? null : (
+          {inDealsView(tab) ? null : (
             <button className="erpBtn primary" onClick={() => setEdit(blank(list))}>
               <Plus size={15} /> Prospect
             </button>
@@ -182,8 +210,19 @@ export default function CrmView() {
         ))}
       </div>
 
-      {tab in DEALS_TAB ? (
-        <DealsView embedded tab={DEALS_TAB[tab as keyof typeof DEALS_TAB]} />
+      {inDealsView(tab) ? (
+        <>
+          {SUBS[tab] ? (
+            <div className="erpChips" style={{ marginBottom: 14 }}>
+              {SUBS[tab]!.map(([k, label]) => (
+                <button key={k} type="button" className={`erpChip ${sub === k ? 'is-on' : ''}`} onClick={() => go(tab, k)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <DealsView embedded tab={dealsTab(tab, sub)} />
+        </>
       ) : prospects === null ? (
         <Loading />
       ) : tab === 'home' ? (
@@ -207,11 +246,27 @@ export default function CrmView() {
           </div>
           <div className="erpGrid main" style={{ marginTop: 16 }}>
             <div className="erpCol">
-              <Card title="Follow up now">
-                {all.filter(isOverdue).length === 0 ? (
-                  <Empty>No follow-ups due. Set a next date on every prospect.</Empty>
+              <Card title="Do today">
+                {doToday.length + undated.length === 0 ? (
+                  <Empty>Nothing due across prospects, leads and deals. Keep a next date on everything.</Empty>
                 ) : (
-                  all.filter(isOverdue).sort((a, b) => (a.next_date ?? '').localeCompare(b.next_date ?? '')).map((p) => <MiniRow key={p.id} p={p} onOpen={setEdit} />)
+                  [...doToday, ...undated].map((x) => {
+                    const inner = (
+                      <>
+                        <span className="crmKind">{x.kind}</span>
+                        <div className="erpRow__body">
+                          <div className="erpRow__title">{x.title}</div>
+                          <div className="erpRow__sub">{x.sub}</div>
+                        </div>
+                        <div className="erpRow__right crmLate">{x.when}</div>
+                      </>
+                    )
+                    return x.href ? (
+                      <Link key={x.key} className="erpRow" href={x.href}>{inner}</Link>
+                    ) : (
+                      <button key={x.key} className="erpRow" style={{ width: '100%', textAlign: 'left' }} onClick={x.open}>{inner}</button>
+                    )
+                  })
                 )}
               </Card>
               <Card title="Start here" style={{ marginTop: 16 }}>
@@ -232,9 +287,11 @@ export default function CrmView() {
                       <span>{s}</span>
                       <i style={{ width: `${(n / max) * 100}%` }} />
                       <b>{n}</b>
+                      <em title="Of the prospects that reached this stage, the share that moved on to the next">{i < 4 && reached[i] ? `${Math.round((reached[i + 1] / reached[i]) * 100)}% move on` : ''}</em>
                     </div>
                   )
                 })}
+                <p className="crmSub" style={{ marginTop: 8 }}>“Move on” is the share of prospects reaching a stage that went further. Lost prospects are left out.</p>
               </Card>
               <Card title="Your lists" style={{ marginTop: 16 }}>
                 {LIST_KEYS.map((k) => (

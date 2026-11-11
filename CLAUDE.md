@@ -157,8 +157,11 @@ The pages are client components in `components/erp/` (`HomeView`, `DealsView`, `
 bearer token, so both surfaces always agree and write the same activity trail. When you change a screen in
 one, change it in the other. Styles are the `.erp*` block at the end of `app/components.css`, and icons come
 from `lucide-react`, the same Ionicons-like set the app uses. There is no separate Deals page: **Sales funnel is the one place for the
-whole sales motion**, as tabs of `/admin/crm` (`?tab=`): Funnel, Prospects, Leads,
-Deals (`transactions`, rendered by `DealsView` with `embedded`; the only deal table, see below), Contacts, Agents, Doc requests, Playbook. The app's
+whole sales motion**, as six tabs of `/admin/crm` (`?tab=`): Funnel, Prospects, Leads,
+Deals (`transactions`, rendered by `DealsView` with `embedded`; the only deal table, see below; Doc requests are `?sub=docs`),
+People (Contacts, with Agents at `?sub=agents`) and Playbook. Old `?tab=contacts|agents|docs` links still resolve. The Funnel tab's
+**Do today** lists everything due across prospects, leads and deals, plus open deals with no next date, and each funnel
+bar shows the share of prospects that moved on to the next stage (Lost left out). The app's
 Sales tab (`(tabs)/sales.tsx`, `?view=`) has the same set, with `components/salesFunnel.tsx` for the outbound half.
 `/admin/deals` only redirects (old links, notifications), `(tabs)/deals` and `crm/index` redirect into `/sales`, and the
 record editors still live at `/admin/deals/[id]`, `/leads/[id]`, `/contacts/[id]`. `/admin/properties` keeps Listings and Verification together
