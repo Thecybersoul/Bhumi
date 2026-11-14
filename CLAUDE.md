@@ -78,7 +78,7 @@ with mysteriously unsaveable forms. `/admin/setup` is the diagnostic: it probes 
 real `select` (a head-only count returns a false "exists, empty" for tables PostgREST has never heard of) and
 offers each migration's SQL to copy.
 
-Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`023`.
+Migrations live in `supabase/`, applied in order: `schema.sql`, then `migrations/004`–`024`.
 **006 creates `site_content` and `media`** — without it the content editor and media library cannot save
 anything and uploads fail outright. **007 creates `transactions`** — the deal pipeline, separate from
 `properties` (inventory on offer). **008 creates `notes` and `tasks`** — the ERP's follow-up memory; both
@@ -102,7 +102,7 @@ reports `schema.current` (is 016 in?) and `schema.auto_migrate` (is a connection
 
 **There is one deal table, `transactions`.** The Sales CRM's `crm_deals` was folded into it by 022 (Interested → Enquiry,
 Proposal → Negotiation, Won → Closed, Lost → outcome Lost; value ₹ → crore, commission ₹ → a flat fee in lakh) and the
-old table is left in place, unread, to be dropped by hand once the copy is checked. `transactions` gained `deal_type`
+old table was dropped by migration 024 once both of its rows were confirmed in `transactions`. `transactions` gained `deal_type`
 (Outright/JD/JV/Mandate), `expected_close`, `next_date`, `prospect_id` and `crm_origin`. `/api/crm/deals` no longer exists.
 The forecast weights are `DEAL_WEIGHT` in `lib/crm.ts` (kept in step with `mobile/src/lib/crm.ts`).
 
