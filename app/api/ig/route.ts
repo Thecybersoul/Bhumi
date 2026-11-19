@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin, currentUser } from '@/lib/auth'
+import { assertSocial, currentUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
 import { createServiceClient } from '@/lib/supabase'
 import { account, authorizeUrl, cleanPost, disconnect, igConfigured, listPosts, publish, recentMedia, reply } from '@/lib/instagram'
@@ -26,7 +26,7 @@ async function photosFromDocuments(body: Record<string, unknown>) {
   if (!ids.length) return
   const urls: string[] = Array.isArray(body.image_urls) ? (body.image_urls as string[]) : []
   for (const id of ids) {
-    const r = await publishImage(id)
+    const r = await publishImage(id, { allowPrivate: true, folder: 'instagram' })
     if ('error' in r) throw new Error(r.error)
     urls.push(r.url)
   }
@@ -39,7 +39,7 @@ async function ready() {
 }
 
 export async function GET(req: NextRequest) {
-  const denied = await assertAdmin()
+  const denied = await assertSocial()
   if (denied) return denied
   if (req.nextUrl.searchParams.get('insights')) {
     try {
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = await assertAdmin()
+  const denied = await assertSocial()
   if (denied) return denied
   const user = await currentUser()
   const by = user?.name ?? 'ERP'

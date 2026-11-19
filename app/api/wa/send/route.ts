@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin, currentUser } from '@/lib/auth'
+import { assertSocial, currentUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
 import { createServiceClient } from '@/lib/supabase'
 import { ingest } from '@/lib/capture'
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
    free; Meta may limit them on an account with no payment method. The
    reply shows on the phone too (coexistence). */
 export async function POST(req: NextRequest) {
-  const denied = await assertAdmin()
+  const denied = await assertSocial()
   if (denied) return denied
   const user = await currentUser()
   const body = (await req.json().catch(() => null)) as { thread_id?: string; text?: string; confirmed?: boolean } | null

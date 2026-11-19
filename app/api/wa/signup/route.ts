@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin, currentUser } from '@/lib/auth'
+import { assertSocial, currentUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
 import { GRAPH, connectAccount, disconnectAccount, listAccounts, waConfigured } from '@/lib/wa'
 
@@ -12,7 +12,7 @@ export const maxDuration = 60
    POST  {disconnect: id}                  stop capture for a number */
 
 export async function GET() {
-  const denied = await assertAdmin()
+  const denied = await assertSocial()
   if (denied) return denied
   let accounts: Awaited<ReturnType<typeof listAccounts>> = []
   try {
@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = await assertAdmin()
+  const denied = await assertSocial()
   if (denied) return denied
   const user = await currentUser()
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null

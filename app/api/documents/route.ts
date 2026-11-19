@@ -1,3 +1,4 @@
+import { canUseSocial, isPrivateDoc } from '@/lib/social'
 import { NextRequest, NextResponse } from 'next/server'
 import { assertAdmin, currentUser } from '@/lib/auth'
 import { auditReady, logActivity } from '@/lib/activity'
@@ -39,9 +40,11 @@ export async function GET(req: NextRequest) {
     let q = createServiceClient().from('documents').select('*').order('created_at', { ascending: false }).limit(500)
     if (p.get('entity_type')) q = q.eq('entity_type', entityType(p.get('entity_type')))
     if (p.get('entity_id')) q = q.eq('entity_id', p.get('entity_id')!)
+    const mine = canUseSocial(await currentUser())
+    if (!mine) q = q.or('category.is.null,category.neq.WhatsApp,entity_type.neq.general') // unfiled WhatsApp media is Sanjog's (lib/social.ts)
     const { data, error } = await q
     if (error) return NextResponse.json({ data: [], source: 'fallback', error: error.message })
-    return NextResponse.json({ data: data ?? [], source: 'live' })
+    return NextResponse.json({ data: (data ?? []).filter((d) => mine || !isPrivateDoc(d)), source: 'live' })
   } catch (e) {
     return NextResponse.json({ data: [], source: 'fallback', error: (e as Error).message })
   }

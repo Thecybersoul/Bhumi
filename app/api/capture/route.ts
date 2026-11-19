@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin, currentUser } from '@/lib/auth'
+import { assertSocial, currentUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
 import {
   NOT_READY, addRule, searchMessages, backlog, captureReady, claimBatch, finishBatch, ingest, listRules, parseExport, removeRule, setThreadStatus, threadMessages, titleFromFilename,
@@ -23,7 +23,7 @@ export const maxDuration = 120
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status })
 
 export async function GET(req: NextRequest) {
-  const denied = await assertAdmin()
+  const denied = await assertSocial()
   if (denied) return denied
   if (!(await captureReady())) return NextResponse.json({ ready: false, error: NOT_READY })
   const q = req.nextUrl.searchParams.get('q')
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = await assertAdmin()
+  const denied = await assertSocial()
   if (denied) return denied
   if (!(await captureReady())) return bad(NOT_READY, 503)
   const user = await currentUser()

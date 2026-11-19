@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logActivity } from '@/lib/activity'
 import { getUser } from '@/lib/users'
+import { canUseSocial, SOCIAL_ONLY_MESSAGE } from '@/lib/social'
 import { connect, readState } from '@/lib/instagram'
 
 export const dynamic = 'force-dynamic'
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest) {
   const uid = readState(p.get('state') ?? '')
   const user = uid ? await getUser(uid) : null
   if (!user) return back('error=This sign-in link expired. Try Connect Instagram again.')
+  if (!canUseSocial(user)) return back(`error=${encodeURIComponent(SOCIAL_ONLY_MESSAGE)}`)
   try {
     const r = await connect(req.nextUrl.origin, String(p.get('code') ?? '').replace(/#_$/, ''), user.name)
     await logActivity({ action: 'create', entity_type: 'instagram', entity_label: `@${r.username}`, summary: `Connected Instagram @${r.username}` }, user)

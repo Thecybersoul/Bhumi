@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getContacts, getLeads, getMeetings, getNotes, getProperties, getTasks, getTransactions } from '@/lib/db'
-import { assertAdmin } from '@/lib/auth'
+import { assertAdmin, currentUser } from '@/lib/auth'
+import { canUseSocial, isPrivateDoc } from '@/lib/social'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
@@ -37,7 +38,8 @@ export async function GET(req: NextRequest) {
   }
   const live = <T,>(r: { data: T[]; source: string }) => (r.source === 'live' ? r.data : [])
 
-  const [leads, contacts, props, deals, meetings, tasks, notes, docs] = await Promise.all([
+  const mine = canUseSocial(await currentUser())
+  const [leads, contacts, props, deals, meetings, tasks, notes, allDocs] = await Promise.all([
     getLeads().then(live),
     getContacts().then(live),
     getProperties({ admin: true }).then(live),
@@ -49,11 +51,13 @@ export async function GET(req: NextRequest) {
       ? createServiceClient()
           .from('documents')
           .select('id, name, category, entity_type, entity_id, entity_label')
+          .or(mine ? 'id.not.is.null' : 'category.is.null,category.neq.WhatsApp,entity_type.neq.general')
           .order('created_at', { ascending: false })
           .limit(1000)
           .then((r) => (r.data ?? []) as Record<string, unknown>[])
       : Promise.resolve([] as Record<string, unknown>[]),
   ])
+  const docs = allDocs.filter((d) => mine || !isPrivateDoc(d as { category?: string; entity_type?: string }))
 
   const out: SearchHit[] = []
   const take = <T,>(list: T[], match: (x: T) => boolean, map: (x: T) => SearchHit) => out.push(...list.filter(match).slice(0, PER_GROUP).map(map))

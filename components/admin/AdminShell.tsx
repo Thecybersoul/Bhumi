@@ -38,7 +38,7 @@ import { ASSISTANT } from '@/components/erp/lib'
    activity) below those. The signed-in person sits at the foot and
    opens their Profile: account, team, Google Workspace. */
 
-type Item = { href: string; label: string; icon: LucideIcon; hint?: string; match?: string }
+type Item = { href: string; label: string; icon: LucideIcon; hint?: string; match?: string; social?: boolean }
 
 const nav: { group: string; items: Item[] }[] = [
   {
@@ -49,8 +49,8 @@ const nav: { group: string; items: Item[] }[] = [
       { href: '/admin/properties', label: 'Listings', icon: Map, hint: 'Marketplace & verification', match: '/admin/properties' },
       { href: '/admin/meetings', label: 'Meetings', icon: Users, hint: 'Visits, calls & discussions', match: '/admin/meetings' },
       { href: '/admin/notes-tasks', label: 'Tasks & notes', icon: CircleCheck },
-      { href: '/admin/inbox', label: 'WhatsApp Inbox', icon: Inbox, hint: 'Captured business chats, filed by Claude', match: '/admin/inbox' },
-      { href: '/admin/instagram', label: 'Instagram', icon: AtSign, hint: 'Posts from listings, approved and scheduled', match: '/admin/instagram' },
+      { href: '/admin/inbox', label: 'WhatsApp Inbox', icon: Inbox, hint: 'Captured business chats, filed by Claude', match: '/admin/inbox', social: true },
+      { href: '/admin/instagram', label: 'Instagram', icon: AtSign, hint: 'Posts from listings, approved and scheduled', match: '/admin/instagram', social: true },
       { href: '/admin/messages', label: 'Messages', icon: MessagesSquare, hint: 'Team chat' },
     ],
   },
@@ -77,6 +77,8 @@ const nav: { group: string; items: Item[] }[] = [
 export interface ShellUser {
   name: string
   email: string
+  /** WhatsApp and Instagram (Sanjog only, lib/social.ts) */
+  social?: boolean
 }
 
 export default function AdminShell({ user, children }: { user: ShellUser | null; children: React.ReactNode }) {
@@ -85,6 +87,9 @@ export default function AdminShell({ user, children }: { user: ShellUser | null;
   const [open, setOpen] = useState(false)
 
   async function logout() {
+    try {
+      localStorage.removeItem('bhumi.assistant.v1') // the assistant's conversation is this person's
+    } catch {}
     await fetch('/api/admin/logout', { method: 'POST' })
     router.push('/admin/login')
   }
@@ -139,7 +144,7 @@ export default function AdminShell({ user, children }: { user: ShellUser | null;
           {nav.map((group) => (
             <div key={group.group} className="adminSidebar__group">
               <span className="adminSidebar__groupLabel">{group.group}</span>
-              {group.items.map((item) => (
+              {group.items.filter((item) => !item.social || user?.social).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

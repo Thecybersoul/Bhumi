@@ -347,6 +347,27 @@ confirmed:true}`) answers a DM or comment; a sent reply is stored as `ig:`/`igc:
 Env: `IG_APP_ID`, `IG_APP_SECRET`, optional `IG_VERIFY_TOKEN` (else `WA_VERIFY_TOKEN`). Sanjog's setup and usage
 manual is `docs/Bhumi_WhatsApp_Instagram_Manual_for_Sanjog.pdf` (untracked, like the rest of `docs/`).
 
+**WhatsApp and Instagram are Sanjog's alone (`lib/social.ts`).** `canUseSocial(user)` is true only for
+`sanjog@bhumiestates.in` (override: `SOCIAL_ACCESS_EMAILS`). `assertSocial()` guards `/api/capture`, `/api/wa/signup`,
+`/api/wa/send` and `/api/ig`; the Inbox and Instagram pages redirect anyone else, the nav hides them, `toolsFor(user)`
+drops `wa_`/`ig_`/`capture_` tools from the assistant and the connector, and `stripSocial()` removes such tool turns from
+a history someone else sends. Unfiled WhatsApp media (`isPrivateDoc`: category WhatsApp, entity_type general) is hidden
+from everyone else's Documents, search, email attachments, `read_document` and `publishImage`; once filed on a record it
+is shared. Activity entries of type `capture`/`instagram` are hidden from the others' Team activity and kept out of
+notifications, pushes and the Sheets mirror. Records Claude files from chats (leads, contacts, deals) stay shared.
+Instagram photos taken from Documents go to the public `media` bucket under `instagram/` with no Media library row.
+Webhooks, the IG callback (checks the state's user) and cron stay user-less.
+
+**Meta details learned the hard way.** Coexistence needs the app to be a **Tech Provider** (Business Verification +
+App Review for `whatsapp_business_messaging`/`_management`); until then Embedded Signup fails. After linking,
+`connectAccount` asks for `smb_app_state_sync` (saved contacts → `wa_contacts`, migration 029, used for chat titles and
+the Personal list) then `history`, each allowed once within 24 h. The webhook also handles history error 2593109
+(sharing declined), `account_update` PARTNER_REMOVED and `account_offboarded`. Instagram needs a per-account
+`POST /v27.0/<ig_id>/subscribed_apps` after login (done in `connect()`), comment webhooks need Advanced Access so
+`pollComments()` reads recent posts' comments from the reminders job, and webhook signatures are accepted with either
+secret (`lib/meta-signed.ts`). Meta's deauthorize and data-deletion callbacks are `/api/meta/deauthorize` and
+`/api/meta/data-deletion` (signed_request).
+
 ### The Property Register is kept in Listings (migration 020)
 
 `lib/data/property-register.ts` is the team's register (P001…). `lib/register-sync.ts` keeps a listing for each entry,

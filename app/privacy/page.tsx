@@ -37,7 +37,16 @@ const sections = [
   },
   {
     heading: 'WhatsApp',
-    body: 'Click-to-chat links open WhatsApp, which is operated by Meta under its own privacy terms. Anything you send us there sits within WhatsApp as well as in our records. If you would rather not use it, every page carries a form and a phone number.',
+    body: 'Click-to-chat links open WhatsApp, which is operated by Meta under its own privacy terms. Our WhatsApp Business number is connected to our records through Meta’s WhatsApp Business Platform: messages, photos, documents and voice notes in one-to-one business chats with us (and, once, up to six months of earlier chats) are received into our private systems so an advisor can act on them, and the names we have saved for numbers are used to label those chats. Personal chats are excluded before anything is stored, and chats not yet confirmed as business are deleted within seven days. Group chats are not read. If you would rather not use WhatsApp, every page carries a form and a phone number.',
+  },
+  {
+    heading: 'Instagram',
+    body: 'Our Instagram account is connected through Meta’s Instagram API. Direct messages and comments sent to our account are received into the same private systems so we can answer enquiries, and we publish posts about our listings. We do not read anyone else’s account.',
+  },
+  {
+    heading: 'Data deletion',
+    id: 'data-deletion',
+    body: `To have your WhatsApp or Instagram messages with us, or any other record we hold about you, deleted, write to ${brand.email} with the number or account you used; we confirm within seven business days. If you used Instagram or Facebook login with our app, removing the app in your account settings also removes our stored connection.`,
   },
   {
     heading: 'Your rights',
@@ -65,7 +74,7 @@ export default function PrivacyPage() {
         <section className="section">
           <div className="wrap-narrow docSection">
             {sections.map((s) => (
-              <div key={s.heading}>
+              <div key={s.heading} id={'id' in s ? s.id : undefined}>
                 <h2>{s.heading}</h2>
                 <p>{s.body}</p>
               </div>

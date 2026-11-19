@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin } from '@/lib/auth'
+import { assertAdmin, currentUser } from '@/lib/auth'
+import { canUseSocial, isPrivateDoc } from '@/lib/social'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
 import { moveDriveFile, trashDriveFile } from '@/lib/google'
 import { logActivity } from '@/lib/activity'
@@ -9,9 +10,12 @@ export const dynamic = 'force-dynamic'
 
 type Ctx = { params: Promise<{ id: string }> }
 
+/** The document, or null when it doesn't exist or is unfiled WhatsApp media and the caller isn't Sanjog. */
 async function find(id: string): Promise<DocumentRow | null> {
   const { data } = await createServiceClient().from('documents').select('*').eq('id', id).maybeSingle()
-  return (data as DocumentRow | null) ?? null
+  const doc = (data as DocumentRow | null) ?? null
+  if (doc && isPrivateDoc(doc) && !canUseSocial(await currentUser())) return null
+  return doc
 }
 
 // GET /api/documents/:id — { url } to open it. Bucket files get a
@@ -52,6 +56,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if (!Object.keys(patch).length) return NextResponse.json({ error: 'Nothing to change' }, { status: 400 })
 
   const id = (await params).id
+  if (!(await find(id))) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const before = refile ? await find(id) : null
   const { data, error } = await createServiceClient().from('documents').update(patch).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

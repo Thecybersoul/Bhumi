@@ -63,20 +63,23 @@ const SUGGESTIONS = [
   'Import the property register as draft listings',
 ]
 
-let memory: { turns: Turn[]; messages: ApiMessage[] } = { turns: [], messages: [] }
-function load() {
+// The conversation is kept per person: another account signing in on this phone starts fresh.
+let memory: { owner: string; turns: Turn[]; messages: ApiMessage[] } = { owner: '', turns: [], messages: [] }
+function load(owner: string) {
   if (Platform.OS === 'web') {
     try {
       const raw = globalThis.localStorage?.getItem(STORE)
-      if (raw) return JSON.parse(raw) as typeof memory
+      const saved = raw ? (JSON.parse(raw) as typeof memory) : null
+      if (saved && saved.owner === owner) return saved
     } catch {
       /* fresh start */
     }
+    return { owner, turns: [], messages: [] }
   }
-  return memory
+  return memory.owner === owner ? memory : { owner, turns: [], messages: [] }
 }
-function save(turns: Turn[], messages: ApiMessage[]) {
-  memory = { turns, messages }
+function save(owner: string, turns: Turn[], messages: ApiMessage[]) {
+  memory = { owner, turns, messages }
   if (Platform.OS === 'web') {
     try {
       globalThis.localStorage?.setItem(STORE, JSON.stringify(memory))
@@ -133,11 +136,12 @@ function Rich({ value, color = colors.ink }: { value: string; color?: string }) 
 
 export default function AssistantScreen() {
   const api = useApi()
-  const { token } = useSession()
+  const { token, user } = useSession()
+  const owner = user?.id ?? ''
   const insets = useSafeAreaInsets()
   const params = useLocalSearchParams<{ q?: string; shared?: string }>()
-  const [turns, setTurns] = useState<Turn[]>(() => load().turns)
-  const [messages, setMessages] = useState<ApiMessage[]>(() => load().messages)
+  const [turns, setTurns] = useState<Turn[]>(() => load(owner).turns)
+  const [messages, setMessages] = useState<ApiMessage[]>(() => load(owner).messages)
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<Attachment[]>([])
   const [uploading, setUploading] = useState(0)
@@ -236,7 +240,7 @@ export default function AssistantScreen() {
           const copy = [...all]
           const last = copy[copy.length - 1]
           copy[copy.length - 1] = { ...last, steps: (last.steps ?? []).filter((x) => !x.running) }
-          save(copy, next)
+          save(owner, copy, next)
           return copy
         })
       }
@@ -369,7 +373,7 @@ export default function AssistantScreen() {
     xhr.current?.abort()
     setTurns([])
     setMessages([])
-    save([], [])
+    save(owner, [], [])
   }
 
   return (

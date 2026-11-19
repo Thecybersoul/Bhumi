@@ -58,6 +58,7 @@ export default function ConnectWhatsApp({ onConnected }: { onConnected?: () => v
           if (d.data.waba_id) session.current.waba_id = d.data.waba_id
           if (d.data.phone_number_id) session.current.phone_number_id = d.data.phone_number_id
           if (d.event === 'CANCEL') setError(`Sign-up was closed${d.data.current_step ? ` at “${d.data.current_step}”` : ''}. Nothing was connected.`)
+          if (d.event === 'ERROR') setError(`Meta: ${d.data.error_message ?? 'sign-up failed'}${d.data.error_code ? ` (code ${d.data.error_code}${d.data.session_id ? `, session ${d.data.session_id}` : ''})` : ''}. Nothing was connected.`)
         }
       } catch {
         /* not ours */
@@ -81,10 +82,12 @@ export default function ConnectWhatsApp({ onConnected }: { onConnected?: () => v
             setBusy(false)
             return
           }
-          // The number's ids arrive by message just before or after the login callback.
-          setTimeout(async () => {
+          // The number's ids arrive by message around the login callback; the code lives 5 minutes.
+          ;(async () => {
+            for (let i = 0; i < 60 && !(session.current.waba_id && session.current.phone_number_id); i++) await new Promise((r) => setTimeout(r, 500))
             try {
               const { waba_id, phone_number_id } = session.current
+              if (!waba_id || !phone_number_id) throw new Error('Meta did not say which WhatsApp number was chosen. Try Connect WhatsApp again.')
               const out = await api.post<{ display_phone: string; history: string }>('/api/wa/signup', { code, waba_id, phone_number_id })
               setNotice(`Connected ${out.display_phone}. New chats arrive now${out.history === 'requested' ? '; past chats are on their way' : ''}.`)
               load()
@@ -94,7 +97,7 @@ export default function ConnectWhatsApp({ onConnected }: { onConnected?: () => v
             } finally {
               setBusy(false)
             }
-          }, 1500)
+          })()
         },
         {
           config_id: cfg.config_id,
@@ -136,11 +139,11 @@ export default function ConnectWhatsApp({ onConnected }: { onConnected?: () => v
             To read the WhatsApp Business number directly through Meta’s API, the firm needs a Meta app (free). Done once, by whoever manages the firm’s Facebook business account:
           </p>
           <ol style={{ paddingLeft: 18, display: 'grid', gap: 4, margin: 0 }}>
-            <li>developers.facebook.com → Create app → type <b>Business</b> → add the <b>WhatsApp</b> product.</li>
-            <li>WhatsApp → Configuration → Webhook: callback URL <code>https://www.bhumiestates.in/api/wa/webhook</code>, a verify token of your choice; subscribe to <b>messages</b>, <b>smb_message_echoes</b>, <b>history</b>.</li>
-            <li>Facebook Login for Business → Configurations → create one for <b>WhatsApp Embedded Signup</b>; copy its configuration ID. Add <code>www.bhumiestates.in</code> to the allowed domains.</li>
+            <li>developers.facebook.com → Create app → use case <b>Connect with customers through WhatsApp</b>, on Bhumi’s business portfolio. Fill App settings → Basic (icon, privacy <code>/privacy</code>, terms <code>/terms</code>, data deletion <code>/api/meta/data-deletion</code>).</li>
+            <li>Webhook: callback URL <code>https://www.bhumiestates.in/api/wa/webhook</code>, the verify token; subscribe to <b>messages</b>, <b>smb_message_echoes</b>, <b>history</b>, <b>smb_app_state_sync</b> and <b>account_update</b>.</li>
+            <li>Facebook Login for Business → Settings: Client, Web, Embedded browser and JavaScript SDK login on, Strict mode on; <code>https://www.bhumiestates.in</code> in Allowed domains and <code>https://www.bhumiestates.in/admin/inbox</code> in Valid OAuth redirect URIs. Configurations → <b>WhatsApp Embedded Signup</b>; copy its ID.</li>
             <li>In Vercel, add <code>META_APP_ID</code>, <code>META_APP_SECRET</code>, <code>WA_CONFIG_ID</code> and <code>WA_VERIFY_TOKEN</code>, then redeploy.</li>
-            <li>Complete Meta’s Business Verification and App Review for the WhatsApp permissions (Meta’s own forms; free).</li>
+            <li>Become a Tech Provider (Meta requires it for connecting a WhatsApp Business app number): Business Verification, then App Review for <b>whatsapp_business_messaging</b> and <b>whatsapp_business_management</b>. Meta’s own forms; free.</li>
           </ol>
           <p style={{ margin: '8px 0 0' }}>Then a <b>Connect WhatsApp</b> button appears here. Fill the Personal list first.</p>
         </div>

@@ -1,3 +1,4 @@
+import { SOCIAL_ENTITY_TYPES } from '@/lib/social'
 import { createServiceClient, hasSupabase } from './supabase'
 
 /* ═══════════════════════════════════════════════════════════
@@ -111,6 +112,7 @@ export async function notificationsFor(userId: string, opts: { since?: string | 
     .select('id,actor_id,actor_name,action,entity_type,entity_id,entity_label,summary,created_at')
     .or(`actor_id.is.null,actor_id.neq.${userId}`)
     .in('action', ['create', 'update', 'upload', 'link', 'connect', 'disconnect'])
+    .not('entity_type', 'in', `(${SOCIAL_ENTITY_TYPES.join(',')})`)
     .order('created_at', { ascending: false })
     .limit(Math.min(200, (opts.limit ?? 40) * 3))
   if (opts.since) q = q.gt('created_at', opts.since)

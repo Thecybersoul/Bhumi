@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { ADMIN_COOKIE, readSessionToken } from './session'
 import { getUser, type AdminUser } from './users'
+import { canUseSocial, SOCIAL_ONLY_MESSAGE } from './social'
 
 export { ADMIN_COOKIE }
 
@@ -44,4 +45,12 @@ export async function isAdmin(): Promise<boolean> {
 export async function assertAdmin(): Promise<NextResponse | null> {
   if (await isAdmin()) return null
   return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
+}
+
+/** Guard for the WhatsApp and Instagram routes: Sanjog's login only (lib/social.ts). */
+export async function assertSocial(): Promise<NextResponse | null> {
+  const user = await currentUser()
+  if (!user) return NextResponse.json({ error: 'Not authorised' }, { status: 401 })
+  if (!canUseSocial(user)) return NextResponse.json({ error: SOCIAL_ONLY_MESSAGE }, { status: 403 })
+  return null
 }

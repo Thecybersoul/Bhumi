@@ -1,3 +1,4 @@
+import { isPrivateDoc } from '@/lib/social'
 import { google } from 'googleapis'
 import { randomBytes } from 'node:crypto'
 import { getClient, WORKSPACE_EMAIL } from './google'
@@ -108,11 +109,11 @@ function buildMime(opts: { to: string[]; cc: string[]; subject: string; text: st
 /** Fetch ERP documents as attachments. Files in the bucket or uploaded
     to Drive are attached; a Drive file that was only linked (or a
     Google Doc, which has no bytes) goes in the body as a link. */
-export async function loadAttachments(ids: string[]): Promise<{ files: Attachment[]; links: { name: string; url: string }[] }> {
+export async function loadAttachments(ids: string[], allowPrivate = false): Promise<{ files: Attachment[]; links: { name: string; url: string }[] }> {
   if (!ids.length) return { files: [], links: [] }
   const sb = createServiceClient()
   const { data } = await sb.from('documents').select('*').in('id', ids)
-  const docs = (data ?? []) as DocumentRow[]
+  const docs = ((data ?? []) as DocumentRow[]).filter((d) => allowPrivate || !isPrivateDoc(d))
   const files: Attachment[] = []
   const links: { name: string; url: string }[] = []
   let total = 0

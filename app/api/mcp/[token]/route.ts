@@ -4,7 +4,8 @@ import { createSessionToken } from '@/lib/session'
 import { erpCaller } from '@/lib/erp-call'
 import { documentBytes, publishImage } from '@/lib/document-files'
 import { SYSTEM_PROMPT, contextBlock } from '@/lib/assistant/prompt'
-import { TOOLS, runTool, validateInput, type ToolContext } from '@/lib/assistant/tools'
+import { runTool, toolsFor, validateInput, type ToolContext } from '@/lib/assistant/tools'
+import { canUseSocial, isSocialTool, SOCIAL_ONLY_MESSAGE } from '@/lib/social'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -45,8 +46,8 @@ function toMcp(content: unknown): McpContent[] {
 }
 
 /** read_document for Claude apps: the file itself, inline (no Files API). */
-const readInline: ToolContext['readDocument'] = async (id) => {
-  const got = await documentBytes(id)
+const readInline = (allowPrivate: boolean): ToolContext['readDocument'] => async (id) => {
+  const got = await documentBytes(id, { allowPrivate })
   if ('error' in got) return got
   const { doc, bytes } = got
   const mime = (doc.mime || '').toLowerCase()
@@ -75,8 +76,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const bearer = await createSessionToken(user.id, 15 * 60)
   const ctx: ToolContext = {
     call: erpCaller(req.nextUrl.origin, { authorization: bearer ? `Bearer ${bearer}` : null }),
-    readDocument: readInline,
-    publishImage,
+    readDocument: readInline(canUseSocial(user)),
+    publishImage: (id) => publishImage(id, { allowPrivate: canUseSocial(user) }),
     userId: user.id,
     origin: req.nextUrl.origin,
   }
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         case 'tools/list':
           answers.push(
             ok(m.id, {
-              tools: TOOLS.map((t) => ({
+              tools: toolsFor(user).map((t) => ({
                 name: t.name,
                 title: t.name.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase()),
                 description: t.description,
@@ -120,6 +121,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         case 'tools/call': {
           const name = String(m.params?.name ?? '')
           const input = (m.params?.arguments ?? {}) as Record<string, unknown>
+          if (isSocialTool(name) && !canUseSocial(user)) {
+            answers.push(ok(m.id, { content: [{ type: 'text', text: SOCIAL_ONLY_MESSAGE }], isError: true }))
+            break
+          }
           const invalid = validateInput(name, input)
           if (invalid) {
             answers.push(ok(m.id, { content: [{ type: 'text', text: invalid }], isError: true }))

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertAdmin } from '@/lib/auth'
+import { assertAdmin, currentUser } from '@/lib/auth'
+import { canUseSocial, SOCIAL_ENTITY_TYPES } from '@/lib/social'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
   if (p.get('entity_id')) q = q.eq('entity_id', p.get('entity_id')!)
   if (p.get('actor_id')) q = q.eq('actor_id', p.get('actor_id')!)
   if (!p.get('include_logins')) q = q.neq('action', 'login')
+  if (!canUseSocial(await currentUser())) q = q.not('entity_type', 'in', `(${SOCIAL_ENTITY_TYPES.join(',')})`)
 
   const { data, error } = await q
   if (error) return NextResponse.json({ data: [], error: error.message })

@@ -125,6 +125,7 @@ export async function GET(req: NextRequest) {
 
   // Instagram posts approved for a time that has now come.
   await import('@/lib/instagram').then((m) => m.publishDue()).catch((e) => console.error('[bhumi] instagram publish failed', e))
+  await import('@/lib/instagram').then((m) => m.pollComments()).catch((e) => console.error('[bhumi] instagram comments failed', e))
 
   // Housekeeping: reminder keys older than a month can't recur.
   await sb.from('push_sent').delete().lt('sent_at', new Date(t - 30 * 86_400_000).toISOString())

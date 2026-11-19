@@ -1,3 +1,4 @@
+import { SOCIAL_ENTITY_TYPES } from '@/lib/social'
 import { google, type sheets_v4 } from 'googleapis'
 import { createServiceClient, hasSupabase } from './supabase'
 import { erpRootFolderId, getClient, hasService } from './google'
@@ -278,7 +279,7 @@ const TABS: Tab[] = [
 
 async function fetchRows(tab: Tab): Promise<Row[]> {
   let q = createServiceClient().from(tab.table).select(tab.select ?? '*').order(tab.order, { ascending: false }).limit(tab.table === 'activity_log' ? 2000 : 5000)
-  if (tab.table === 'activity_log') q = q.neq('action', 'login')
+  if (tab.table === 'activity_log') q = q.neq('action', 'login').not('entity_type', 'in', `(${SOCIAL_ENTITY_TYPES.join(',')})`)
   const { data } = await q
   const rows = (data ?? []) as unknown as Row[]
   return tab.keep ? rows.filter(tab.keep) : rows

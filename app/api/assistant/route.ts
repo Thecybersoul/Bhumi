@@ -3,7 +3,8 @@ import Anthropic, { toFile } from '@anthropic-ai/sdk'
 import { currentUser } from '@/lib/auth'
 import { documentBytes, publishImage } from '@/lib/document-files'
 import { SYSTEM_PROMPT, contextBlock } from '@/lib/assistant/prompt'
-import { TOOLS, runTool, validateInput, type ToolContext } from '@/lib/assistant/tools'
+import { runTool, toolsFor, validateInput, type ToolContext } from '@/lib/assistant/tools'
+import { canUseSocial, isSocialTool } from '@/lib/social'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
 
   const body = (await req.json().catch(() => null)) as { messages?: Msg[] } | null
   const messages = Array.isArray(body?.messages) ? [...body.messages] : []
+  if (!canUseSocial(me)) stripSocial(messages)
   if (!messages.length || messages[messages.length - 1].role !== 'user') {
     return NextResponse.json({ error: 'Send the conversation ending with a user message.' }, { status: 400 })
   }
@@ -72,8 +74,8 @@ export async function POST(req: NextRequest) {
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>
       return { status: res.status, json }
     },
-    readDocument: (id) => readDocument(client, id, fileIds),
-    publishImage: (id) => publishImage(id),
+    readDocument: (id) => readDocument(client, id, fileIds, canUseSocial(me)),
+    publishImage: (id) => publishImage(id, { allowPrivate: canUseSocial(me) }),
     userId: me.id,
     origin,
   }
@@ -92,7 +94,7 @@ export async function POST(req: NextRequest) {
               { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
               { type: 'text', text: contextBlock(me) },
             ],
-            tools: TOOLS,
+            tools: toolsFor(me),
             messages,
             // A declined request is retried on Anthropic's recommended
             // fallback model inside the same call.
@@ -183,9 +185,10 @@ export async function POST(req: NextRequest) {
 async function readDocument(
   client: Anthropic,
   id: string,
-  cache: Map<string, string>
+  cache: Map<string, string>,
+  allowPrivate = false
 ): ReturnType<ToolContext['readDocument']> {
-  const got = await documentBytes(id)
+  const got = await documentBytes(id, { allowPrivate })
   if ('error' in got) return got
   const { doc, bytes } = got
 
@@ -211,5 +214,22 @@ async function readDocument(
       kind === 'pdf'
         ? [{ type: 'document', source: { type: 'file', file_id: fileId }, title: doc.name }]
         : [{ type: 'image', source: { type: 'file', file_id: fileId } }],
+  }
+}
+
+/** Drop WhatsApp and Instagram tool calls and their results from a conversation sent by
+    someone without access (lib/social.ts): a stale browser history must not carry them. */
+function stripSocial(messages: Msg[]) {
+  const ids = new Set<string>()
+  for (const m of messages) {
+    if (!Array.isArray(m.content)) continue
+    const blocks = m.content as { type?: string; id?: string; name?: string; tool_use_id?: string }[]
+    for (const b of blocks) if (b.type === 'tool_use' && b.name && isSocialTool(b.name) && b.id) ids.add(b.id)
+  }
+  if (!ids.size) return
+  for (const m of messages) {
+    if (!Array.isArray(m.content)) continue
+    const kept = (m.content as { type?: string; id?: string; tool_use_id?: string }[]).filter((b) => !(b.type === 'tool_use' && b.id && ids.has(b.id)) && !(b.type === 'tool_result' && b.tool_use_id && ids.has(b.tool_use_id)))
+    m.content = (kept.length ? kept : [{ type: 'text', text: '(removed)' }]) as Msg['content']
   }
 }

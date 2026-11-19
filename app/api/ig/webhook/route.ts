@@ -1,5 +1,5 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { hubSigned } from '@/lib/meta-signed'
 import { captureReady, ingest } from '@/lib/capture'
 import { usernameFor } from '@/lib/instagram'
 
@@ -16,13 +16,8 @@ export function GET(req: NextRequest) {
   return new NextResponse('Forbidden', { status: 403 })
 }
 
-function signed(raw: string, header: string | null): boolean {
-  const secret = process.env.IG_APP_SECRET
-  if (!secret || !header?.startsWith('sha256=')) return false
-  const want = Buffer.from(createHmac('sha256', secret).update(raw).digest('hex'))
-  const got = Buffer.from(header.slice(7))
-  return want.length === got.length && timingSafeEqual(want, got)
-}
+// Meta's docs say "the app secret" without saying which of the two an Instagram-login app uses.
+const signed = (raw: string, header: string | null) => hubSigned(raw, header, [process.env.IG_APP_SECRET, process.env.META_APP_SECRET])
 
 export async function POST(req: NextRequest) {
   const raw = await req.text()
@@ -47,6 +42,7 @@ export async function POST(req: NextRequest) {
       for (const c of e.changes ?? []) {
         if (c.field !== 'comments') continue
         const v = c.value as { id?: string; text?: string; from?: { username?: string; id?: string }; media?: { id?: string } }
+        if (v.from?.id && v.from.id === e.id) continue // the firm's own reply, already stored when sent
         await ingest(
           { title: `Instagram comments`, source: 'webhook', intent_business: true, channel: 'instagram' },
           [{ external_id: `igc:${v.id}`, sender_name: `@${v.from?.username ?? v.from?.id ?? 'someone'}`, sent_at: new Date().toISOString(), kind: 'text', body: `${v.text ?? ''} (on post ${v.media?.id ?? ''})` }],

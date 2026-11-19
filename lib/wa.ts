@@ -78,14 +78,22 @@ export async function connectAccount(code: string, wabaId: string, phoneNumberId
     )
   if (error) throw new Error(error.message)
 
-  // Past chats (Meta allows up to 180 days, once, within 24 hours of linking).
+  // Meta allows each sync once, within 24 hours of linking, in this order: the phone's saved
+  // contacts (names for the chats and the Personal list), then past chats (up to 180 days).
+  const errors: string[] = []
+  try {
+    await graph(`/${phoneNumberId}/smb_app_data`, token, { method: 'POST', body: { messaging_product: 'whatsapp', sync_type: 'smb_app_state_sync' } })
+  } catch (e) {
+    errors.push(`Contacts: ${(e as Error).message}`)
+  }
   let history = 'requested'
   try {
     await graph(`/${phoneNumberId}/smb_app_data`, token, { method: 'POST', body: { messaging_product: 'whatsapp', sync_type: 'history' } })
   } catch (e) {
     history = 'failed'
-    await db().from('wa_accounts').update({ last_error: `History: ${(e as Error).message}` }).eq('phone_number_id', phoneNumberId)
+    errors.push(`History: ${(e as Error).message}`)
   }
+  if (errors.length) await db().from('wa_accounts').update({ last_error: errors.join(' · ') }).eq('phone_number_id', phoneNumberId)
   await db().from('wa_accounts').update({ history_sync: history }).eq('phone_number_id', phoneNumberId)
   return { display_phone: info.display_phone_number ?? '', history }
 }

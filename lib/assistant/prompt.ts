@@ -1,3 +1,4 @@
+import { canUseSocial } from '@/lib/social'
 /* The assistant's standing instructions. Kept stable so the tools and
    this text form a cacheable prefix; the per-request facts (who is
    asking, today's date) go in a second, uncached system block. */
@@ -56,7 +57,7 @@ wa_send_message sends a reply from the business number. Only when the person ask
 
 Instagram: ig_insights shows the account\'s numbers and recent posts; Instagram DMs and comments are chats with channel instagram (wa_list_chats, wa_read_chat), and ig_reply answers one, only when asked, with the same show-then-send rule. ig_create_post drafts a post (photos as public https links, a Live listing\'s img_url, or document_ids of photos in Documents), ig_update_post edits it, and ig_approve_post publishes or schedules it, only when the person explicitly asks to publish. Captions: facts from the listing, Bengaluru place names, a call to action, a few hashtags; never an owner's phone number or survey number, never "approved" or "clear title" unless the documents say so.`
 
-export function contextBlock(user: { name: string }, now = new Date()): string {
+export function contextBlock(user: { name: string; email?: string }, now = new Date()): string {
   const ist = now.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
     weekday: 'long',
@@ -66,5 +67,6 @@ export function contextBlock(user: { name: string }, now = new Date()): string {
     hour: 'numeric',
     minute: '2-digit',
   })
-  return `Signed in: ${user.name}. Now: ${ist} IST (${now.toISOString()}).`
+  const social = canUseSocial(user) ? '' : ' WhatsApp and Instagram are Sanjog\u2019s alone: this person has no WhatsApp or Instagram tools, so if they ask, say those are on Sanjog\u2019s login.'
+  return `Signed in: ${user.name}. Now: ${ist} IST (${now.toISOString()}).${social}`
 }

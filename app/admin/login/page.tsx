@@ -28,6 +28,10 @@ function LoginForm() {
     })
 
     if (res.ok) {
+      // The assistant's saved conversation belonged to whoever used this browser before.
+      try {
+        localStorage.removeItem('bhumi.assistant.v1')
+      } catch {}
       router.push(next)
       router.refresh()
     } else {

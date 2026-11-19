@@ -1,3 +1,4 @@
+import { isSocialEntity } from '@/lib/social'
 import { createServiceClient, hasSupabase } from './supabase'
 import type { AdminUser } from './users'
 
@@ -119,7 +120,8 @@ export async function logActivity(entry: ActivityEntry, actor?: Actor | AdminUse
           await syncIfStale(who?.name ?? 'Auto-sync')
         })
         // Push it to iPhone home-screen apps if it's worth a notification.
-        if (row) {
+        // WhatsApp and Instagram work is Sanjog's alone, so it never notifies the others.
+        if (row && !isSocialEntity(row.entity_type)) {
           after(async () => {
             const { toNotification } = await import('./notifications')
             const n = toNotification(row)

@@ -1,3 +1,4 @@
+import { canUseSocial } from '@/lib/social'
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@/lib/auth'
 import { createServiceClient, hasSupabase } from '@/lib/supabase'
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (!subject || !text) return NextResponse.json({ error: 'An email needs a subject and a message' }, { status: 400 })
 
     const ids = Array.isArray(body.document_ids) ? (body.document_ids as unknown[]).map(String).slice(0, 15) : []
-    const { files, links } = await loadAttachments(ids)
+    const { files, links } = await loadAttachments(ids, canUseSocial(await currentUser()))
     if (links.length) text += `\n\n${links.map((l) => `${l.name}: ${l.url}`).join('\n')}`
 
     const sent = await sendEmail({ to, cc, subject, text, senderName: me.name, attachments: files })

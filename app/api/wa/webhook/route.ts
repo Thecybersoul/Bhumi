@@ -71,9 +71,16 @@ function toIncoming(m: Msg, fromMe: boolean, name: string): IncomingMessage {
   return { external_id: String(m.id ?? ''), from_me: fromMe, sender_name: fromMe ? '' : name, sender_phone: fromMe ? '' : String(m.from ?? ''), sent_at: at, kind, body, media_ref }
 }
 
+/** The name saved for a number in the WhatsApp Business app (smb_app_state_sync, migration 029). */
+async function savedName(phone: string): Promise<string> {
+  const { data } = await createServiceClient().from('wa_contacts').select('name').eq('phone_norm', digits(phone)).maybeSingle()
+  return String(data?.name ?? '')
+}
+
 /** One chat's messages in, then its business media fetched. */
 async function take(phoneNumberId: string, contactPhone: string, contactName: string, msgs: { m: Msg; fromMe: boolean }[]) {
   if (!msgs.length) return
+  if (!contactName) contactName = await savedName(contactPhone).catch(() => '')
   const incoming = msgs.map(({ m, fromMe }) => toIncoming(m, fromMe, contactName))
   const r = await ingest({ title: contactName || `+${contactPhone}`, phone: contactPhone, source: 'webhook' }, incoming, 'WhatsApp')
   // Media is downloaded only for business chats: a held chat's photos are not fetched.
@@ -100,12 +107,38 @@ export async function POST(req: NextRequest) {
   if (!signed(raw, req.headers.get('x-hub-signature-256'))) return new NextResponse('Bad signature', { status: 401 })
   if (!(await captureReady())) return new NextResponse('Not ready', { status: 503 }) // Meta retries
 
-  const payload = JSON.parse(raw || '{}') as { entry?: { changes?: { field?: string; value?: Record<string, unknown> }[] }[] }
+  const payload = JSON.parse(raw || '{}') as { entry?: { id?: string; changes?: { field?: string; value?: Record<string, unknown> }[] }[] }
   const sb = createServiceClient()
   try {
     for (const entry of payload.entry ?? []) {
       for (const change of entry.changes ?? []) {
         const v = change.value ?? {}
+
+        // The business disconnected the API in the WhatsApp Business app, or the number moved
+        // phones: the token is dead, so stop using this account until it is connected again.
+        if ((change.field === 'account_update' && v.event === 'PARTNER_REMOVED') || change.field === 'account_offboarded') {
+          await sb.from('wa_accounts').update({ status: 'disconnected', token: '', last_error: `Disconnected in WhatsApp (${String(v.event ?? change.field)})`, updated_at: new Date().toISOString() }).eq('waba_id', String(entry.id ?? ''))
+          continue
+        }
+
+        // The phone's saved contacts: once after linking, then every change.
+        if (change.field === 'smb_app_state_sync') {
+          for (const s of (v.state_sync as { type?: string; action?: string; contact?: { full_name?: string; first_name?: string; phone_number?: string } }[]) ?? []) {
+            const phone = digits(s.contact?.phone_number)
+            if (s.type !== 'contact' || !phone) continue
+            if (s.action === 'remove') {
+              await sb.from('wa_contacts').delete().eq('phone_norm', phone)
+              continue
+            }
+            const name = String(s.contact?.full_name || s.contact?.first_name || '').trim().slice(0, 120)
+            if (!name) continue
+            await sb.from('wa_contacts').upsert({ phone_norm: phone, name, updated_at: new Date().toISOString() }, { onConflict: 'phone_norm' })
+            // A chat that so far showed only the number gets the saved name.
+            await sb.from('wa_threads').update({ title: name }).eq('phone_norm', phone).like('title', '+%')
+          }
+          continue
+        }
+
         const meta = (v.metadata ?? {}) as { phone_number_id?: string; display_phone_number?: string }
         const pnid = String(meta.phone_number_id ?? '')
         const business = digits(meta.display_phone_number)
@@ -120,7 +153,13 @@ export async function POST(req: NextRequest) {
         if (byChat.size && pnid) await sb.from('wa_accounts').update({ last_inbound_at: new Date().toISOString() }).eq('phone_number_id', pnid)
 
         // Past chats, sent in chunks after linking.
-        for (const h of (v.history as { metadata?: { progress?: number; phase?: number }; threads?: { id?: string; messages?: Msg[] }[] }[]) ?? []) {
+        for (const h of (v.history as { metadata?: { progress?: number; phase?: number }; threads?: { id?: string; messages?: Msg[] }[]; errors?: { code?: number; title?: string; message?: string }[] }[]) ?? []) {
+          // 2593109: history sharing was turned off in the WhatsApp Business app.
+          const err = h.errors?.[0]
+          if (err && pnid) {
+            await sb.from('wa_accounts').update({ history_sync: err.code === 2593109 ? 'declined' : 'failed', last_error: err.code === 2593109 ? 'Past chats were not shared (turned off in the WhatsApp Business app). New chats still arrive.' : `History: ${err.message ?? err.title ?? err.code}` }).eq('phone_number_id', pnid)
+            continue
+          }
           for (const t of h.threads ?? []) {
             const phone = String(t.id ?? '')
             const list = (t.messages ?? []).map((m) => ({ m, fromMe: !!business && digits(m.from) === business }))

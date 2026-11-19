@@ -1,3 +1,4 @@
+import { canUseSocial, isSocialTool } from '@/lib/social'
 import type Anthropic from '@anthropic-ai/sdk'
 import { signUploadToken, UPLOAD_LINK_TTL_SECONDS, type UploadPurpose } from '../upload-link'
 
@@ -832,6 +833,11 @@ export async function uploadInline(
   const savedErr = errorOf(saved)
   if (savedErr) return { error: savedErr }
   return { doc: (saved.json.data as Record<string, unknown>) ?? {} }
+}
+
+/** The tools this person may use: WhatsApp and Instagram ones are Sanjog's alone (lib/social.ts). */
+export function toolsFor(user: { email?: string | null }): typeof TOOLS {
+  return canUseSocial(user) ? TOOLS : TOOLS.filter((t) => !isSocialTool(t.name))
 }
 
 export async function runTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutcome> {

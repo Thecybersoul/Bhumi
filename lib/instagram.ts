@@ -82,11 +82,15 @@ async function ig<T = Record<string, unknown>>(path: string, token: string, init
 export async function connect(origin: string, code: string, by: string) {
   const form = new URLSearchParams({ client_id: process.env.IG_APP_ID!, client_secret: process.env.IG_APP_SECRET!, grant_type: 'authorization_code', redirect_uri: redirectUri(origin), code })
   const res = await fetch('https://api.instagram.com/oauth/access_token', { method: 'POST', body: form, cache: 'no-store' })
-  const short = (await res.json().catch(() => ({}))) as { access_token?: string; user_id?: string | number; error_message?: string }
-  if (!short.access_token) throw new Error(short.error_message ?? 'Instagram did not return a token')
+  type Short = { access_token?: string; user_id?: string | number; error_message?: string }
+  const body = (await res.json().catch(() => ({}))) as Short & { data?: Short[] }
+  const short: Short = body.data?.[0] ?? body // Meta documents both shapes
+  if (!short.access_token) throw new Error(short.error_message ?? body.error_message ?? 'Instagram did not return a token')
   const longRes = await fetch(`${GRAPH}/access_token?${new URLSearchParams({ grant_type: 'ig_exchange_token', client_secret: process.env.IG_APP_SECRET!, access_token: short.access_token })}`, { cache: 'no-store' })
-  const long = (await longRes.json().catch(() => ({}))) as { access_token?: string; expires_in?: number }
-  const token = long.access_token ?? short.access_token
+  const long = (await longRes.json().catch(() => ({}))) as { access_token?: string; expires_in?: number; error?: { message?: string } }
+  // A short-lived token dies in an hour and can't be refreshed, so it is never stored.
+  if (!long.access_token) throw new Error(`Instagram did not give a lasting token: ${long.error?.message ?? longRes.status}`)
+  const token = long.access_token
   const me = await ig<{ user_id?: string; id?: string; username?: string }>('/me', token, { params: { fields: 'user_id,username' } })
   const igUserId = String(me.user_id ?? me.id ?? short.user_id ?? '')
   const { error } = await db()
@@ -96,6 +100,12 @@ export async function connect(origin: string, code: string, by: string) {
       { onConflict: 'ig_user_id' }
     )
   if (error) throw new Error(error.message)
+  // Deliver this account's DMs and comments to /api/ig/webhook (needed per account, after login).
+  try {
+    await ig(`/v27.0/${igUserId}/subscribed_apps`, token, { method: 'POST', params: { subscribed_fields: 'messages,comments' } })
+  } catch (e) {
+    await db().from('ig_accounts').update({ last_error: `Webhook subscription: ${(e as Error).message}` }).eq('ig_user_id', igUserId)
+  }
   return { username: me.username ?? '' }
 }
 
@@ -265,4 +275,29 @@ export async function recentMedia(limit = 12) {
   })
   const profile = await ig<Record<string, unknown>>('/me', a.token, { params: { fields: 'username,followers_count,follows_count,media_count' } }).catch(() => ({}))
   return { profile, media: r.data ?? [] }
+}
+
+/** Comments on recent posts, read through the API: comment webhooks need Meta's Advanced
+    Access, so this keeps comments arriving without it. Run by the 5-minute reminders job;
+    already-seen comments are skipped by their id (wa_messages.external_id). */
+export async function pollComments(posts = 8) {
+  const a = await account()
+  if (!a) return 0
+  const { ingest, captureReady } = await import('./capture')
+  if (!(await captureReady())) return 0
+  const media = await ig<{ data?: { id: string; caption?: string; comments_count?: number }[] }>(`/${a.ig_user_id}/media`, a.token, { params: { fields: 'id,caption,comments_count', limit: String(posts) } })
+  let n = 0
+  for (const m of media.data ?? []) {
+    if (!m.comments_count) continue
+    const c = await ig<{ data?: { id: string; text?: string; username?: string; timestamp?: string; from?: { id?: string; username?: string } }[] }>(`/${m.id}/comments`, a.token, { params: { fields: 'id,text,username,timestamp,from', limit: '50' } }).catch(() => ({ data: [] }))
+    const theirs = (c.data ?? []).filter((x) => (x.from?.username ?? x.username) !== a.username && x.from?.id !== a.ig_user_id)
+    if (!theirs.length) continue
+    const r = await ingest(
+      { title: 'Instagram comments', source: 'webhook', intent_business: true, channel: 'instagram' },
+      theirs.map((x) => ({ external_id: `igc:${x.id}`, sender_name: `@${x.from?.username ?? x.username ?? 'someone'}`, sent_at: x.timestamp ? new Date(x.timestamp).toISOString() : new Date().toISOString(), kind: 'text' as const, body: `${x.text ?? ''} (on post ${m.id})` })),
+      'Instagram'
+    )
+    n += r.stored ?? 0
+  }
+  return n
 }
