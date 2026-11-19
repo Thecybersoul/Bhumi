@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { assertAdmin, currentUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
 import {
-  NOT_READY, addRule, backlog, captureReady, claimBatch, finishBatch, ingest, listRules, parseExport, removeRule, setThreadStatus, threadMessages, titleFromFilename,
+  NOT_READY, addRule, searchMessages, backlog, captureReady, claimBatch, finishBatch, ingest, listRules, parseExport, removeRule, setThreadStatus, threadMessages, titleFromFilename,
   type FinishItem, type MatchType, type RuleKind,
 } from '@/lib/capture'
 
@@ -26,6 +26,8 @@ export async function GET(req: NextRequest) {
   const denied = await assertAdmin()
   if (denied) return denied
   if (!(await captureReady())) return NextResponse.json({ ready: false, error: NOT_READY })
+  const q = req.nextUrl.searchParams.get('q')
+  if (q) return NextResponse.json({ results: await searchMessages(q) })
   const thread = req.nextUrl.searchParams.get('thread')
   if (thread) {
     const b = await backlog()

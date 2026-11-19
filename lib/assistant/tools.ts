@@ -404,6 +404,54 @@ export const TOOLS: Tool[] = [
     input_schema: obj({ id: str, status: en(['Open', 'Done']), title: str, due_at: str, priority: en(['Low', 'Normal', 'High']), assignee: str }, ['id']),
   },
   {
+    name: 'wa_list_chats',
+    description:
+      'WhatsApp: the business chats on the connected WhatsApp Business number (and Instagram DMs), newest first, with how many messages each has and when the last one came. Personal chats are never here. Optionally filter by a word in the chat name.',
+    input_schema: obj({ filter: { ...str, description: 'Optional words in the chat name' }, limit: { ...num, description: 'Default 25' } }),
+  },
+  {
+    name: 'wa_read_chat',
+    description:
+      'WhatsApp: read one business chat, oldest to newest (the latest 200 messages), with what was filed from each. A media item "doc:<id>" can be opened with read_document. Use the chat id from wa_list_chats or wa_search.',
+    input_schema: obj({ chat_id: str }, ['chat_id']),
+  },
+  {
+    name: 'wa_search',
+    description: 'WhatsApp: find messages containing all of these words across business chats, newest first. Returns the chat id and name for each.',
+    input_schema: obj({ query: str }, ['query']),
+  },
+  {
+    name: 'wa_send_message',
+    description:
+      'WhatsApp: send a text reply from the business number to one chat. Only when the person has explicitly asked for this exact message to be sent: show them the text first and set confirmed true only after they say send. WhatsApp allows it only within 24 hours of the other person\u2019s last message.',
+    input_schema: obj({ chat_id: str, text: str, confirmed: bool }, ['chat_id', 'text', 'confirmed']),
+  },
+  {
+    name: 'ig_list_posts',
+    description: 'Instagram: the connected account and its posts in the ERP (drafts, scheduled, published, failed), newest first.',
+    input_schema: obj({}),
+  },
+  {
+    name: 'ig_create_post',
+    description:
+      'Instagram: draft a post. Photos must be public https JPEG links (a listing\u2019s img_url works; for a document, set_listing_photo first or use its public link). One photo = a photo post, 2–10 = a carousel, a video_url (MP4) = a reel. Write a caption that fits the brand: facts from the listing, no phone numbers of owners, no claims the documents don\u2019t support. A draft is never public until approved.',
+    input_schema: obj(
+      { image_urls: strArr, video_url: str, caption: str, property_id: { ...str, description: 'The listing this is about' }, scheduled_at: { ...str, description: 'ISO time to publish once approved' } },
+      ['caption']
+    ),
+  },
+  {
+    name: 'ig_update_post',
+    description: 'Instagram: change a draft or scheduled post (caption, photos, video, time). Published posts can only be changed in Instagram.',
+    input_schema: obj({ id: str, image_urls: strArr, video_url: str, caption: str, scheduled_at: str }, ['id']),
+  },
+  {
+    name: 'ig_approve_post',
+    description:
+      'Instagram: approve a draft. If it has a future scheduled_at it is scheduled; otherwise it is published now. Only when the person has explicitly asked to publish or schedule this post: set confirmed true only then.',
+    input_schema: obj({ id: str, confirmed: bool }, ['id', 'confirmed']),
+  },
+  {
     name: 'capture_next_batch',
     description:
       'WhatsApp capture: take the next batch of captured business WhatsApp messages waiting to be filed (oldest first, grouped by chat, with the last few filed messages for context and anything the ERP parser already recognised). Personal chats never appear here. A message whose media is "doc:<id>" has its photo, PDF or voice note in Documents: open it with read_document(<id>) and file it to the right record with attach_document. File what each message says with the normal tools (search first to avoid duplicates; create or update contacts, listings, leads, deals, tasks, meetings, notes), then call capture_finish_batch with the batch_id. Returns batch_id null when nothing is waiting.',
@@ -1068,6 +1116,77 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       const err = errorOf(r)
       if (err) return fail('Couldn’t update the task', err)
       return { content: json({ ok: true }), step: { label: i.status === 'Done' ? 'Marked task done' : 'Updated task', href: '/admin/notes-tasks', ok: true } }
+    }
+
+    case 'wa_list_chats': {
+      const r = await ctx.call('GET', '/api/capture')
+      const err = errorOf(r)
+      if (err) return fail('Couldn\u2019t list WhatsApp chats', err)
+      const words = String(i.filter ?? '').toLowerCase().split(/\s+/).filter(Boolean)
+      const all = ((r.json.threads as Record<string, unknown>[]) ?? []).filter((t) => t.status === 'business')
+      const rows = all.filter((t) => words.every((w) => String(t.title).toLowerCase().includes(w))).slice(0, Math.min(100, Number(i.limit) || 25))
+      return {
+        content: json({ chats: rows.map((t) => ({ chat_id: t.id, name: t.title, phone: t.phone_norm ? `+${t.phone_norm}` : undefined, group: t.is_group, last_message: t.last_message_at, counts: t.counts })), held_unread: (r.json.totals as Record<string, unknown>)?.held }),
+        step: { label: `WhatsApp chats · ${rows.length}`, href: '/admin/inbox', ok: true },
+      }
+    }
+
+    case 'wa_read_chat': {
+      const r = await ctx.call('GET', `/api/capture?thread=${encodeURIComponent(String(i.chat_id))}`)
+      const err = errorOf(r)
+      if (err) return fail('Couldn\u2019t open that chat', err)
+      const t = r.json.thread as Record<string, unknown>
+      const msgs = ((r.json.messages as Record<string, unknown>[]) ?? []).map((m) => ({ at: m.sent_at, from: m.from_me ? 'Bhumi (us)' : m.sender_name || m.sender_phone, kind: m.kind, text: String(m.body ?? '').slice(0, 1500), media: m.media_ref || undefined, filed: m.outcome || undefined }))
+      return { content: json({ chat: t?.title, phone: t?.phone_norm ? `+${t.phone_norm}` : undefined, messages: msgs }), step: { label: `Read WhatsApp chat ${t?.title ?? ''}`, href: '/admin/inbox', ok: true } }
+    }
+
+    case 'wa_search': {
+      const r = await ctx.call('GET', `/api/capture?q=${encodeURIComponent(String(i.query))}`)
+      const err = errorOf(r)
+      if (err) return fail('Couldn\u2019t search WhatsApp', err)
+      const hits = (r.json.results as Record<string, unknown>[]) ?? []
+      return {
+        content: json({ results: hits.map((m) => ({ chat_id: m.thread_id, chat: m.chat, at: m.sent_at, from: m.from_me ? 'Bhumi (us)' : m.sender_name || m.sender_phone, text: m.body, media: m.media_ref || undefined })) }),
+        step: { label: `Searched WhatsApp for \u201c${i.query}\u201d \u00b7 ${hits.length}`, href: '/admin/inbox', ok: true },
+      }
+    }
+
+    case 'wa_send_message': {
+      const r = await ctx.call('POST', '/api/wa/send', { thread_id: i.chat_id, text: i.text, confirmed: i.confirmed === true })
+      const err = errorOf(r)
+      if (err) return fail('WhatsApp message not sent', err)
+      return { content: json(r.json), step: { label: 'Sent the WhatsApp reply', href: '/admin/inbox', ok: true } }
+    }
+
+    case 'ig_list_posts': {
+      const r = await ctx.call('GET', '/api/ig')
+      const err = errorOf(r)
+      if (err) return fail('Couldn\u2019t read Instagram', err)
+      const posts = ((r.json.posts as Record<string, unknown>[]) ?? []).map((p) => pick(p, ['id', 'status', 'kind', 'caption', 'image_urls', 'video_url', 'scheduled_at', 'published_at', 'permalink', 'error', 'property_id']))
+      return { content: json({ configured: r.json.configured, account: r.json.account, posts }), step: { label: `Instagram posts \u00b7 ${posts.length}`, href: '/admin/instagram', ok: true } }
+    }
+
+    case 'ig_create_post': {
+      const r = await ctx.call('POST', '/api/ig', { action: 'create', ...i })
+      const err = errorOf(r)
+      if (err) return fail('Couldn\u2019t draft the Instagram post', err)
+      return { content: json(r.json), step: { label: 'Drafted an Instagram post', href: '/admin/instagram', ok: true } }
+    }
+
+    case 'ig_update_post': {
+      const r = await ctx.call('POST', '/api/ig', { action: 'update', ...i })
+      const err = errorOf(r)
+      if (err) return fail('Couldn\u2019t change the Instagram post', err)
+      return { content: json(r.json), step: { label: 'Updated the Instagram post', href: '/admin/instagram', ok: true } }
+    }
+
+    case 'ig_approve_post': {
+      if (i.confirmed !== true) return fail('Not approved', 'Publishing needs confirmed: true, given only when the person has asked to publish or schedule this post.')
+      const r = await ctx.call('POST', '/api/ig', { action: 'approve', id: i.id })
+      const err = errorOf(r)
+      if (err) return fail('Instagram post not published', err)
+      const d = r.json.data as Record<string, unknown>
+      return { content: json(r.json), step: { label: d?.status === 'scheduled' ? 'Scheduled the Instagram post' : 'Published to Instagram', href: String(d?.permalink || '/admin/instagram'), ok: true } }
     }
 
     case 'capture_next_batch': {

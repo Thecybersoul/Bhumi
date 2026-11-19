@@ -327,8 +327,19 @@ coexistence (`components/erp/ConnectWhatsApp.tsx`, `/api/wa/signup`, `lib/wa.ts`
 number keeps working in the WhatsApp Business app while `/api/wa/webhook` receives `messages`, `smb_message_echoes`
 and `history`. Business-chat media is downloaded into Documents (category WhatsApp; `media_ref` becomes `doc:<id>`);
 held chats' media is not fetched. Env: `META_APP_ID`, `META_APP_SECRET`, `WA_CONFIG_ID`, `WA_VERIFY_TOKEN`, optional
-`GRAPH_VERSION`. Nothing sends through Meta, so Meta never bills. The API cannot read existing groups. An Android
-notification reader was built and removed at the owner's request; do not bring it back. Not built yet: the app screen.
+`GRAPH_VERSION`. The API cannot read existing groups. An Android notification reader was built and removed at the
+owner's request; do not bring it back. Not built yet: the app screens for Inbox and Instagram.
+
+**WhatsApp from Claude.** Connector tools `wa_list_chats`, `wa_read_chat`, `wa_search` (read-only, business chats
+only) and `wa_send_message` (`POST /api/wa/send`, needs `confirmed: true`, only within Meta's 24-hour window; the
+only path that sends through Meta). `lib/assistant/prompt.ts` tells Claude to show the text and send only when told.
+
+**Instagram (migration 027, `lib/instagram.ts`, `/admin/instagram`).** Instagram API with Instagram Login (no Facebook
+Page): Connect → `/api/ig/callback` (signed `state`) stores a 60-day token, refreshed by the reminders job. Posts are
+`ig_posts` drafts (photo, carousel of 2–10, or reel from public https URLs) that publish only on approval
+(`POST /api/ig {action:'approve'}`, or `ig_approve_post` with `confirmed: true`); a future `scheduled_at` makes it
+`scheduled` and `/api/cron/reminders` publishes it (`publishDue()`). `/api/ig/webhook` turns comments and DMs into
+Inbox threads. Env: `IG_APP_ID`, `IG_APP_SECRET`, optional `IG_VERIFY_TOKEN` (else `WA_VERIFY_TOKEN`).
 
 ### The Property Register is kept in Listings (migration 020)
 

@@ -515,3 +515,17 @@ export async function threadMessages(id: string) {
     .limit(200)
   return (data ?? []).reverse()
 }
+
+/** Words across business chats, newest first (held chats are never searched). */
+export async function searchMessages(q: string, limit = 40) {
+  const sb = db()
+  const words = q.trim().split(/\s+/).filter((w) => w.length > 1).slice(0, 5)
+  if (!words.length) return []
+  const { data: biz } = await sb.from('wa_threads').select('id,title').eq('status', 'business')
+  const titles = new Map((biz ?? []).map((t) => [t.id as string, t.title as string]))
+  if (!titles.size) return []
+  let query = sb.from('wa_messages').select('id,thread_id,from_me,sender_name,sender_phone,sent_at,kind,body,media_ref').in('thread_id', [...titles.keys()])
+  for (const w of words) query = query.ilike('body', `%${w.replace(/[%_]/g, '')}%`)
+  const { data } = await query.order('sent_at', { ascending: false }).limit(limit)
+  return (data ?? []).map((m) => ({ ...m, chat: titles.get(m.thread_id), body: String(m.body).slice(0, 600) }))
+}
