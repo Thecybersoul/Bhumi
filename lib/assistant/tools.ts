@@ -406,7 +406,7 @@ export const TOOLS: Tool[] = [
   {
     name: 'capture_next_batch',
     description:
-      'WhatsApp capture: take the next batch of captured business WhatsApp messages waiting to be filed (oldest first, grouped by chat, with the last few filed messages for context and anything the ERP parser already recognised). Personal chats never appear here. File what each message says with the normal tools (search first to avoid duplicates; create or update contacts, listings, leads, deals, tasks, meetings, notes), then call capture_finish_batch with the batch_id. Returns batch_id null when nothing is waiting.',
+      'WhatsApp capture: take the next batch of captured business WhatsApp messages waiting to be filed (oldest first, grouped by chat, with the last few filed messages for context and anything the ERP parser already recognised). Personal chats never appear here. A message whose media is "doc:<id>" has its photo, PDF or voice note in Documents: open it with read_document(<id>) and file it to the right record with attach_document. File what each message says with the normal tools (search first to avoid duplicates; create or update contacts, listings, leads, deals, tasks, meetings, notes), then call capture_finish_batch with the batch_id. Returns batch_id null when nothing is waiting.',
     input_schema: obj({ limit: { ...num, description: 'Messages to take, default 40, max 80' } }),
   },
   {

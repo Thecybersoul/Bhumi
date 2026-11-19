@@ -1,20 +1,24 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { NextRequest, NextResponse } from 'next/server'
+import { after, NextRequest, NextResponse } from 'next/server'
 import { captureReady, ingest, type IncomingMessage, type Kind } from '@/lib/capture'
+import { accountByPhoneId, storeMedia } from '@/lib/wa'
+import { createServiceClient } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-/* Meta's WhatsApp webhook (Cloud API, and coexistence with the WhatsApp
-   Business app). Public by necessity; every POST must carry Meta's
+/* Meta's WhatsApp webhook: Cloud API with coexistence, so Sanjog keeps
+   using the WhatsApp Business app and every one-to-one chat on the number
+   reaches the ERP. Public by necessity; every POST must carry Meta's
    X-Hub-Signature-256 over the raw body, signed with META_APP_SECRET.
 
-   Receiving is free. Nothing here ever SENDS a WhatsApp message: replies
-   go from the phone, so Meta never bills (zero-cost plan, W3).
+   Fields handled: messages (incoming), smb_message_echoes (what he sends
+   from the phone), history (past chats after linking). Everything goes
+   through lib/capture.ts ingest(), so the Personal list is applied before
+   anything is stored and unknown numbers are held. Photos, documents and
+   voice notes of business chats are downloaded into Documents.
 
-   Messages go through lib/capture.ts ingest(), so the Personal list is
-   applied before anything is stored, and unknown numbers are held. Media
-   is recorded by its Meta media id; downloading it is a later phase. */
+   Nothing here SENDS a WhatsApp message, so Meta never bills. */
 
 export function GET(req: NextRequest) {
   const p = req.nextUrl.searchParams
@@ -34,6 +38,8 @@ function signed(raw: string, header: string | null): boolean {
 }
 
 type Msg = Record<string, unknown> & { from?: string; to?: string; id?: string; timestamp?: string; type?: string }
+const MEDIA = ['image', 'video', 'audio', 'document', 'sticker']
+const digits = (s: unknown) => String(s ?? '').replace(/\D/g, '')
 
 function toIncoming(m: Msg, fromMe: boolean, name: string): IncomingMessage {
   const t = String(m.type ?? 'text')
@@ -45,23 +51,48 @@ function toIncoming(m: Msg, fromMe: boolean, name: string): IncomingMessage {
   if (t === 'text') {
     kind = 'text'
     body = String(part.body ?? '')
-  } else if (['image', 'video', 'audio', 'document', 'sticker'].includes(t)) {
+  } else if (MEDIA.includes(t)) {
     kind = t === 'sticker' ? 'other' : (t as Kind)
     body = String(part.caption ?? part.filename ?? '')
-    media_ref = String(part.id ?? '')
+    media_ref = part.id ? `meta:${part.id}` : ''
   } else if (t === 'location') {
     kind = 'location'
     body = [part.name, part.address, `https://maps.google.com/?q=${part.latitude},${part.longitude}`].filter(Boolean).join(' · ')
   } else if (t === 'contacts') {
     kind = 'contact'
     body = JSON.stringify(m.contacts ?? []).slice(0, 2000)
-  } else if (t === 'interactive' || t === 'button') {
-    kind = 'text'
-    body = JSON.stringify(part).slice(0, 1000)
+  } else if (t === 'reaction') {
+    kind = 'other'
+    body = `Reacted ${String(part.emoji ?? '')}`
   } else {
     body = `[${t}]`
   }
+  if (m.context && typeof m.context === 'object') body = `${body}${(m.context as Record<string, unknown>).forwarded ? ' [forwarded]' : ''}`
   return { external_id: String(m.id ?? ''), from_me: fromMe, sender_name: fromMe ? '' : name, sender_phone: fromMe ? '' : String(m.from ?? ''), sent_at: at, kind, body, media_ref }
+}
+
+/** One chat's messages in, then its business media fetched. */
+async function take(phoneNumberId: string, contactPhone: string, contactName: string, msgs: { m: Msg; fromMe: boolean }[]) {
+  if (!msgs.length) return
+  const incoming = msgs.map(({ m, fromMe }) => toIncoming(m, fromMe, contactName))
+  const r = await ingest({ title: contactName || `+${contactPhone}`, phone: contactPhone, source: 'webhook' }, incoming, 'WhatsApp')
+  // Media is downloaded only for business chats: a held chat's photos are not fetched.
+  if (r.status !== 'business') return
+  const media = incoming.filter((m) => m.media_ref?.startsWith('meta:'))
+  if (!media.length) return
+  const account = await accountByPhoneId(phoneNumberId)
+  if (!account) return
+  after(async () => {
+    const sb = createServiceClient()
+    for (const m of media) {
+      try {
+        const docId = await storeMedia(account, m.media_ref!.slice(5), m.kind ?? 'document', contactName || `+${contactPhone}`, m.body ?? '')
+        if (docId) await sb.from('wa_messages').update({ media_ref: `doc:${docId}` }).eq('external_id', m.external_id!)
+      } catch (e) {
+        console.error('wa media', (e as Error).message)
+      }
+    }
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -70,21 +101,34 @@ export async function POST(req: NextRequest) {
   if (!(await captureReady())) return new NextResponse('Not ready', { status: 503 }) // Meta retries
 
   const payload = JSON.parse(raw || '{}') as { entry?: { changes?: { field?: string; value?: Record<string, unknown> }[] }[] }
+  const sb = createServiceClient()
   try {
     for (const entry of payload.entry ?? []) {
       for (const change of entry.changes ?? []) {
         const v = change.value ?? {}
+        const meta = (v.metadata ?? {}) as { phone_number_id?: string; display_phone_number?: string }
+        const pnid = String(meta.phone_number_id ?? '')
+        const business = digits(meta.display_phone_number)
         const names = new Map(((v.contacts as { wa_id?: string; profile?: { name?: string } }[]) ?? []).map((c) => [String(c.wa_id), String(c.profile?.name ?? '')]))
+
         // Customer → business.
-        for (const m of (v.messages as Msg[]) ?? []) {
-          const phone = String(m.from ?? '')
-          const name = names.get(phone) ?? ''
-          await ingest({ title: name || `+${phone}`, phone, source: 'webhook' }, [toIncoming(m, false, name)], 'WhatsApp')
-        }
-        // Business → customer, sent from the phone app (coexistence echoes).
-        for (const m of ((v.message_echoes as Msg[]) ?? [])) {
-          const phone = String(m.to ?? '')
-          await ingest({ title: `+${phone}`, phone, source: 'webhook' }, [toIncoming(m, true, '')], 'WhatsApp')
+        const byChat = new Map<string, { m: Msg; fromMe: boolean }[]>()
+        for (const m of (v.messages as Msg[]) ?? []) byChat.set(String(m.from), [...(byChat.get(String(m.from)) ?? []), { m, fromMe: false }])
+        // Business → customer, sent from the phone app.
+        for (const m of (v.message_echoes as Msg[]) ?? []) byChat.set(String(m.to), [...(byChat.get(String(m.to)) ?? []), { m, fromMe: true }])
+        for (const [phone, list] of byChat) await take(pnid, phone, names.get(phone) ?? '', list)
+        if (byChat.size && pnid) await sb.from('wa_accounts').update({ last_inbound_at: new Date().toISOString() }).eq('phone_number_id', pnid)
+
+        // Past chats, sent in chunks after linking.
+        for (const h of (v.history as { metadata?: { progress?: number; phase?: number }; threads?: { id?: string; messages?: Msg[] }[] }[]) ?? []) {
+          for (const t of h.threads ?? []) {
+            const phone = String(t.id ?? '')
+            const list = (t.messages ?? []).map((m) => ({ m, fromMe: !!business && digits(m.from) === business }))
+            await take(pnid, phone, '', list)
+          }
+          if (pnid && typeof h.metadata?.progress === 'number') {
+            await sb.from('wa_accounts').update({ history_progress: h.metadata.progress, history_sync: h.metadata.progress >= 100 ? 'done' : 'in_progress' }).eq('phone_number_id', pnid)
+          }
         }
       }
     }

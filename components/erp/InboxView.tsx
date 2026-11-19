@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Bot, Check, Copy, Inbox, Lock, MessageCircle, Shield, Smartphone, Trash2, Users } from 'lucide-react'
+import { Bot, Check, Copy, Inbox, Lock, MessageCircle, Shield, Trash2, Users } from 'lucide-react'
 import { api, timeAgo } from './lib'
 import { Banner, Card, Empty, Loading, Pill } from './ui'
+import ConnectWhatsApp from './ConnectWhatsApp'
 
 /* The WhatsApp Inbox (migration 025, lib/capture.ts): what has been
    captured, what waits for Claude, the Personal list that keeps private
@@ -134,17 +135,11 @@ export default function InboxView() {
 
       <div className="erpGrid main" style={{ marginTop: 16 }}>
         <div className="erpCol">
-          <Card title="How messages arrive" icon={Smartphone}>
-            <ul className="crmSub" style={{ paddingLeft: 18, display: 'grid', gap: 6, margin: 0 }}>
-              <li><b>From the phone, automatically.</b> In the Bhumi Android app: Profile → <b>WhatsApp capture</b> → on, then allow Notification access. Every WhatsApp message the phone shows, chats and groups, comes here as it arrives, even with the app closed.</li>
-              <li><b>From Meta, once connected.</b> Sanjog's WhatsApp Business number linked through Meta also delivers his one-to-one chats here, including photos and documents.</li>
-              <li>A chat appears under <b>Held</b> until someone marks it Business once; after that every new message is filed.</li>
-            </ul>
-          </Card>
+          <ConnectWhatsApp onConnected={load} />
 
           <Card title={`Business chats · ${business.length}`} icon={MessageCircle} style={{ marginTop: 16 }}>
             {business.length === 0 ? (
-              <Empty>No business chats yet. Turn on WhatsApp capture in the phone app, then mark chats Business under Held.</Empty>
+              <Empty>No business chats yet. Connect WhatsApp above; new chats wait under Held until someone marks them Business.</Empty>
             ) : (
               business.map((t) => (
                 <div key={t.id} className="erpRow">

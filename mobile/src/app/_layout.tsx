@@ -11,8 +11,6 @@ import { useShareIntent } from 'expo-share-intent'
 import { setShared } from '@/lib/shared'
 import { LoadingScreen } from '@/components/ui'
 import { colors } from '@/lib/theme'
-import { API_URL } from '@/lib/config'
-import { waCapture } from '@/lib/waNotify'
 import '@/lib/webAlert'
 
 configureNotifications()
@@ -111,21 +109,9 @@ function useFreshUpdates() {
   }, [])
 }
 
-/* WhatsApp capture runs in Android's notification service, outside the app:
-   keep its token current on every launch, and stop it on sign-out. */
-function useWaCaptureToken(token: string | null, isLoading: boolean) {
-  useEffect(() => {
-    if (isLoading || !waCapture) return
-    const enabled = waCapture.status().enabled
-    if (token && enabled) waCapture.configure(API_URL, token, true)
-    if (!token && enabled) waCapture.configure(API_URL, null, false)
-  }, [token, isLoading])
-}
-
 function RootNavigator() {
   const { token, isLoading } = useSession()
   useNotifications(token)
-  useWaCaptureToken(token, isLoading)
   useFreshUpdates()
   useSharedIntoApp(isLoading ? null : token)
   if (isLoading) return <LoadingScreen />

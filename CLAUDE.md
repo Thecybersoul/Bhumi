@@ -320,7 +320,15 @@ chat" (`parseExport()`, Android and iPhone formats, `.zip` read in the browser; 
 and `META_APP_SECRET`; it never sends, so Meta never bills). Claude files the queue through the connector tools
 `capture_next_batch` / `capture_finish_batch` (in `lib/assistant/tools.ts`), from a Claude Pro scheduled task or any
 chat ("file my WhatsApp inbox"). Batches are sized under Claude Code's tool-result limit and leased for 30 minutes.
-The web page is `/admin/inbox`. Not built yet: media download, the app screen, the Android notification reader.
+The web page is `/admin/inbox`.
+
+**Meta's WhatsApp API is the main route.** The Inbox's "Connect WhatsApp" card runs Meta Embedded Signup with
+coexistence (`components/erp/ConnectWhatsApp.tsx`, `/api/wa/signup`, `lib/wa.ts`, migration 026 `wa_accounts`), so the
+number keeps working in the WhatsApp Business app while `/api/wa/webhook` receives `messages`, `smb_message_echoes`
+and `history`. Business-chat media is downloaded into Documents (category WhatsApp; `media_ref` becomes `doc:<id>`);
+held chats' media is not fetched. Env: `META_APP_ID`, `META_APP_SECRET`, `WA_CONFIG_ID`, `WA_VERIFY_TOKEN`, optional
+`GRAPH_VERSION`. Nothing sends through Meta, so Meta never bills. The API cannot read existing groups. An Android
+notification reader was built and removed at the owner's request; do not bring it back. Not built yet: the app screen.
 
 ### The Property Register is kept in Listings (migration 020)
 
