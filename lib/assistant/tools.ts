@@ -404,6 +404,36 @@ export const TOOLS: Tool[] = [
     input_schema: obj({ id: str, status: en(['Open', 'Done']), title: str, due_at: str, priority: en(['Low', 'Normal', 'High']), assignee: str }, ['id']),
   },
   {
+    name: 'capture_next_batch',
+    description:
+      'WhatsApp capture: take the next batch of captured business WhatsApp messages waiting to be filed (oldest first, grouped by chat, with the last few filed messages for context and anything the ERP parser already recognised). Personal chats never appear here. File what each message says with the normal tools (search first to avoid duplicates; create or update contacts, listings, leads, deals, tasks, meetings, notes), then call capture_finish_batch with the batch_id. Returns batch_id null when nothing is waiting.',
+    input_schema: obj({ limit: { ...num, description: 'Messages to take, default 40, max 80' } }),
+  },
+  {
+    name: 'capture_finish_batch',
+    description:
+      'WhatsApp capture: report what you did with each message of a batch from capture_next_batch. Every message id should appear once: outcome filed (with the records you created or updated) or skipped (greetings, chit-chat, nothing to file). Messages you leave out go back to the queue once.',
+    input_schema: obj(
+      {
+        batch_id: str,
+        summary: { ...str, description: 'One or two lines: what this batch contained and what you filed' },
+        items: {
+          type: 'array',
+          items: obj(
+            {
+              message_ids: strArr,
+              outcome: en(['filed', 'skipped']),
+              note: { ...str, description: 'Short: what was filed, or why skipped' },
+              records: { type: 'array', items: obj({ type: en(['listing', 'deal', 'lead', 'contact', 'agent', 'task', 'meeting', 'note', 'prospect', 'document']), id: str, label: str }, ['type', 'id']) },
+            },
+            ['message_ids', 'outcome']
+          ),
+        },
+      },
+      ['batch_id', 'items']
+    ),
+  },
+  {
     name: 'add_note',
     description: 'Write down what was said or decided, optionally on a record.',
     input_schema: obj({ body: str, entity_type: en(LINKABLE), entity_id: str, entity_label: str }, ['body']),
@@ -1038,6 +1068,25 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       const err = errorOf(r)
       if (err) return fail('Couldn’t update the task', err)
       return { content: json({ ok: true }), step: { label: i.status === 'Done' ? 'Marked task done' : 'Updated task', href: '/admin/notes-tasks', ok: true } }
+    }
+
+    case 'capture_next_batch': {
+      const r = await ctx.call('POST', '/api/capture', { action: 'claim', limit: i.limit })
+      const err = errorOf(r)
+      if (err) return fail('Couldn’t take a WhatsApp batch', err)
+      const threads = (r.json.threads as unknown[]) ?? []
+      const n = threads.reduce((a: number, t) => a + (((t as Record<string, unknown>).messages as unknown[]) ?? []).length, 0)
+      return {
+        content: json(r.json),
+        step: { label: r.json.batch_id ? `Took ${n} WhatsApp messages to file · ${r.json.remaining} still waiting` : 'No WhatsApp messages waiting', href: '/admin/inbox', ok: true },
+      }
+    }
+
+    case 'capture_finish_batch': {
+      const r = await ctx.call('POST', '/api/capture', { action: 'finish', batch_id: i.batch_id, items: i.items, summary: i.summary ?? '' })
+      const err = errorOf(r)
+      if (err) return fail('Couldn’t record the batch', err)
+      return { content: json(r.json), step: { label: `Filed ${r.json.filed ?? 0} WhatsApp messages`, href: '/admin/inbox', ok: true } }
     }
 
     case 'add_note': {

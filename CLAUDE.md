@@ -309,6 +309,19 @@ issues a per-person secret link (only its SHA-256 is stored; revocable). It expo
 `read_document` returns file bytes inline (no Files API). Hand-rolled JSON-RPC (initialize, tools/list,
 tools/call, ping), deliberately with no MCP SDK dependency.
 
+### WhatsApp capture, phase 0 (migration 025)
+
+The spec is `docs/specs/` (untracked); `zero-cost-operating-plan.md` overrides the big spec: everything runs on the
+existing Claude Pro subscription, with **no Anthropic API key and nothing paid**. `lib/capture.ts` is the one way
+messages get in: `ingest()` applies the Personal list (`capture_rules`) **before** anything is stored, queues business
+threads, and holds unknown ones (never handed to Claude, deleted after 7 days). Sources: an uploaded WhatsApp "Export
+chat" (`parseExport()`, Android and iPhone formats, `.zip` read in the browser; `scripts/test-capture-export.ts`),
+`POST /api/capture {action:'share'}` from the app, and Meta's webhook at `/api/wa/webhook` (needs `WA_VERIFY_TOKEN`
+and `META_APP_SECRET`; it never sends, so Meta never bills). Claude files the queue through the connector tools
+`capture_next_batch` / `capture_finish_batch` (in `lib/assistant/tools.ts`), from a Claude Pro scheduled task or any
+chat ("file my WhatsApp inbox"). Batches are sized under Claude Code's tool-result limit and leased for 30 minutes.
+The web page is `/admin/inbox`. Not built yet: media download, the app screen, the Android notification reader.
+
 ### The Property Register is kept in Listings (migration 020)
 
 `lib/data/property-register.ts` is the team's register (P001…). `lib/register-sync.ts` keeps a listing for each entry,
