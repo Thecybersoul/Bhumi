@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Bot, Check, Copy, Inbox, Lock, MessageCircle, Shield, Trash2, Upload, Users } from 'lucide-react'
+import { Bot, Check, Copy, Inbox, Lock, MessageCircle, Shield, Smartphone, Trash2, Users } from 'lucide-react'
 import { api, timeAgo } from './lib'
 import { Banner, Card, Empty, Loading, Pill } from './ui'
 
@@ -30,77 +30,6 @@ interface Data {
   rules: Rule[]
 }
 interface Msg { id: string; from_me: boolean; sender_name: string; sender_phone: string; sent_at: string; kind: string; body: string; media_ref: string; state: string; outcome: string }
-
-/* ─── Reading an export: .txt, or the .zip an iPhone makes ─── */
-
-async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {
-  const ds = new DecompressionStream('deflate-raw')
-  const out = new Response(new Blob([data as BlobPart]).stream().pipeThrough(ds))
-  return new Uint8Array(await out.arrayBuffer())
-}
-
-/** The chat text inside a WhatsApp export .zip (the first .txt entry). */
-async function textFromZip(buf: ArrayBuffer): Promise<string> {
-  const b = new Uint8Array(buf)
-  const v = new DataView(buf)
-  let p = 0
-  while (p + 30 < b.length && v.getUint32(p, true) === 0x04034b50) {
-    const flags = v.getUint16(p + 6, true)
-    const method = v.getUint16(p + 8, true)
-    let size = v.getUint32(p + 18, true)
-    const nameLen = v.getUint16(p + 26, true)
-    const extraLen = v.getUint16(p + 28, true)
-    const name = new TextDecoder().decode(b.subarray(p + 30, p + 30 + nameLen))
-    const start = p + 30 + nameLen + extraLen
-    if (flags & 0x08 && size === 0) {
-      // Size is in a trailing descriptor: read it from the central directory instead.
-      const cd = findCentral(v, b, name)
-      if (cd == null) throw new Error('Could not read this zip. Export the chat without media and upload the .txt.')
-      size = cd
-    }
-    if (/\.txt$/i.test(name)) {
-      const raw = b.subarray(start, start + size)
-      const bytes = method === 0 ? raw : method === 8 ? await inflateRaw(raw) : null
-      if (!bytes) throw new Error('This zip uses an unsupported compression. Upload the .txt instead.')
-      return new TextDecoder('utf-8').decode(bytes)
-    }
-    p = start + size + (flags & 0x08 ? 16 : 0)
-  }
-  throw new Error('No chat text found in that zip.')
-}
-
-function findCentral(v: DataView, b: Uint8Array, want: string): number | null {
-  for (let p = b.length - 22; p >= 0; p--) {
-    if (v.getUint32(p, true) !== 0x06054b50) continue
-    let q = v.getUint32(p + 16, true)
-    const n = v.getUint16(p + 10, true)
-    for (let i = 0; i < n && v.getUint32(q, true) === 0x02014b50; i++) {
-      const size = v.getUint32(q + 20, true)
-      const nameLen = v.getUint16(q + 28, true)
-      const name = new TextDecoder().decode(b.subarray(q + 46, q + 46 + nameLen))
-      if (name === want) return size
-      q += 46 + nameLen + v.getUint16(q + 30, true) + v.getUint16(q + 32, true)
-    }
-    return null
-  }
-  return null
-}
-
-/** Vercel caps a request at 4.5 MB: send big exports in pieces, cut where a message starts. */
-function chunks(text: string, max = 3_000_000): string[] {
-  if (text.length <= max) return [text]
-  const out: string[] = []
-  let rest = text
-  while (rest.length > max) {
-    let cut = rest.lastIndexOf('\n', max)
-    while (cut > 0 && !/^\[?\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}/.test(rest.slice(cut + 1, cut + 12))) cut = rest.lastIndexOf('\n', cut - 1)
-    if (cut <= 0) cut = max
-    out.push(rest.slice(0, cut))
-    rest = rest.slice(cut + 1)
-  }
-  out.push(rest)
-  return out
-}
 
 const SCHEDULED_PROMPT = `You file Bhumi Estates' captured WhatsApp business messages into the Bhumi ERP, using the Bhumi ERP connector.
 
@@ -150,26 +79,6 @@ export default function InboxView() {
     } finally {
       setBusy(false)
     }
-  }
-
-  async function upload(file: File, title: string) {
-    await act(async () => {
-      const buf = await file.arrayBuffer()
-      const text = /\.zip$/i.test(file.name) || new Uint8Array(buf.slice(0, 2))[0] === 0x50 ? await textFromZip(buf) : new TextDecoder('utf-8').decode(buf)
-      let stored = 0
-      let dup = 0
-      let dropped = 0
-      let personal = false
-      for (const part of chunks(text)) {
-        const r = await api.post<{ stored: number; duplicates: number; dropped_personal: number; status: string; title: string }>('/api/capture', { action: 'import', text: part, filename: file.name, title })
-        stored += r.stored
-        dup += r.duplicates
-        dropped += r.dropped_personal
-        personal ||= r.status === 'personal'
-      }
-      if (personal) throw new Error('That chat is on the Personal list, so nothing was saved.')
-      setNotice(`Saved ${stored} messages for Claude to file${dup ? ` · ${dup} were already here` : ''}${dropped ? ` · ${dropped} from Personal-list people left out` : ''}.`)
-    })
   }
 
   async function openThread(t: Thread) {
@@ -225,31 +134,17 @@ export default function InboxView() {
 
       <div className="erpGrid main" style={{ marginTop: 16 }}>
         <div className="erpCol">
-          <Card title="Add a chat" icon={Upload}>
-            <p className="crmSub" style={{ marginBottom: 10 }}>
-              In WhatsApp, open a business chat or group → ⋮ (or the chat name on iPhone) → <b>Export chat</b> → <b>Without media</b>, and upload the file here. Uploading again later adds only the new messages.
-            </p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                const f = e.currentTarget
-                const file = (f.elements.namedItem('file') as HTMLInputElement).files?.[0]
-                const title = (f.elements.namedItem('title') as HTMLInputElement).value
-                if (file) upload(file, title).then(() => f.reset())
-              }}
-              style={{ display: 'grid', gap: 8 }}
-            >
-              <input className="erpInput" type="file" name="file" accept=".txt,.zip,text/plain,application/zip" required />
-              <input className="erpInput" name="title" placeholder="Chat name (optional: read from the file name)" />
-              <button className="erpBtn primary" disabled={busy}>
-                <Upload size={15} /> {busy ? 'Saving…' : 'Upload for filing'}
-              </button>
-            </form>
+          <Card title="How messages arrive" icon={Smartphone}>
+            <ul className="crmSub" style={{ paddingLeft: 18, display: 'grid', gap: 6, margin: 0 }}>
+              <li><b>From the phone, automatically.</b> In the Bhumi Android app: Profile → <b>WhatsApp capture</b> → on, then allow Notification access. Every WhatsApp message the phone shows, chats and groups, comes here as it arrives, even with the app closed.</li>
+              <li><b>From Meta, once connected.</b> Sanjog's WhatsApp Business number linked through Meta also delivers his one-to-one chats here, including photos and documents.</li>
+              <li>A chat appears under <b>Held</b> until someone marks it Business once; after that every new message is filed.</li>
+            </ul>
           </Card>
 
           <Card title={`Business chats · ${business.length}`} icon={MessageCircle} style={{ marginTop: 16 }}>
             {business.length === 0 ? (
-              <Empty>No business chats yet. Upload an export above.</Empty>
+              <Empty>No business chats yet. Turn on WhatsApp capture in the phone app, then mark chats Business under Held.</Empty>
             ) : (
               business.map((t) => (
                 <div key={t.id} className="erpRow">

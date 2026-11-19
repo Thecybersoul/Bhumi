@@ -14,6 +14,7 @@ import { Avatar, timeAgo } from '@/components/people'
 import { ActivityFeed } from '@/components/activity'
 import { NotifySettings } from '@/components/notifySettings'
 import { ClaudeConnector } from '@/components/claudeConnector'
+import { WaCapture } from '@/components/waCapture'
 
 type IconName = keyof typeof Ionicons.glyphMap
 
@@ -218,6 +219,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={s.body}>
+          <WaCapture />
           <Text style={s.group}>Account</Text>
           <View style={s.block}>
             <Row icon="mail-outline" title="Email" sub={email} />
