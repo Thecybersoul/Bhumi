@@ -222,3 +222,47 @@ export async function publishDue() {
   await refreshTokenIfDue()
   return n
 }
+
+/* ─── Conversations and numbers ───────────────────────────── */
+
+/** "@name" for an Instagram user id, best effort (DM webhooks carry only the id). */
+export async function usernameFor(igsid: string): Promise<string> {
+  const a = await account()
+  if (!a) return ''
+  try {
+    const r = await ig<{ username?: string; name?: string }>(`/${igsid}`, a.token, { params: { fields: 'username,name' } })
+    return r.username ? `@${r.username}` : r.name ?? ''
+  } catch {
+    return ''
+  }
+}
+
+/** Reply to a DM (Meta allows it within 24 hours of their last message) or to a comment. */
+export async function reply(target: { dm_to?: string; comment_id?: string }, text: string): Promise<string> {
+  const a = await account()
+  if (!a) throw new Error('Instagram is not connected.')
+  if (target.comment_id) {
+    const r = await ig<{ id: string }>(`/${target.comment_id}/replies`, a.token, { method: 'POST', params: { message: text } })
+    return r.id
+  }
+  const res = await fetch(`${GRAPH}/${a.ig_user_id}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${a.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipient: { id: target.dm_to }, message: { text } }),
+    cache: 'no-store',
+  })
+  const j = (await res.json().catch(() => ({}))) as { message_id?: string; error?: { message?: string } }
+  if (!res.ok) throw new Error(j.error?.message ?? `Instagram answered ${res.status}`)
+  return j.message_id ?? ''
+}
+
+/** The account's latest posts on Instagram with their likes and comments, and the profile's counts. */
+export async function recentMedia(limit = 12) {
+  const a = await account()
+  if (!a) throw new Error('Instagram is not connected.')
+  const r = await ig<{ data?: Record<string, unknown>[] }>(`/${a.ig_user_id}/media`, a.token, {
+    params: { fields: 'id,caption,media_type,permalink,timestamp,like_count,comments_count', limit: String(Math.min(50, limit)) },
+  })
+  const profile = await ig<Record<string, unknown>>('/me', a.token, { params: { fields: 'username,followers_count,follows_count,media_count' } }).catch(() => ({}))
+  return { profile, media: r.data ?? [] }
+}

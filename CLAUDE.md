@@ -339,7 +339,13 @@ Page): Connect → `/api/ig/callback` (signed `state`) stores a 60-day token, re
 `ig_posts` drafts (photo, carousel of 2–10, or reel from public https URLs) that publish only on approval
 (`POST /api/ig {action:'approve'}`, or `ig_approve_post` with `confirmed: true`); a future `scheduled_at` makes it
 `scheduled` and `/api/cron/reminders` publishes it (`publishDue()`). `/api/ig/webhook` turns comments and DMs into
-Inbox threads. Env: `IG_APP_ID`, `IG_APP_SECRET`, optional `IG_VERIFY_TOKEN` (else `WA_VERIFY_TOKEN`).
+Inbox threads with `channel = 'instagram'` (migration 028; `ext_id` is the sender's Instagram id, the thread key is
+`ig:<id>`, and DM titles carry the @username when Meta returns it). From Claude: `ig_create_post` also takes
+`document_ids` (photos in Documents, made public via `publishImage`), `ig_insights` (`GET /api/ig?insights=1`) reads
+followers and recent posts' likes and comments, and `ig_reply` (`POST /api/ig {action:'reply', message_id,
+confirmed:true}`) answers a DM or comment; a sent reply is stored as `ig:`/`igc:<id>` so the echo is not a duplicate.
+Env: `IG_APP_ID`, `IG_APP_SECRET`, optional `IG_VERIFY_TOKEN` (else `WA_VERIFY_TOKEN`). Sanjog's setup and usage
+manual is `docs/Bhumi_WhatsApp_Instagram_Manual_for_Sanjog.pdf` (untracked, like the rest of `docs/`).
 
 ### The Property Register is kept in Listings (migration 020)
 

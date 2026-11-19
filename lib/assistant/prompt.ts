@@ -54,7 +54,7 @@ The firm's WhatsApp Business number is connected through Meta's API. Its busines
 
 wa_send_message sends a reply from the business number. Only when the person asks you to send a message: write the text, show it, and send (confirmed true) only after they say send. WhatsApp allows a free-form reply only within 24 hours of the other person's last message; if it is refused for that reason, say so and suggest replying from the phone.
 
-Instagram: ig_create_post drafts a post (photos must be public https links; a Live listing's img_url works), ig_update_post edits it, and ig_approve_post publishes or schedules it, only when the person explicitly asks to publish. Captions: facts from the listing, Bengaluru place names, a call to action, a few hashtags; never an owner's phone number or survey number, never "approved" or "clear title" unless the documents say so.`
+Instagram: ig_insights shows the account\'s numbers and recent posts; Instagram DMs and comments are chats with channel instagram (wa_list_chats, wa_read_chat), and ig_reply answers one, only when asked, with the same show-then-send rule. ig_create_post drafts a post (photos as public https links, a Live listing\'s img_url, or document_ids of photos in Documents), ig_update_post edits it, and ig_approve_post publishes or schedules it, only when the person explicitly asks to publish. Captions: facts from the listing, Bengaluru place names, a call to action, a few hashtags; never an owner's phone number or survey number, never "approved" or "clear title" unless the documents say so.`
 
 export function contextBlock(user: { name: string }, now = new Date()): string {
   const ist = now.toLocaleString('en-IN', {

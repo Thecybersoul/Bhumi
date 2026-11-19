@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { assertAdmin, currentUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
 import { createServiceClient } from '@/lib/supabase'
-import { account, authorizeUrl, cleanPost, disconnect, igConfigured, listPosts, publish } from '@/lib/instagram'
+import { account, authorizeUrl, cleanPost, disconnect, igConfigured, listPosts, publish, recentMedia, reply } from '@/lib/instagram'
+import { publishImage } from '@/lib/document-files'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -19,14 +20,34 @@ export const maxDuration = 120
 
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status })
 
+/** document_ids: photos in the ERP's Documents (JPEG/PNG/WebP), made public and added to image_urls. */
+async function photosFromDocuments(body: Record<string, unknown>) {
+  const ids = Array.isArray(body.document_ids) ? (body.document_ids as unknown[]).map(String).slice(0, 10) : []
+  if (!ids.length) return
+  const urls: string[] = Array.isArray(body.image_urls) ? (body.image_urls as string[]) : []
+  for (const id of ids) {
+    const r = await publishImage(id)
+    if ('error' in r) throw new Error(r.error)
+    urls.push(r.url)
+  }
+  body.image_urls = urls
+}
+
 async function ready() {
   const { error } = await createServiceClient().from('ig_posts').select('id').limit(1)
   return !error
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const denied = await assertAdmin()
   if (denied) return denied
+  if (req.nextUrl.searchParams.get('insights')) {
+    try {
+      return NextResponse.json(await recentMedia(Number(req.nextUrl.searchParams.get('limit')) || 12))
+    } catch (e) {
+      return bad((e as Error).message, 400)
+    }
+  }
   if (!(await ready())) return NextResponse.json({ ready: false, configured: igConfigured(), error: 'Instagram needs database migration 027. Open Setup and apply pending updates.' })
   const a = await account()
   return NextResponse.json({
@@ -58,6 +79,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true })
 
       case 'create': {
+        await photosFromDocuments(body)
         const row = { ...cleanPost(body), status: 'draft', created_by: by, updated_by: by }
         const { data, error } = await sb.from('ig_posts').insert(row).select('*').single()
         if (error) return bad(error.message, 500)
@@ -66,6 +88,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'update': {
+        await photosFromDocuments(body)
         const { data: cur } = await sb.from('ig_posts').select('status').eq('id', id).maybeSingle()
         if (!cur) return bad('No such post', 404)
         if (!['draft', 'scheduled', 'failed'].includes(cur.status)) return bad('A published post can only be changed in Instagram.')
@@ -100,6 +123,23 @@ export async function POST(req: NextRequest) {
         if (p.status === 'published' || p.status === 'publishing') return bad('A published post can only be deleted in Instagram.')
         await sb.from('ig_posts').delete().eq('id', id)
         return NextResponse.json({ ok: true })
+      }
+
+      case 'reply': {
+        if (body.confirmed !== true) return bad('Replying needs confirmed: true, given only when the person has asked for this exact reply to be sent.')
+        const text = String(body.text ?? '').trim().slice(0, 1000)
+        if (!text) return bad('text is required')
+        const { data: m } = await sb.from('wa_messages').select('external_id,thread_id').eq('id', String(body.message_id ?? '')).maybeSingle()
+        if (!m) return bad('No such message', 404)
+        const { data: t } = await sb.from('wa_threads').select('id,title,channel,ext_id').eq('id', m.thread_id).maybeSingle()
+        if (!t || t.channel !== 'instagram') return bad('That message is not from Instagram. Use the WhatsApp reply for WhatsApp chats.')
+        const ext = String(m.external_id)
+        const target = ext.startsWith('igc:') ? { comment_id: ext.slice(4) } : { dm_to: String(t.ext_id ?? '') }
+        if (!target.comment_id && !target.dm_to) return bad('This Instagram chat has no user id to reply to.')
+        const sent = await reply(target, text)
+        await sb.from('wa_messages').insert({ thread_id: t.id, external_id: sent ? (target.comment_id ? `igc:${sent}` : `ig:${sent}`) : `igout:${Date.now()}`, source: 'webhook', from_me: true, sent_at: new Date().toISOString(), kind: 'text', body: text, state: 'filed', outcome: `Sent by ${by}` })
+        await logActivity({ action: 'create', entity_type: 'instagram', entity_id: t.id, entity_label: t.title, summary: `Replied on Instagram to ${t.title}` })
+        return NextResponse.json({ ok: true, id: sent })
       }
 
       default:

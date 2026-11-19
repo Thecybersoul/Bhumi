@@ -42,6 +42,9 @@ export interface IncomingThread {
   source: Source
   /** The person chose to send this chat (export, share): it is business unless the Personal list says otherwise. */
   intent_business?: boolean
+  channel?: 'whatsapp' | 'instagram'
+  /** Instagram user id for a DM thread (where a reply goes). */
+  ext_id?: string
 }
 
 export interface Rule {
@@ -134,6 +137,7 @@ export interface IngestResult {
 }
 
 function threadKey(t: IncomingThread): string {
+  if (t.channel === 'instagram') return t.ext_id ? `ig:${t.ext_id}` : `ig:${normName(t.title)}`
   const phone = normPhone(t.phone)
   if (!t.is_group && phone.length >= 10) return `wa:${phone}`
   return `${t.is_group ? 'group' : 'chat'}:${normName(t.title)}`
@@ -192,7 +196,7 @@ export async function ingest(thread: IncomingThread, messages: IncomingMessage[]
   if (!threadId) {
     const { data, error } = await sb
       .from('wa_threads')
-      .insert({ key, title: thread.title.slice(0, 160), is_group: !!thread.is_group, phone_norm: phone, status, source: thread.source, last_message_at: last || null, created_by: by })
+      .insert({ key, title: thread.title.slice(0, 160), is_group: !!thread.is_group, phone_norm: thread.channel === 'instagram' ? '' : phone, channel: thread.channel ?? 'whatsapp', ext_id: thread.ext_id ?? '', status, source: thread.source, last_message_at: last || null, created_by: by })
       .select('id')
       .single()
     if (error) throw new Error(error.message)
@@ -464,7 +468,7 @@ export async function backlog() {
   const sb = db()
   await purgeExpired()
   const [{ data: threads }, { data: msgs }, { data: batches }] = await Promise.all([
-    sb.from('wa_threads').select('id,title,is_group,phone_norm,status,source,last_message_at,created_at').order('last_message_at', { ascending: false, nullsFirst: false }).limit(300),
+    sb.from('wa_threads').select('id,title,is_group,phone_norm,status,source,channel,last_message_at,created_at').order('last_message_at', { ascending: false, nullsFirst: false }).limit(300),
     sb.from('wa_messages').select('thread_id,state,sent_at').limit(20_000),
     sb.from('capture_batches').select('id,claimed_by,claimed_at,done_at,messages,summary,records').order('claimed_at', { ascending: false }).limit(10),
   ])
@@ -509,7 +513,7 @@ export async function setThreadStatus(id: string, status: ThreadStatus | 'person
 export async function threadMessages(id: string) {
   const { data } = await db()
     .from('wa_messages')
-    .select('id,from_me,sender_name,sender_phone,sent_at,kind,body,media_ref,state,outcome')
+    .select('id,external_id,from_me,sender_name,sender_phone,sent_at,kind,body,media_ref,state,outcome')
     .eq('thread_id', id)
     .order('sent_at', { ascending: false })
     .limit(200)

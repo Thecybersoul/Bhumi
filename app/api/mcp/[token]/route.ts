@@ -23,7 +23,7 @@ export const maxDuration = 120
    ═══════════════════════════════════════════════════════════ */
 
 const SUPPORTED = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05']
-const READ_ONLY = new Set(['search', 'list_records', 'get_record', 'dashboard', 'read_document', 'find_matches', 'suggest_agents', 'wa_list_chats', 'wa_read_chat', 'wa_search', 'ig_list_posts'])
+const READ_ONLY = new Set(['search', 'list_records', 'get_record', 'dashboard', 'read_document', 'find_matches', 'suggest_agents', 'wa_list_chats', 'wa_read_chat', 'wa_search', 'ig_list_posts', 'ig_insights'])
 
 type Rpc = { jsonrpc: '2.0'; id?: string | number | null; method: string; params?: Record<string, unknown> }
 type McpContent = { type: 'text'; text: string } | { type: 'image'; data: string; mimeType: string } | { type: 'resource'; resource: { uri: string; mimeType: string; blob: string } }

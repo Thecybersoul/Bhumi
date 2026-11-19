@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { captureReady, ingest } from '@/lib/capture'
+import { usernameFor } from '@/lib/instagram'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,9 +37,10 @@ export async function POST(req: NextRequest) {
         const echo = !!m.message.is_echo
         const other = String(echo ? m.recipient?.id : m.sender?.id)
         const att = (m.message.attachments ?? []).map((a) => `[${a.type}] ${a.payload?.url ?? ''}`).join(' ')
+        const who = (await usernameFor(other)) || `Instagram user ${other}`
         await ingest(
-          { title: `Instagram DM · ${other}`, source: 'webhook', intent_business: true },
-          [{ external_id: `ig:${m.message.mid}`, from_me: echo, sender_name: echo ? '' : `Instagram ${other}`, sent_at: new Date(m.timestamp ?? Date.now()).toISOString(), kind: 'text', body: [m.message.text, att].filter(Boolean).join(' ') }],
+          { title: `Instagram DM · ${who}`, source: 'webhook', intent_business: true, channel: 'instagram', ext_id: other },
+          [{ external_id: `ig:${m.message.mid}`, from_me: echo, sender_name: echo ? '' : who, sent_at: new Date(m.timestamp ?? Date.now()).toISOString(), kind: 'text', body: [m.message.text, att].filter(Boolean).join(' ') }],
           'Instagram'
         )
       }
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
         if (c.field !== 'comments') continue
         const v = c.value as { id?: string; text?: string; from?: { username?: string; id?: string }; media?: { id?: string } }
         await ingest(
-          { title: `Instagram comments`, source: 'webhook', intent_business: true },
+          { title: `Instagram comments`, source: 'webhook', intent_business: true, channel: 'instagram' },
           [{ external_id: `igc:${v.id}`, sender_name: `@${v.from?.username ?? v.from?.id ?? 'someone'}`, sent_at: new Date().toISOString(), kind: 'text', body: `${v.text ?? ''} (on post ${v.media?.id ?? ''})` }],
           'Instagram'
         )

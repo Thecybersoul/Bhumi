@@ -406,7 +406,7 @@ export const TOOLS: Tool[] = [
   {
     name: 'wa_list_chats',
     description:
-      'WhatsApp: the business chats on the connected WhatsApp Business number (and Instagram DMs), newest first, with how many messages each has and when the last one came. Personal chats are never here. Optionally filter by a word in the chat name.',
+      'WhatsApp and Instagram: the business chats on the connected WhatsApp Business number, plus Instagram DMs and comments (channel instagram), newest first, with how many messages each has and when the last one came. Personal chats are never here. Optionally filter by a word in the chat name.',
     input_schema: obj({ filter: { ...str, description: 'Optional words in the chat name' }, limit: { ...num, description: 'Default 25' } }),
   },
   {
@@ -436,7 +436,14 @@ export const TOOLS: Tool[] = [
     description:
       'Instagram: draft a post. Photos must be public https JPEG links (a listing\u2019s img_url works; for a document, set_listing_photo first or use its public link). One photo = a photo post, 2–10 = a carousel, a video_url (MP4) = a reel. Write a caption that fits the brand: facts from the listing, no phone numbers of owners, no claims the documents don\u2019t support. A draft is never public until approved.',
     input_schema: obj(
-      { image_urls: strArr, video_url: str, caption: str, property_id: { ...str, description: 'The listing this is about' }, scheduled_at: { ...str, description: 'ISO time to publish once approved' } },
+      {
+        image_urls: strArr,
+        document_ids: { ...strArr, description: 'Photos already in the ERP\u2019s Documents (JPEG, PNG or WebP), by document id: made public for Instagram' },
+        video_url: str,
+        caption: str,
+        property_id: { ...str, description: 'The listing this is about' },
+        scheduled_at: { ...str, description: 'ISO time to publish once approved' },
+      },
       ['caption']
     ),
   },
@@ -444,6 +451,17 @@ export const TOOLS: Tool[] = [
     name: 'ig_update_post',
     description: 'Instagram: change a draft or scheduled post (caption, photos, video, time). Published posts can only be changed in Instagram.',
     input_schema: obj({ id: str, image_urls: strArr, video_url: str, caption: str, scheduled_at: str }, ['id']),
+  },
+  {
+    name: 'ig_insights',
+    description: 'Instagram: the account\u2019s profile counts (followers, posts) and its latest posts on Instagram with likes, comments and links.',
+    input_schema: obj({ limit: { ...num, description: 'Posts to return, default 12' } }),
+  },
+  {
+    name: 'ig_reply',
+    description:
+      'Instagram: reply to a DM or a comment. Take message_id from wa_read_chat on an Instagram chat. Only when the person has asked for this exact reply: show the text and set confirmed true only after they say send. DMs can be answered within 24 hours of their last message.',
+    input_schema: obj({ message_id: str, text: str, confirmed: bool }, ['message_id', 'text', 'confirmed']),
   },
   {
     name: 'ig_approve_post',
@@ -1126,7 +1144,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       const all = ((r.json.threads as Record<string, unknown>[]) ?? []).filter((t) => t.status === 'business')
       const rows = all.filter((t) => words.every((w) => String(t.title).toLowerCase().includes(w))).slice(0, Math.min(100, Number(i.limit) || 25))
       return {
-        content: json({ chats: rows.map((t) => ({ chat_id: t.id, name: t.title, phone: t.phone_norm ? `+${t.phone_norm}` : undefined, group: t.is_group, last_message: t.last_message_at, counts: t.counts })), held_unread: (r.json.totals as Record<string, unknown>)?.held }),
+        content: json({ chats: rows.map((t) => ({ chat_id: t.id, name: t.title, channel: t.channel ?? 'whatsapp', phone: t.phone_norm ? `+${t.phone_norm}` : undefined, group: t.is_group, last_message: t.last_message_at, counts: t.counts })), held_unread: (r.json.totals as Record<string, unknown>)?.held }),
         step: { label: `WhatsApp chats · ${rows.length}`, href: '/admin/inbox', ok: true },
       }
     }
@@ -1136,7 +1154,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       const err = errorOf(r)
       if (err) return fail('Couldn\u2019t open that chat', err)
       const t = r.json.thread as Record<string, unknown>
-      const msgs = ((r.json.messages as Record<string, unknown>[]) ?? []).map((m) => ({ at: m.sent_at, from: m.from_me ? 'Bhumi (us)' : m.sender_name || m.sender_phone, kind: m.kind, text: String(m.body ?? '').slice(0, 1500), media: m.media_ref || undefined, filed: m.outcome || undefined }))
+      const msgs = ((r.json.messages as Record<string, unknown>[]) ?? []).map((m) => ({ message_id: m.id, at: m.sent_at, from: m.from_me ? 'Bhumi (us)' : m.sender_name || m.sender_phone, kind: m.kind, text: String(m.body ?? '').slice(0, 1500), media: m.media_ref || undefined, filed: m.outcome || undefined }))
       return { content: json({ chat: t?.title, phone: t?.phone_norm ? `+${t.phone_norm}` : undefined, messages: msgs }), step: { label: `Read WhatsApp chat ${t?.title ?? ''}`, href: '/admin/inbox', ok: true } }
     }
 
@@ -1178,6 +1196,20 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       const err = errorOf(r)
       if (err) return fail('Couldn\u2019t change the Instagram post', err)
       return { content: json(r.json), step: { label: 'Updated the Instagram post', href: '/admin/instagram', ok: true } }
+    }
+
+    case 'ig_insights': {
+      const r = await ctx.call('GET', `/api/ig?insights=1&limit=${Number(i.limit) || 12}`)
+      const err = errorOf(r)
+      if (err) return fail('Couldn\u2019t read Instagram', err)
+      return { content: json(r.json), step: { label: 'Read Instagram stats', href: '/admin/instagram', ok: true } }
+    }
+
+    case 'ig_reply': {
+      const r = await ctx.call('POST', '/api/ig', { action: 'reply', message_id: i.message_id, text: i.text, confirmed: i.confirmed === true })
+      const err = errorOf(r)
+      if (err) return fail('Instagram reply not sent', err)
+      return { content: json(r.json), step: { label: 'Replied on Instagram', href: '/admin/inbox', ok: true } }
     }
 
     case 'ig_approve_post': {
