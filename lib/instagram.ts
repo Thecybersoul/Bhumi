@@ -2,19 +2,25 @@ import { createHmac } from 'node:crypto'
 import { createServiceClient } from './supabase'
 
 /* ═══════════════════════════════════════════════════════════
-   Instagram through Meta's API: "Instagram API with Instagram Login"
-   (no Facebook Page needed). Migration 027.
+   Instagram through Meta's API: "Instagram API with Unified Login".
+   Migration 027. Meta no longer offers new apps the older "Instagram
+   Login", so the firm's account connects through Facebook Login for
+   Business with an Instagram configuration: the dialog offers "Continue
+   with Instagram" (no Facebook Page needed; the Instagram account sits
+   in the Bhumi Estates business portfolio), and the code exchange gives a
+   system-user token that never expires (nothing to refresh).
 
-   Setup, once (see the Instagram page in the admin): in the same Meta app
-   as WhatsApp, add the Instagram product → "API setup with Instagram
-   login", set the redirect URL to <site>/api/ig/callback, and put
-   IG_APP_ID and IG_APP_SECRET on Vercel. Publishing to the firm's own
-   account needs no App Review. All of it is free.
+   Env: META_APP_ID and META_APP_SECRET (the same Meta app as WhatsApp)
+   and IG_CONFIG_ID (the Unified Login configuration). The firm's own
+   account works on Standard Access as an Instagram Tester; App Review is
+   only for other people's accounts. Everything is on graph.facebook.com
+   with the account's id in the path (under this login /me is the system
+   user, not the Instagram account).
    ═══════════════════════════════════════════════════════════ */
 
-const GRAPH = 'https://graph.instagram.com'
-export const IG_SCOPES = ['instagram_business_basic', 'instagram_business_content_publish', 'instagram_business_manage_comments', 'instagram_business_manage_messages']
-export const igConfigured = () => !!(process.env.IG_APP_ID && process.env.IG_APP_SECRET)
+// Meta's Unified Login docs use v27.0 throughout (IG_GRAPH_VERSION overrides).
+const GRAPH = `https://graph.facebook.com/${process.env.IG_GRAPH_VERSION || 'v27.0'}`
+export const igConfigured = () => !!(process.env.META_APP_ID && process.env.META_APP_SECRET && process.env.IG_CONFIG_ID)
 export const redirectUri = (origin: string) => `${origin.replace('://bhumiestates.in', '://www.bhumiestates.in')}/api/ig/callback`
 
 const db = () => createServiceClient()
@@ -39,28 +45,34 @@ export interface IgPost {
 }
 
 /** A signed `state` so the OAuth callback knows the request came from us. */
+const stateKey = () => process.env.META_APP_SECRET ?? ''
 export function signState(userId: string): string {
   const exp = Date.now() + 10 * 60_000
   const payload = `${userId}.${exp}`
-  const sig = createHmac('sha256', process.env.IG_APP_SECRET ?? '').update(payload).digest('hex').slice(0, 32)
+  const sig = createHmac('sha256', stateKey()).update(payload).digest('hex').slice(0, 32)
   return `${payload}.${sig}`
 }
 export function readState(state: string): string | null {
   const [uid, exp, sig] = state.split('.')
   if (!uid || !exp || !sig || Number(exp) < Date.now()) return null
-  const want = createHmac('sha256', process.env.IG_APP_SECRET ?? '').update(`${uid}.${exp}`).digest('hex').slice(0, 32)
+  const want = createHmac('sha256', stateKey()).update(`${uid}.${exp}`).digest('hex').slice(0, 32)
   return want === sig ? uid : null
 }
 
+/** Meta's login dialog for the Instagram configuration. prompt=login shows "Continue with
+    Instagram" even in a browser that is signed in to Facebook. No scope: the configuration
+    carries the permissions. */
 export function authorizeUrl(origin: string, userId: string): string {
   const q = new URLSearchParams({
-    client_id: process.env.IG_APP_ID!,
+    client_id: process.env.META_APP_ID!,
+    config_id: process.env.IG_CONFIG_ID!,
     redirect_uri: redirectUri(origin),
     response_type: 'code',
-    scope: IG_SCOPES.join(','),
+    override_default_response_type: 'true',
     state: signState(userId),
+    prompt: 'login',
   })
-  return `https://www.instagram.com/oauth/authorize?${q}`
+  return `https://www.facebook.com/dialog/oauth?${q}`
 }
 
 async function ig<T = Record<string, unknown>>(path: string, token: string, init?: { method?: string; params?: Record<string, string> }): Promise<T> {
@@ -78,35 +90,35 @@ async function ig<T = Record<string, unknown>>(path: string, token: string, init
   return json
 }
 
-/** OAuth code → long-lived (60-day) token, stored with the account. */
+/** OAuth code → system-user token (never expires) → the Instagram account it was given. */
 export async function connect(origin: string, code: string, by: string) {
-  const form = new URLSearchParams({ client_id: process.env.IG_APP_ID!, client_secret: process.env.IG_APP_SECRET!, grant_type: 'authorization_code', redirect_uri: redirectUri(origin), code })
-  const res = await fetch('https://api.instagram.com/oauth/access_token', { method: 'POST', body: form, cache: 'no-store' })
-  type Short = { access_token?: string; user_id?: string | number; error_message?: string }
-  const body = (await res.json().catch(() => ({}))) as Short & { data?: Short[] }
-  const short: Short = body.data?.[0] ?? body // Meta documents both shapes
-  if (!short.access_token) throw new Error(short.error_message ?? body.error_message ?? 'Instagram did not return a token')
-  const longRes = await fetch(`${GRAPH}/access_token?${new URLSearchParams({ grant_type: 'ig_exchange_token', client_secret: process.env.IG_APP_SECRET!, access_token: short.access_token })}`, { cache: 'no-store' })
-  const long = (await longRes.json().catch(() => ({}))) as { access_token?: string; expires_in?: number; error?: { message?: string } }
-  // A short-lived token dies in an hour and can't be refreshed, so it is never stored.
-  if (!long.access_token) throw new Error(`Instagram did not give a lasting token: ${long.error?.message ?? longRes.status}`)
-  const token = long.access_token
-  const me = await ig<{ user_id?: string; id?: string; username?: string }>('/me', token, { params: { fields: 'user_id,username' } })
-  const igUserId = String(me.user_id ?? me.id ?? short.user_id ?? '')
+  const q = new URLSearchParams({ client_id: process.env.META_APP_ID!, client_secret: process.env.META_APP_SECRET!, redirect_uri: redirectUri(origin), code })
+  const res = await fetch(`${GRAPH}/oauth/access_token?${q}`, { cache: 'no-store' })
+  const tok = (await res.json().catch(() => ({}))) as { access_token?: string; expires_in?: number; error?: { message?: string } }
+  if (!tok.access_token) throw new Error(tok.error?.message ?? 'Meta did not return a token')
+  const token = tok.access_token
+
+  // Which Instagram account(s) the person shared with the app.
+  const shared = await ig<{ data?: { id: string; username?: string }[] }>('/me/assigned_instagram_accounts', token, { params: { fields: 'id,username' } })
+  const acct = (shared.data ?? [])[0]
+  if (!acct?.id) {
+    throw new Error('Instagram was signed in, but no Instagram account was shared with the app. Check that @bhumi.estates is in the Bhumi Estates business portfolio and is an Instagram Tester on the app, then connect again.')
+  }
+  const igUserId = String(acct.id)
   const { error } = await db()
     .from('ig_accounts')
     .upsert(
-      { ig_user_id: igUserId, username: me.username ?? '', token, token_expires_at: long.expires_in ? new Date(Date.now() + long.expires_in * 1000).toISOString() : null, status: 'connected', last_error: '', connected_by: by, updated_at: new Date().toISOString() },
+      { ig_user_id: igUserId, username: acct.username ?? '', token, token_expires_at: tok.expires_in ? new Date(Date.now() + tok.expires_in * 1000).toISOString() : null, status: 'connected', last_error: '', connected_by: by, updated_at: new Date().toISOString() },
       { onConflict: 'ig_user_id' }
     )
   if (error) throw new Error(error.message)
   // Deliver this account's DMs and comments to /api/ig/webhook (needed per account, after login).
   try {
-    await ig(`/v27.0/${igUserId}/subscribed_apps`, token, { method: 'POST', params: { subscribed_fields: 'messages,comments' } })
+    await ig(`/${igUserId}/subscribed_apps`, token, { method: 'POST', params: { subscribed_fields: 'comments,messages' } })
   } catch (e) {
     await db().from('ig_accounts').update({ last_error: `Webhook subscription: ${(e as Error).message}` }).eq('ig_user_id', igUserId)
   }
-  return { username: me.username ?? '' }
+  return { username: acct.username ?? '' }
 }
 
 export async function account(): Promise<IgAccount | null> {
@@ -118,19 +130,10 @@ export async function disconnect(id: string) {
   await db().from('ig_accounts').update({ status: 'disconnected', token: '', updated_at: new Date().toISOString() }).eq('id', id)
 }
 
-/** Long-lived tokens last 60 days; refresh any older than 7 days so they never lapse. */
+/** The Unified Login token never expires, so there is nothing to refresh. Kept so callers
+    stay simple; a revoked token surfaces as an API error and a reconnect. */
 export async function refreshTokenIfDue() {
-  const a = await account()
-  if (!a?.token_expires_at) return
-  const left = new Date(a.token_expires_at).getTime() - Date.now()
-  if (left > 53 * 86_400_000) return
-  try {
-    const r = await fetch(`${GRAPH}/refresh_access_token?${new URLSearchParams({ grant_type: 'ig_refresh_token', access_token: a.token })}`, { cache: 'no-store' })
-    const j = (await r.json()) as { access_token?: string; expires_in?: number }
-    if (j.access_token) await db().from('ig_accounts').update({ token: j.access_token, token_expires_at: new Date(Date.now() + (j.expires_in ?? 5_184_000) * 1000).toISOString(), last_error: '' }).eq('id', a.id)
-  } catch (e) {
-    await db().from('ig_accounts').update({ last_error: `Token refresh: ${(e as Error).message}` }).eq('id', a.id)
-  }
+  return
 }
 
 /* ─── Posts ───────────────────────────────────────────────── */
@@ -273,7 +276,8 @@ export async function recentMedia(limit = 12) {
   const r = await ig<{ data?: Record<string, unknown>[] }>(`/${a.ig_user_id}/media`, a.token, {
     params: { fields: 'id,caption,media_type,permalink,timestamp,like_count,comments_count', limit: String(Math.min(50, limit)) },
   })
-  const profile = await ig<Record<string, unknown>>('/me', a.token, { params: { fields: 'username,followers_count,follows_count,media_count' } }).catch(() => ({}))
+  // Under Unified login /me is the system user, so the profile is read by the account's id.
+  const profile = await ig<Record<string, unknown>>(`/${a.ig_user_id}`, a.token, { params: { fields: 'username,followers_count,follows_count,media_count' } }).catch(() => ({}))
   return { profile, media: r.data ?? [] }
 }
 

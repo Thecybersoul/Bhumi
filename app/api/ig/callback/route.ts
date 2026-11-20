@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logActivity } from '@/lib/activity'
 import { getUser } from '@/lib/users'
+import { currentUser } from '@/lib/auth'
 import { canUseSocial, SOCIAL_ONLY_MESSAGE } from '@/lib/social'
 import { connect, readState } from '@/lib/instagram'
 
@@ -12,7 +13,9 @@ export async function GET(req: NextRequest) {
   const p = req.nextUrl.searchParams
   const back = (q: string) => NextResponse.redirect(new URL(`/admin/instagram?${q}`, req.nextUrl.origin))
   if (p.get('error')) return back(`error=${encodeURIComponent(p.get('error_description') ?? p.get('error') ?? 'Cancelled')}`)
-  const uid = readState(p.get('state') ?? '')
+  // Meta's Unified Login docs don't promise to return state; the admin session cookie (sent on
+  // this top-level redirect) identifies the person when it's missing.
+  const uid = readState(p.get('state') ?? '') ?? (await currentUser())?.id ?? null
   const user = uid ? await getUser(uid) : null
   if (!user) return back('error=This sign-in link expired. Try Connect Instagram again.')
   if (!canUseSocial(user)) return back(`error=${encodeURIComponent(SOCIAL_ONLY_MESSAGE)}`)

@@ -334,8 +334,16 @@ owner's request; do not bring it back. Not built yet: the app screens for Inbox 
 only) and `wa_send_message` (`POST /api/wa/send`, needs `confirmed: true`, only within Meta's 24-hour window; the
 only path that sends through Meta). `lib/assistant/prompt.ts` tells Claude to show the text and send only when told.
 
-**Instagram (migration 027, `lib/instagram.ts`, `/admin/instagram`).** Instagram API with Instagram Login (no Facebook
-Page): Connect → `/api/ig/callback` (signed `state`) stores a 60-day token, refreshed by the reminders job. Posts are
+**Instagram (migration 027, `lib/instagram.ts`, `/admin/instagram`).** Instagram API with **Unified Login** — Meta
+does not offer new apps the older "Instagram login" (graph.instagram.com, IG_APP_ID/SECRET), so do not go back to it.
+Connect opens `facebook.com/dialog/oauth` with `config_id=IG_CONFIG_ID` and `prompt=login` ("Continue with
+Instagram"; no Facebook Page, but the account must be in the Bhumi Estates business portfolio and an Instagram Tester
+on the app). `/api/ig/callback` (signed `state`, falling back to the session) exchanges the code with
+`META_APP_ID`/`META_APP_SECRET` for a system-user token that never expires, finds the account with
+`/me/assigned_instagram_accounts` (`/me` is the system user, so every call uses the account id) and subscribes it to
+webhooks. All calls go to graph.facebook.com v27.0. The Meta app is "Bhumi ERP" (1449825049998639), owned by the
+Bhumi Estates portfolio. Webhooks need the app Live, comment webhooks and DMs to non-testers need App Review, and App
+Review needs Business Verification (waiting on GST); until then posting, stats and polled comments work. Posts are
 `ig_posts` drafts (photo, carousel of 2–10, or reel from public https URLs) that publish only on approval
 (`POST /api/ig {action:'approve'}`, or `ig_approve_post` with `confirmed: true`); a future `scheduled_at` makes it
 `scheduled` and `/api/cron/reminders` publishes it (`publishDue()`). `/api/ig/webhook` turns comments and DMs into

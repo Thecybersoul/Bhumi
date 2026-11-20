@@ -104,10 +104,10 @@ export default function InstagramView() {
                 <p style={{ margin: '0 0 8px' }}>Set up once, free, by whoever manages the firm’s Meta account:</p>
                 <ol style={{ paddingLeft: 18, display: 'grid', gap: 4, margin: 0 }}>
                   <li>In the Instagram app, make the Bhumi account a <b>Professional (Business)</b> account.</li>
-                  <li>In the same Meta app as WhatsApp (developers.facebook.com), add the <b>Instagram</b> product → <b>API setup with Instagram login</b>.</li>
-                  <li>Business login settings → redirect URL <code>https://www.bhumiestates.in/api/ig/callback</code>.</li>
+                  <li>Add the account to the Bhumi Estates business portfolio, and as an <b>Instagram Tester</b> on the Meta app (accept the invite in Instagram).</li>
+                  <li>Meta app → Instagram use case → <b>API setup with Unified login</b>: a configuration with redirect URL <code>https://www.bhumiestates.in/api/ig/callback</code>.</li>
                   <li>Webhooks → callback <code>https://www.bhumiestates.in/api/ig/webhook</code>, the same verify token as WhatsApp; subscribe to <b>comments</b> and <b>messages</b>.</li>
-                  <li>In Vercel add <code>IG_APP_ID</code> and <code>IG_APP_SECRET</code> (the Instagram app ID and secret shown there) and redeploy.</li>
+                  <li>In Vercel add <code>META_APP_ID</code>, <code>META_APP_SECRET</code> and <code>IG_CONFIG_ID</code> and redeploy.</li>
                 </ol>
                 <p style={{ margin: '8px 0 0' }}>Then a <b>Connect Instagram</b> button appears here. Posting to your own account needs no Meta review.</p>
               </div>

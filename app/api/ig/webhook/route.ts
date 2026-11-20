@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 /* Instagram webhooks: direct messages and comments on the firm's posts
    reach the WhatsApp Inbox's queue as business chats ("Instagram · …"), so
-   Claude files enquiries the same way. Signed with IG_APP_SECRET. */
+   Claude files enquiries the same way. Signed with the Meta app secret (Unified login). */
 
 export function GET(req: NextRequest) {
   const p = req.nextUrl.searchParams
@@ -41,8 +41,9 @@ export async function POST(req: NextRequest) {
       }
       for (const c of e.changes ?? []) {
         if (c.field !== 'comments') continue
-        const v = c.value as { id?: string; text?: string; from?: { username?: string; id?: string }; media?: { id?: string } }
+        const v = c.value as { id?: string; comment_id?: string; text?: string; from?: { username?: string; id?: string }; media?: { id?: string } }
         if (v.from?.id && v.from.id === e.id) continue // the firm's own reply, already stored when sent
+        v.id = v.id ?? v.comment_id // Unified login sends comment_id
         await ingest(
           { title: `Instagram comments`, source: 'webhook', intent_business: true, channel: 'instagram' },
           [{ external_id: `igc:${v.id}`, sender_name: `@${v.from?.username ?? v.from?.id ?? 'someone'}`, sent_at: new Date().toISOString(), kind: 'text', body: `${v.text ?? ''} (on post ${v.media?.id ?? ''})` }],

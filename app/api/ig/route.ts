@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   try {
     switch (body.action) {
       case 'connect':
-        if (!igConfigured()) return bad('The Instagram app is not set up on the server yet (IG_APP_ID and IG_APP_SECRET).')
+        if (!igConfigured()) return bad('The Instagram app is not set up on the server yet (META_APP_ID, META_APP_SECRET and IG_CONFIG_ID).')
         return NextResponse.json({ url: authorizeUrl(req.nextUrl.origin, user?.id ?? '') })
 
       case 'disconnect':
