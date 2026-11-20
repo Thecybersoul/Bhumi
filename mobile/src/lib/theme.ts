@@ -46,9 +46,9 @@ export const text = {
   sm: 13,
   base: 14,
   md: 15,
-  lg: 17,
-  xl: 21,
-  '2xl': 30,
+  lg: 16,
+  xl: 18,
+  '2xl': 24,
 } as const
 
 export const radius = { sm: 8, base: 12, lg: 18, xl: 26 } as const

@@ -5,8 +5,6 @@ import { AppState, Image, Platform, StyleSheet, Text, TouchableOpacity, View, ty
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { colors } from '@/lib/theme'
-import { useSession } from '@/lib/auth'
-import { Avatar } from '@/components/people'
 
 /* Every tab needs an explicit icon. Without one, React Navigation
    falls back to a glyph from an icon font the app doesn't bundle,
@@ -26,20 +24,15 @@ function tabIcon(idle: IconName, active: IconName) {
   return TabIcon
 }
 
-function Monogram() {
-  return <Image source={require('../../../assets/monogram.png')} style={s.monogram} resizeMode="contain" />
-}
-
 function Logo() {
   return <Image source={require('../../../assets/logo-dark.png')} style={s.logo} resizeMode="contain" />
 }
 
 /* Search, the assistant, messages and the bell (each with its unread
-   count), then the signed-in person. The count
+   count). The signed-in person is the Profile tab, so not repeated here. The count
    refreshes whenever a tab gains focus and when the app returns to
    the foreground. */
 function Me() {
-  const { user } = useSession()
   const api = useApi()
   const [unread, setUnread] = useState(0)
   const [chats, setChats] = useState(0)
@@ -59,15 +52,15 @@ function Me() {
     return () => sub.remove()
   }, [load])
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13, marginRight: 14 }}>
+    <View style={s.actions}>
       <TouchableOpacity onPress={() => router.push('/search')} hitSlop={8} accessibilityLabel="Search">
-        <Ionicons name="search" size={22} color={colors.white} />
+        <Ionicons name="search" size={20} color={colors.white} />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push('/assistant')} hitSlop={8} accessibilityLabel="Assistant">
-        <Ionicons name="sparkles" size={21} color={colors.goldTint} />
+        <Ionicons name="sparkles" size={19} color={colors.goldTint} />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel="Messages">
-        <Ionicons name={chats ? 'chatbubbles' : 'chatbubbles-outline'} size={22} color={colors.white} />
+        <Ionicons name={chats ? 'chatbubbles' : 'chatbubbles-outline'} size={20} color={colors.white} />
         {chats ? (
           <View style={s.badge}>
             <Text style={s.badgeText}>{chats > 9 ? '9+' : chats}</Text>
@@ -75,17 +68,12 @@ function Me() {
         ) : null}
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push('/notifications')} hitSlop={8} accessibilityLabel="Notifications">
-        <Ionicons name={unread ? 'notifications' : 'notifications-outline'} size={23} color={colors.white} />
+        <Ionicons name={unread ? 'notifications' : 'notifications-outline'} size={20} color={colors.white} />
         {unread ? (
           <View style={s.badge}>
             <Text style={s.badgeText}>{unread > 9 ? '9+' : unread}</Text>
           </View>
         ) : null}
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push('/profile')} hitSlop={8}>
-        <View style={s.meRing}>
-          <Avatar name={user?.name} size={30} />
-        </View>
       </TouchableOpacity>
     </View>
   )
@@ -99,8 +87,11 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: colors.navy },
         headerShadowVisible: false,
         headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '700', fontSize: 19 },
-        headerLeft: () => <Monogram />,
+        // A quiet, compact bar: the page name on the left, four actions on the right.
+        headerTitleStyle: { fontWeight: '700', fontSize: 16 },
+        headerTitleAlign: 'left',
+        headerLeft: () => null,
+        headerTitleContainerStyle: { marginLeft: 16 },
         headerRight: () => <Me />,
         tabBarActiveTintColor: colors.navy,
         tabBarInactiveTintColor: colors.muted,
@@ -123,8 +114,6 @@ export default function TabsLayout() {
         options={{
           title: 'Home',
           headerTitle: () => <Logo />,
-          headerLeft: () => null,
-          headerTitleAlign: 'left',
           tabBarIcon: tabIcon('home-outline', 'home'),
         }}
       />
@@ -144,9 +133,8 @@ export default function TabsLayout() {
 const s = StyleSheet.create({
   pill: { width: 44, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   pillOn: { backgroundColor: colors.navyTint },
-  monogram: { width: 26, height: 26, marginLeft: 16, marginRight: 6 },
-  logo: { width: 150, height: 150 * (260 / 1200) },
-  meRing: { borderRadius: 17, borderWidth: 2, borderColor: 'rgba(255,255,255,0.25)' },
+  logo: { width: 112, height: 112 * (260 / 1200) },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 20, marginRight: 18 },
   badge: { position: 'absolute', top: -5, right: -7, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: colors.navy },
   badgeText: { color: colors.white, fontSize: 10, fontWeight: '800' },
 })

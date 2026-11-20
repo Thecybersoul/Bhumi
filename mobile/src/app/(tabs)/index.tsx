@@ -460,7 +460,7 @@ const s = StyleSheet.create({
   newTag: { backgroundColor: colors.gold, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   newTagText: { color: colors.white, fontSize: text['2xs'], fontWeight: '800', letterSpacing: 0.6 },
   hero: { backgroundColor: colors.navy, paddingHorizontal: space.lg, paddingTop: 4, paddingBottom: 46 },
-  hello: { color: colors.white, fontSize: text.xl, fontWeight: '800' },
+  hello: { color: colors.white, fontSize: text.xl, fontWeight: '700' },
   date: { color: 'rgba(255,255,255,0.65)', fontSize: text.sm, marginTop: 2 },
   stats: { flexDirection: 'row', gap: 8, marginTop: space.lg },
   stat: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
